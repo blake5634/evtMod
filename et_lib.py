@@ -278,16 +278,14 @@ def plot_curve_with_arrows2(x, y, axis, interval, color='b',HW =0.1, arrow_scale
     return
 
 
-def load_params(args):
-    if len(args) == 1:
-        return setup_params()
-    else:
-        print('\nFuture code to read param files\n')
+
 
 ###############################################################################
 #
-#    Nominal System Parameters
+#    Manage System Parameters
 #
+
+# set to nominal values
 def setup_params():
     pd = {}
     pu = {}
@@ -394,12 +392,82 @@ def setup_params():
     pu['Vintercept'] = 'm/sec'
 
 
+    #
+    #    Eversion Thresholds
+    #
+
+    PBA_static = pd['Patmosphere'] + 2.0 * uc['Pa_per_PSI']  # Pascals  Static Breakaway Pressure
+    pd['PBA_static'] = PBA_static
+    pu['PBA_static'] = 'Pascals'
+
+    PHalt_dyn = pd['Patmosphere'] + 1.25 * uc['Pa_per_PSI']  # Pascals   dynamic stopping pressure
+    pd['PHalt_dyn'] = PHalt_dyn
+    pu['PHalt_dyn'] = 'Pascals'
+
+    #PBA_static = Patmosphere + 2.0  * Pa_per_PSI   #  Pascals  Static Breakaway Pressure
+    #PHalt_dyn  = Patmosphere + 1.25 * Pa_per_PSI  #  Pascals   dynamic stopping pressure
+    #P1 = PHalt_dyn
+    #P2 = PBA_static
+
+
+    #  TESTING: taper the thresholds together depending time
+    dP1dL = 0.5*(pd['PBA_static'] - pd['PHalt_dyn'])/0.8  # pa/m  (0.8m is fully everted)
+    dP2dL = -dP1dL
+    pd['Threshold Taper'] = dP1dL
+    pu['Threshold Taper'] = 'Pa /m'
+
+    # force threshold taper
+    pd['dF1dL'] =  0.5*(26-18)/1.1
+    pu['dF1dL'] = 'N/m??' #??
+
+
     # simulation details
     pd['dt'] = 0.0025
     pu['dt'] = 'sec'
 
+
     return (pd,pu)
 
+def saveParams(fname, pd):
+    saveDict(fname, pd)
+
+def savePUnits(fname, pu):
+    saveDict(fname, pu)
+
+def saveUnitConv(fname, uc):
+    saveDict(fname, uc)
+
+def saveDict(fname, d):
+    f = open(fname, 'w')
+    skeys = sorted(d.keys())
+    for k in skeys:
+        value = d[k]
+        if type(value) == type(3.1416):
+            print(f'{k:20}: {value:10.7E}',file=f)
+        else:
+            print(f'{k:20}: {value}',file=f)
+    f.close()
+    return
+
+def loadParams(fname):
+    return loadDict(fname)
+
+def loadPUnits(fname):
+    return loadDict(fname)
+
+def loadUnitConv(fname):
+    return loadDict(fname)
+
+def loadDict(fname):
+    f = open(fname, 'r')
+    d = {}
+    for line in f:
+        k,v = line.split(':')
+        try:
+            d[k.strip()] = float(v)
+        except:
+            d[k.strip()] = v.strip()
+    return d
 
 def print_param_table(pd,pu):
     print('\n Parameter Table ')

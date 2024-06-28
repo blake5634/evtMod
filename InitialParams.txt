@@ -1,0 +1,25 @@
+ET_area             : 4.9087385E-04
+ET_diam             : 2.5000000E-02
+ET_radius           : 1.2500000E-02
+Fintercept          : 2.0684280E-04
+J                   : 5.1000000E-04
+K2drag              : 1.0000000E+01
+Kdrag               : 8
+LLine_SIu           : 1.0000000E-08
+PBA_static          : 1.1511452E+05
+PHalt_dyn           : 1.0994345E+05
+Patmosphere         : 1.0132500E+05
+Pintercept          : 1.2200928E+05
+Psource_SIu         : 1.2200928E+05
+RT                  : 2.4559556E+03
+Rsource_SIu         : 1.0000000E+08
+T                   : 2.9540000E+02
+Tau_coulomb         : 1.7400000E-02
+Threshold Taper     : 3.2319188E+03
+Vhousing_m3         : 1.4616078E-03
+Vintercept          : 4.2137669E-01
+dF1dL               : 3.6363636E+00
+dt                  : 2.5000000E-03
+et_MPM              : 1.0000000E-01
+rReel               : 1.0900000E-02
+th_dot_minCoulomb   : 5.0000000E-02

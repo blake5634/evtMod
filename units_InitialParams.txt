@@ -1,0 +1,25 @@
+ET_area             : m2
+ET_diam             : m
+ET_radius           : m
+Fintercept          : m3/sec
+J                   : kg/m2
+K2drag              : Nm
+Kdrag               : N / m2 / sec
+LLine_SIu           : m3/sec / Pascal
+PBA_static          : Pascals
+PHalt_dyn           : Pascals
+Patmosphere         : Pascals
+Pintercept          : Pascals
+Psource_SIu         : Pascals
+RT                  : ??
+Rsource_SIu         : Pa/m3/sec
+T                   : K
+Tau_coulomb         : Nm
+Threshold Taper     : Pa /m
+Vhousing_m3         : m3
+Vintercept          : m/sec
+dF1dL               : N/m??
+dt                  : sec
+et_MPM              : kg/m
+rReel               : m
+th_dot_minCoulomb   : rad/sec

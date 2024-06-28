@@ -4,7 +4,7 @@ import matplotlib.patches as mpatches
 import simulation as sim
 import et_lib as et
 from et_lib import error
-
+import sys
 
 # Unit Conversions
 uc = {
@@ -27,8 +27,39 @@ uc = {
 }
 
 
-dataDirName = 'dataAndyMay24'
+unitsConvfilename = 'unitConv.txt'
+defaultParamName = 'InitialParams.txt'
+defaultUnitsName = 'units_'+defaultParamName
 
+##set up first version of params and units files
+## just run these once (then comment out)
+##
+#et.saveUnitConv(unitsConvfilename, uc)  # liters to cubic meters e.g.
+## first param file
+#pd,pu = et.setup_params()
+#et.saveParams(defaultParamName,pd)
+#et.savePUnits(defaultUnitsName,pu)     # same keys as parameter file
+
+
+args = sys.argv
+
+# load parameter file
+if len(args) == 1:
+    print('Usage: fmod2SI <parameterfile>')
+    print('   loading nominal default parameters from: ' + defaultParamName)
+    pd = et.loadParams(defaultParamName)
+    pu = et.loadPUnits('units_'+defaultParamName)
+
+else:
+    print('loading ',args[1])
+    pd = et.loadParams(args[1])
+    pu = et.loadPUnits('units_'+args[1])
+
+# load unit conversions
+uc = et.loadUnitConv(unitsConvfilename)
+print('loaded unit conversions')
+
+dataDirName = 'dataAndyMay24'
 
 #
 #   What to plot
@@ -37,44 +68,11 @@ PLOT_TYPE = 'SIMULATION' # only simulation
 PLOT_TYPE = 'OVERLAY'   # includes experimental data
 FPLOT = True             # make a force plot as well
 
-#
-#  Load parameters (argv)
-#
-pd,pu = et.load_params(['name']) # defaults for now.
-
 
 print('Pressure and velocity intercept points (SI units)')
 print(pd['Pintercept'], 'Pascals')
 print(pd['Vintercept'], 'meters/sec')
 
-
-#
-#    Eversion Thresholds
-#
-
-PBA_static = pd['Patmosphere'] + 2.0 * uc['Pa_per_PSI']  # Pascals  Static Breakaway Pressure
-pd['PBA_static'] = PBA_static
-pu['PBA_static'] = 'Pascals'
-
-PHalt_dyn = pd['Patmosphere'] + 1.25 * uc['Pa_per_PSI']  # Pascals   dynamic stopping pressure
-pd['PHalt_dyn'] = PHalt_dyn
-pu['PHalt_dyn'] = 'Pascals'
-
-#PBA_static = Patmosphere + 2.0  * Pa_per_PSI   #  Pascals  Static Breakaway Pressure
-#PHalt_dyn  = Patmosphere + 1.25 * Pa_per_PSI  #  Pascals   dynamic stopping pressure
-#P1 = PHalt_dyn
-#P2 = PBA_static
-
-
-#  TESTING: taper the thresholds together depending time
-dP1dL = 0.5*(pd['PBA_static'] - pd['PHalt_dyn'])/0.8  # pa/m  (0.8m is fully everted)
-dP2dL = -dP1dL
-pd['Threshold Taper'] = dP1dL
-pu['Threshold Taper'] = 'Pa /m'
-
-# force threshold taper
-pd['dF1dL'] =  0.5*(26-18)/1.1
-pu['dF1dL'] = 'N/m??' #??
 
 
 # States
