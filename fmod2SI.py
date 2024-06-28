@@ -53,8 +53,12 @@ print(pd['Vintercept'], 'meters/sec')
 #
 
 PBA_static = pd['Patmosphere'] + 2.0 * uc['Pa_per_PSI']  # Pascals  Static Breakaway Pressure
-PHalt_dyn = pd['Patmosphere'] + 1.25 * uc['Pa_per_PSI']  # Pascals   dynamic stopping pressure
+pd['PBA_static'] = PBA_static
+pu['PBA_static'] = 'Pascals'
 
+PHalt_dyn = pd['Patmosphere'] + 1.25 * uc['Pa_per_PSI']  # Pascals   dynamic stopping pressure
+pd['PHalt_dyn'] = PHalt_dyn
+pu['PHalt_dyn'] = 'Pascals'
 
 #PBA_static = Patmosphere + 2.0  * Pa_per_PSI   #  Pascals  Static Breakaway Pressure
 #PHalt_dyn  = Patmosphere + 1.25 * Pa_per_PSI  #  Pascals   dynamic stopping pressure
@@ -63,19 +67,15 @@ PHalt_dyn = pd['Patmosphere'] + 1.25 * uc['Pa_per_PSI']  # Pascals   dynamic sto
 
 
 #  TESTING: taper the thresholds together depending time
-dP1dL = 0.5*(PBA_static - PHalt_dyn)/0.8  # pa/m
+dP1dL = 0.5*(pd['PBA_static'] - pd['PHalt_dyn'])/0.8  # pa/m  (0.8m is fully everted)
 dP2dL = -dP1dL
+pd['Threshold Taper'] = dP1dL
+pu['Threshold Taper'] = 'Pa /m'
 
 # force threshold taper
 pd['dF1dL'] =  0.5*(26-18)/1.1
 pu['dF1dL'] = 'N/m??' #??
 
-pd['Threshold Taper'] = dP1dL
-pu['Threshold Taper'] = 'Pa /m'
-pd['PBA_static'] = PBA_static
-pu['PBA_static'] = 'Pascals'
-pd['PHalt_dyn'] = PHalt_dyn
-pu['PHalt_dyn'] = 'Pascals'
 
 # States
 PRESSURE_TEST = 2
@@ -149,11 +149,11 @@ pd['J'] *= 4
 t1 = 0.0
 t2 = 8.0
 state = STUCK
-(time,l,lc,ldot,f, fet, p, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+(time,l,lc,ldot,f, fet, p, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
 
-FPLOT = True
+FPLOT = False
 PltTMIN = t1
 PltTMAX = t2
 
@@ -202,10 +202,6 @@ y1 = pd['Pintercept']
 x2 = pd['Fintercept']
 y2 = 0.0
 
-#  plot the eversion thresholds
-for L in l:
-    P1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
-    P2 = pd['PBA_static'] - pd['Threshold Taper'] * L
 
 axs[0,0].plot([x1,x2], [y1,y2], color='k')  # x1,..y2 defined above
 #axs[0,0].plot(fet,p) #pressure is Pa
@@ -230,9 +226,9 @@ axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
 axs[1,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
-axs[1,0].plot([0, PltTMAX] , [pd['PHalt_dyn'], P1] , linestyle='dashed',color=clrs[3])
-axs[1,0].plot([0, PltTMAX] , [pd['PBA_static'], P2] , linestyle='dashed',color=clrs[4] )
-
+#  plot the eversion thresholds (function of L)
+axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
+axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
 
 # Plot 3
 axs[2,0].plot(time, vol )
@@ -325,15 +321,16 @@ if PLOT_TYPE == 'OVERLAY':
     dtsim = pd['dt']
     print('dt Sim:', dtsim, 'dt Exp:', dtexp)
 
+    #axs[2,0].plot(ed['time'], ed['vol'], '--',color=clrs[1])  # Experimental Data
+    axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[1])  # Experimental Data
+    axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[1])  # Experimental Data
+    axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
+
     if False:
         print('Pressure Simulation Losses: ')
         print('Time Domain: ',  et.TD_loss(p, ed['P']))
         print('Freq Domain: ',  et.FD_loss2(p, ed['P'], dtsim, dtexp, test=True, ptitle='Pressure') )
 
-        #axs[2,0].plot(ed['time'], ed['vol'], '--',color=clrs[1])  # Experimental Data
-        axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[1])  # Experimental Data
-        axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[1])  # Experimental Data
-        axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
 
         print('Velocity Simulation Losses: ')
         print('Time Domain: ',  et.TD_loss(ldot,  ed['Ldot']))

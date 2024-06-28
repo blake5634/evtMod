@@ -39,12 +39,12 @@ uc = {
     "Gal_per_m3" : 264.17205,
     "mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
     "m3_per_Gal" : 1.0 / 264.17205,
+    "m3_per_Liter": 1.0 / 1000.0,  # m3
     "MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
     "m3_per_mole": 0.02241,  # m3/mol of Air
     "moles_per_m3": 1.0 / 0.02241,
     "Pa_per_PSI": 6894.76,
     "atmos_Pa": 14.5 * 6894.76,
-    "m3_per_Liter": 1.0 / 1000.0  # m3
 }
 
 
@@ -374,10 +374,14 @@ def setup_params():
     # Flow intercept:
 
     # restored from backup!
+
     LLine_meas = 0.6   # L/ min / kPa  (Lewis paper, page 5 col 2)
     LLine_SIu = LLine_meas * uc['m3_per_Liter'] /(uc['sec_per_min'] * uc['Pa_per_kPa'])  # m3 / sec / Pa
-    Fopen = LLine_SIu * Psource_SIu  # open cavity flow (no ev tube)
+    Fopen = LLine_SIu * pd['Psource_SIu']  # open cavity flow (no ev tube)
     pd['Rsource_SIu'] = Psource_SIu / Fopen
+    pu['Rsource_SIu'] = 'Pa/m3/sec'
+    pd['LLine_SIu']  = LLine_SIu
+    pu['LLine_SIu']  = 'm3/sec / Pascal'
 
     # resume updated code
     FlowMax_SIu = (pd['Psource_SIu'] - pd['Patmosphere'])/pd['Rsource_SIu']
@@ -389,16 +393,6 @@ def setup_params():
     pd['Vintercept'] =  Vintercept
     pu['Vintercept'] = 'm/sec'
 
-    # source load line
-    LLine_meas = 0.6   # L/ min / kPa  (page 5 col 2)
-    LLine_SIu = LLine_meas * uc['m3_per_Liter'] /(uc['sec_per_min'] * uc['Pa_per_kPa'])  # m3 / sec / Pa
-    pd['LLine_SIu']  = LLine_SIu
-    pu['LLine_SIu']  = 'm3/sec / Pascal'
-
-    # source flow resistance
-    Rsource_SIu = 1.0 / pd['Psource_SIu']
-    pd['Rsource_SIu'] = Rsource_SIu
-    pu['Rsource_SIu'] = 'Pa/m3/sec'
 
     # simulation details
     pd['dt'] = 0.0025
@@ -407,24 +401,9 @@ def setup_params():
     return (pd,pu)
 
 
-# some force / torque physics
-def F_drag(L,Ldot, pd):
-    v = Ldot
-    #return Kdrag * v + K2drag / max(L, 0.100)
-    # 2 comes from eversion kinematics
-    return  2* (pd['Kdrag'] +  pd['K2drag'] * L) * v
-def Tau_brake(Tc, th_dot, pd):
-    # eliminate braking torque near zero velocity
-    if abs(th_dot) < pd['th_dot_minCoulomb']:
-        return Tc  # HACK  disable
-    else:
-        return Tc
-
-
-
 def print_param_table(pd,pu):
     print('\n Parameter Table ')
-    for k in pd.keys():
+    for k in sorted(pd.keys()):
         val = pd[k]
         if type(val) != type('x'):
             print(f'{k:18}  {pd[k]:8.4E}  {pu[k]:15}')
@@ -435,7 +414,7 @@ def print_param_table(pd,pu):
 
 def print_param_table2(pd,pdo,pu):  # highlight changes in params due to hacks
     print('\n Parameter Table ')
-    for k in pd.keys():
+    for k in sorted(pd.keys()):
         f = ' '
         if pd[k] != pdo[k]:
             f = '*'

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import et_lib as et
+import et0_lib as et
 
 def error(str):
     print('Error: ',str)
@@ -145,7 +145,7 @@ pu['moles_per_m3'] = 'moles / m3 of Air'
 
 #  Data
 Psource_SIu = Patmosphere + 3.0 * Pa_per_PSI # pascals
-
+breakpoint()
 LLine_meas = 0.6   # L/ min / kPa  (page 5 col 2)
 LLine_SIu = LLine_meas * m3_per_Liter /(sec_per_min * Pa_per_kPa)  # m3 / sec / Pa
 
@@ -272,6 +272,7 @@ pd['PHalt_dyn'] = PHalt_dyn
 pu['PHalt_dyn'] = 'Pascals'
 
 # States
+statenames = ['STUCK','GROWING','PRESSURE_TEST']
 PRESSURE_TEST = 2
 GROWING = 1
 STUCK = 0
@@ -442,6 +443,13 @@ for t in time:
         Lddot = -1 * max(0, alpha * Ldot)
 
         th_ddot = -1* Tau_brake(Tau_coulomb,th_dot)/J
+        if t>0.7 and False:
+            print(f'V0 ')
+            print(f't: {t:8.4f}     State:{statenames[state]}         Pressure: {P:8.1f}')
+            print(f'V0 SourceFlow: {sourceFlowIn:8.3f}   Rsource_SIu: {pd["Rsource_SIu"]:8.3E}')
+            print(f'V0 Ndot: {Ndot:8.3f}   N: {N:8.3f},  Voltot: {Voltot:8.3f}')
+            print(f'V0 Lddot: {Lddot:8.3f}  Ldot: {Ldot:8.3f},  L: {L:8.3f}')
+            breakpoint()
 
     else:
         error('Invalid State: '+state)
