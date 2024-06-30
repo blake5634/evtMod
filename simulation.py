@@ -17,8 +17,12 @@ STUCK = 0
 def F_drag(L,Ldot, pd):
     #return Kdrag * v + K2drag / max(L, 0.100)
     # 2 comes from eversion kinematics
-    return  2 * (pd['Kdrag'] +  pd['K2drag'] * L) * Ldot
-
+    everDrag =   2 * (pd['Kdrag'] +  pd['K2drag'] * L) * Ldot
+    #return everDrag
+    #  increase drag at end of tubing supply
+    Psteadystate = pd['Psource_SIu']*pd['ET_area']
+    F_limit = (L/pd['Lmax'])**5 * Psteadystate
+    return max(everDrag, min(Psteadystate, F_limit))
 
 def Tau_brake(Tc, th_dot, pd):
     # eliminate braking torque near zero velocity
@@ -133,7 +137,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / Mt
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'], th_dot,pd)/pd['J']     # damping out overspin
 
-        elif state == GROWING and Lc <=  0:  # no crumple: TAUGHT
+        elif state == GROWING and Lc <=  0.01:  # no crumple: TAUGHT
             Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt + (pd['J']/pd['rReel']**2) )
             th_ddot = Lddot/pd['rReel']   # kinematic relation
 
@@ -179,14 +183,14 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         PRESSURE_BREAK = True  # False = Force breakaway
         # Eq 4
 
-        if t > 4.570 and t < 4.600:
-            print('')
-            print(f't: {t:8.4f}   State: {statenames[state]}     Pressure: {P:8.1f}')
-            print(f'SourceFlow: {sourceFlowIn:8.3f}   Rsource_SIu: {pd["Rsource_SIu"]:8.3E}')
-            #Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt + (pd['J']/pd['rReel']**2) )
-            print(f'F_ever {F_ever:8.3f}  F_drag: {F_drag(L,Ldot,pd):8.3f}  Fcoul: {Fcoulomb:8.3f}  Mt: {Mt:8.3f}')
-            print(f'Ndot: {Ndot:8.3f}   N: {N:8.3f},  Voltot: {Voltot:8.3f}')
-            print(f'Lddot: {Lddot:8.3f}  Ldot: {Ldot:8.3f}, Mt: {Mt:8.3f} L: {L:8.3f} ')
+        #if t > 4.570 and t < 4.600:
+            #print('')
+            #print(f't: {t:8.4f}   State: {statenames[state]}     Pressure: {P:8.1f}')
+            #print(f'SourceFlow: {sourceFlowIn:8.3f}   Rsource_SIu: {pd["Rsource_SIu"]:8.3E}')
+            ##Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt + (pd['J']/pd['rReel']**2) )
+            #print(f'F_ever {F_ever:8.3f}  F_drag: {F_drag(L,Ldot,pd):8.3f}  Fcoul: {Fcoulomb:8.3f}  Mt: {Mt:8.3f}')
+            #print(f'Ndot: {Ndot:8.3f}   N: {N:8.3f},  Voltot: {Voltot:8.3f}')
+            #print(f'Lddot: {Lddot:8.3f}  Ldot: {Ldot:8.3f}, Mt: {Mt:8.3f} L: {L:8.3f} ')
         #if t > 4.5820-pd['dt']:
             #breakpoint()
 

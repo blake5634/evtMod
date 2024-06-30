@@ -44,19 +44,29 @@ defaultUnitsName = 'units_'+defaultParamName
 args = sys.argv
 
 # load parameter file
+
+paramDir = 'ParamFiles/'
+
 if len(args) == 1:
     print('Usage: fmod2SI <parameterfile>')
     print('   loading nominal default parameters from: ' + defaultParamName)
-    pd = et.loadParams(defaultParamName)
-    pu = et.loadPUnits('units_'+defaultParamName)
+    pd = et.loadParams(paramDir, defaultParamName)
+    pu = et.loadPUnits(paramDir, 'units_'+defaultParamName)
 
 else:
-    print('loading ',args[1])
-    pd = et.loadParams(args[1])
-    pu = et.loadPUnits('units_'+args[1])
+    paramFileName = args[1]
+    print('loading ',paramFileName)
+    pd = et.loadParams(paramDir, paramFileName)
+    try:
+        pu = et.loadPUnits(paramDir, 'units_'+paramFileName)
+    except:
+        # units change only when a new param is added so give option for one
+        #   default units file.
+        print('loading default parameter units from: ' + paramDir + defaultUnitsName)
+        pu = et.loadPUnits(paramDir, defaultUnitsName)
 
 # load unit conversions
-uc = et.loadUnitConv(unitsConvfilename)
+uc = et.loadUnitConv(paramDir, unitsConvfilename)
 print('loaded unit conversions')
 
 dataDirName = 'dataAndyMay24'
@@ -97,25 +107,26 @@ STUCK = 0
 R = 8.314 # wikipedia Gas Constant
 T= 295.4  # 72F in deg K
 
-#########################################################################################33
-
-# print and save orig baseline params
-et.print_param_table(pd,pu)  # before hacks and fn changes
-pd_orig = pd.copy()
-
 
 if PLOT_TYPE == 'OVERLAY':
     files, mdfiles = et.get_files()
-
-    print('Choose a dataset to plot with the simulation: ')
     for i,fn in enumerate(files):
         print(f'{i:5}', fn)
 
-    n = int(input('Select file by number: '))
-    if (n>=len(files) or len(files) <0):
-        print('illegal file name index')
-        quit()
-    fn = files[n]
+    print('Simulating Dataset: ', pd['DataFile'])
+    fn = pd['DataFile']
+
+    inp = input('Select file by number: (-1 to use parameter DataFile)')
+    try:
+        n = int(inp)
+    except:
+        n = -1
+
+    if n >= 0:
+        if (n>=len(files) or len(files) <0):
+            print('illegal file name index')
+            quit()
+        fn = files[n]
 
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
@@ -127,21 +138,27 @@ pd['Tau_coulomb'] = Tau_coulomb
 pu['Tau_coulomb'] = 'Nm'
 
 
-##########################################################
-#
-#  Parameter hacks needed to match results (Fig 3)
-#
-#   TESTING  HACK
+###########################################################
+##
+##  Parameter hacks needed to match results (Fig 3)
+##
+##   TESTING  HACK
 
 
-pd['Rsource_SIu'] *= 1.25
+#pd['Rsource_SIu'] *= 1.25
 
-pd['Vhousing_m3'] *= 0.5
+#pd['Vhousing_m3'] *= 0.5
 
-#Kdrag *= 2
-#pd['Kdrag'] = Kdrag
+##Kdrag *= 2
+##pd['Kdrag'] = Kdrag
 
-pd['J'] *= 4
+#pd['J'] *= 4
+
+#########################################################################################33
+
+# print and save orig baseline params
+et.print_param_table(pd,pu)  #default params (
+pd_orig = et.loadParams(paramDir, defaultParamName)
 
 ##################################################  Run Simulation
 t1 = 0.0
@@ -158,7 +175,7 @@ PltTMAX = t2
 if FPLOT:
     # Create force plot
     fig = plt.figure()
-    fig.suptitle(fn.split('/')[-1])
+    fig.suptitle(fn.split('/')[-1] + ' ' + paramFileName)
 
     ax = fig.gca()
     plt.plot(time, F_e)
@@ -201,6 +218,9 @@ x2 = pd['Fintercept']
 y2 = 0.0
 
 
+
+#   Presure vs FLow Plot
+#
 axs[0,0].plot([x1,x2], [y1,y2], color='k')  # x1,..y2 defined above
 #axs[0,0].plot(fet,p) #pressure is Pa
 #
@@ -261,16 +281,16 @@ if PLOT_TYPE == 'OVERLAY':
 
     # fn is chosen above prior to sim
 
-    fig.suptitle(fn.split('/')[-1])
+    fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
 
 
-    #fn = dataDirName + '/' + files[n]
-    fn = files[n]
+    ##fn = dataDirName + '/' + files[n]
+    #fn = files[n]
 
     #print('opening: ',fn)
     #x=input('       ... OK?? <cr>')
 
-    ed = et.get_data_from_AL_csv(fn)
+    ed = et.get_data_from_AL_csv(dataDirName + '/' +fn)
     ed = et.convert_units(ed,uc)
 
 
@@ -338,7 +358,7 @@ if PLOT_TYPE == 'OVERLAY':
     # Adjust layout
     plt.tight_layout()
 
-    et.print_param_table2(pd,pd_orig, pu)
+    et.print_param_table2(pd,pd_orig, pu)  # print with change markers
 
 plt.show()
 

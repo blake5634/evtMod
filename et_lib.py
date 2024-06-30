@@ -371,8 +371,6 @@ def setup_params():
 
     # Flow intercept:
 
-    # restored from backup!
-
     LLine_meas = 0.6   # L/ min / kPa  (Lewis paper, page 5 col 2)
     LLine_SIu = LLine_meas * uc['m3_per_Liter'] /(uc['sec_per_min'] * uc['Pa_per_kPa'])  # m3 / sec / Pa
     Fopen = LLine_SIu * pd['Psource_SIu']  # open cavity flow (no ev tube)
@@ -381,7 +379,6 @@ def setup_params():
     pd['LLine_SIu']  = LLine_SIu
     pu['LLine_SIu']  = 'm3/sec / Pascal'
 
-    # resume updated code
     FlowMax_SIu = (pd['Psource_SIu'] - pd['Patmosphere'])/pd['Rsource_SIu']
     pd['Fintercept'] =  FlowMax_SIu
     pu['Fintercept'] = 'm3/sec'
@@ -449,17 +446,21 @@ def saveDict(fname, d):
     f.close()
     return
 
-def loadParams(fname):
-    return loadDict(fname)
+def loadParams(dir, fname):
+    return loadDict(dir, fname)
 
-def loadPUnits(fname):
-    return loadDict(fname)
+def loadPUnits(dir, fname):
+    return loadDict(dir,fname)
 
-def loadUnitConv(fname):
-    return loadDict(fname)
+def loadUnitConv(dir,fname):
+    return loadDict(dir,fname)
 
-def loadDict(fname):
-    f = open(fname, 'r')
+def loadDict(folder, fname):
+    if '/' == folder[-1]:
+        f = open(folder+fname, 'r')
+    else:
+        f = open(folder+'/'+fname, 'r')
+
     d = {}
     for line in f:
         k,v = line.split(':')
@@ -485,8 +486,12 @@ def print_param_table2(pd,pdo,pu):  # highlight changes in params due to hacks
     for k in sorted(pd.keys()):
         f = ' '
         if pd[k] != pdo[k]:
-            f = '*'
-        print(f'{k:12} {f} {pd[k]:8.4E}  {pu[k]:15}')
+            f = '*'  # flag the changes
+
+        if pu[k] == 'text':
+            print(f'{k:12} {f} {pd[k]:12}  {pu[k]:15}')
+        else:
+            print(f'{k:12} {f} {pd[k]:8.4E}  {pu[k]:15}')
     print('')
 
 
