@@ -45,7 +45,7 @@ args = sys.argv
 
 # load parameter file
 
-paramDir = 'ParamFiles/'
+paramDir = 'evtParams/'
 
 if len(args) == 1:
     print('Usage: fmod2SI <parameterfile>')
@@ -254,7 +254,7 @@ axs[2,0].legend(['Vol (m3)'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
-axs[2,0].set_ylim( 0.000, 0.0015 )
+axs[2,0].set_ylim( 0.0010, 0.0020 )
 
 axs[0,1].plot(time, f)
 axs[0,1].set_xlabel('Time (sec)')

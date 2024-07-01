@@ -19,9 +19,10 @@ def F_drag(L,Ldot, pd):
     # 2 comes from eversion kinematics
     everDrag =   2 * (pd['Kdrag'] +  pd['K2drag'] * L) * Ldot
     #return everDrag
-    #  increase drag at end of tubing supply
+
+    #  increase drag at end of tubing (max eversion length)
     Psteadystate = pd['Psource_SIu']*pd['ET_area']
-    F_limit = (L/pd['Lmax'])**5 * Psteadystate
+    F_limit = (L/pd['Lmax'])**7 * Psteadystate
     return max(everDrag, min(Psteadystate, F_limit))
 
 def Tau_brake(Tc, th_dot, pd):
@@ -225,6 +226,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # Integrate the state variables.
         Ldot   += Lddot   * dt
+        Ldot   =  max(0,Ldot)    # Ldot can never go negative
         L      += Ldot    * dt
         th_dot += th_ddot * dt
         theta  += th_dot  * dt
