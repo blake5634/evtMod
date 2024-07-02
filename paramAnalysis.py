@@ -7,7 +7,46 @@ import et_lib as et
 import glob
 import sys
 
-def print_params_by_group(pnames, pd, pg, tstr='\n      Parameter Table'):
+
+def compare_params(pavg, pcomps):
+    nscale = 20
+    changes = {}
+    #pavg is the dict of avg params
+    #pcomp is a list of pdicts
+    for pk in pavg.keys():
+        diffs = []
+        for pd in pcomps:
+            diffs.append(pdiff(pavg[pk],pd[pk],nscale))
+        changes[pk] = change_str(diffs,nscale)
+    return changes
+
+
+def change_str(diffs,nscale):
+    left = '*0.1'
+    right = '*10'
+    scale = ['.']*((nscale-1)*2 + 1)
+    NoDiff = True
+    for d in diffs:
+        #print(scale, d)
+        if abs(d) > 0.1:
+            NoDiff = False
+            dIndex = int(len(scale)/2 + 0.5 + d)
+            if dIndex > -nscale:
+                scale[dIndex] = 'X'
+    scale[nscale] = '_'
+    if NoDiff:
+        return ''
+    else:
+        return left+str(''.join(scale))+right
+
+def pdiff(a,b,nscale):
+    n = int(nscale*(np.log10(b/a)))
+    n = max(n, -nscale)
+    n = min(n, nscale)
+    return n
+
+
+def print_params_by_group(pnames, pd, pg, pch=None, tstr='\n      Parameter Table'):
     print(tstr)
     # sort param names by their group
     pngs = []
@@ -18,7 +57,10 @@ def print_params_by_group(pnames, pd, pg, tstr='\n      Parameter Table'):
         k = k2[0]
         val = pd[k]
         if type(val) != type('x'):
-            print(f'{k:18}  {pd[k]:8.4E}  {pu[k]:15}   {pg[k]}')
+            if pch is None:
+                print(f'{k:18}  {pd[k]:8.4E}  {pu[k]:15}   {pg[k]}')
+            else:
+                print(f'{k:18} {pd[k]:8.4E} {pu[k]:15} {pg[k]:12} {pch[k]}')
         else:
             print(f'{k:18}  {pd[k]:10}  {pu[k]:15}  (string????)')
 
@@ -78,5 +120,16 @@ for k in pnames:
     parAvg[k] /= n
 
 print_params_by_group(pnames, parAvg, pg, tstr='\n     Average Parameters by Group')
+
+
+print('Parameter Changes vs Set5')
+
+pchanges = compare_params(parAvg, [ pdicts[1],  pdicts[6],  pdicts[7]  ])
+
+print_params_by_group(pnames, parAvg, pg, pch=pchanges, tstr='\n    Compare Avg w lo fric')
+
+pchanges = compare_params(parAvg, [ pdicts[0],  pdicts[2],  pdicts[3], pdicts[4],  pdicts[5],  pdicts[8]  ])
+
+print_params_by_group(pnames, parAvg, pg, pch=pchanges, tstr='\n    Compare Avg w HI fric')
 
 
