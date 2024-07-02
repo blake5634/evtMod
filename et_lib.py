@@ -54,23 +54,24 @@ def get_files():
     files = []
     mdfiles = []  # markdown files for metadata
     for datadir in dataDirNames:
+            # these files *include* the path relative to working dir.
+            #  e.g. 'datadir/filename.csv'
             tfiles = list(glob.glob(datadir + '/' + "*"))
             tfiles.sort(key=lambda x: os.path.getmtime(x),reverse=True) # newest first
-            if len(tfiles) ==0:
+            if len(tfiles) == 0:
                 cto.error('No brl_data files found')
             dirfiles = []
             dirmdfiles = []
             for f in tfiles:
                 #print('found: ',f)
-                if '.csv' in f :
+                if f[-4:] == '.csv':          # data
                     dirfiles.append(f)
-                elif  '_meta.json' in f:
+                elif f[-10:]==  '_meta.json': # metadata
                     dirmdfiles.append(f)
 
-            # dict.fromkeys better than set because preserves order (thanks google)
-            #filenameroots = list(dict.fromkeys(filenameroots)) # elim dupes
             files += dirfiles
             mdfiles += dirmdfiles
+    print ('get_files: ', files)
     return files, mdfiles
 
 #

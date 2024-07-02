@@ -48,6 +48,7 @@ args = sys.argv
 paramDir = 'evtParams/'
 
 if len(args) == 1:
+    paramFileName = defaultParamName
     print('Usage: fmod2SI <parameterfile>')
     print('   loading nominal default parameters from: ' + defaultParamName)
     pd = et.loadParams(paramDir, defaultParamName)
@@ -57,6 +58,7 @@ else:
     paramFileName = args[1]
     print('loading ',paramFileName)
     pd = et.loadParams(paramDir, paramFileName)
+
     try:
         pu = et.loadPUnits(paramDir, 'units_'+paramFileName)
     except:
@@ -114,7 +116,7 @@ if PLOT_TYPE == 'OVERLAY':
         print(f'{i:5}', fn)
 
     print('Simulating Dataset: ', pd['DataFile'])
-    fn = pd['DataFile']
+    fn = dataDirName + '/' + pd['DataFile']
 
     inp = input('Select file by number: (-1 to use parameter DataFile)')
     try:
@@ -126,7 +128,7 @@ if PLOT_TYPE == 'OVERLAY':
         if (n>=len(files) or len(files) <0):
             print('illegal file name index')
             quit()
-        fn = files[n]
+        fn = files[n]   # includes datadir/
 
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
@@ -213,15 +215,14 @@ clrs = ['b','g','r','c','m']
 # "ideal" loadline
 
 x1 = 0.0
-y1 = pd['Pintercept']
-x2 = pd['Fintercept']
-y2 = 0.0
-
-
+y1 = pd['Psource_SIu']
+#x2 = pd['Psource_SIu'] / pd['Rsource_SIu']
+x2 = (pd['Psource_SIu'] - pd['Patmosphere'])/pd['Rsource_SIu']
+y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
-axs[0,0].plot([x1,x2], [y1,y2], color='k')  # x1,..y2 defined above
+axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
 #axs[0,0].plot(fet,p) #pressure is Pa
 #
 # fet = flow into everting tube (not measured in reality)
@@ -283,14 +284,10 @@ if PLOT_TYPE == 'OVERLAY':
 
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
 
-
-    ##fn = dataDirName + '/' + files[n]
-    #fn = files[n]
-
     #print('opening: ',fn)
     #x=input('       ... OK?? <cr>')
 
-    ed = et.get_data_from_AL_csv(dataDirName + '/' +fn)
+    ed = et.get_data_from_AL_csv(fn)
     ed = et.convert_units(ed,uc)
 
 
