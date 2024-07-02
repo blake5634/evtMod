@@ -448,7 +448,10 @@ def saveDict(fname, d):
     return
 
 def loadParams(dir, fname):
-    return loadDict(dir, fname)
+    if len(dir) > 0:
+        return loadDict(dir, fname)
+    else:
+        return loadDict('', fname)
 
 def loadPUnits(dir, fname):
     return loadDict(dir,fname)
@@ -457,10 +460,13 @@ def loadUnitConv(dir,fname):
     return loadDict(dir,fname)
 
 def loadDict(folder, fname):
-    if '/' == folder[-1]:
-        f = open(folder+fname, 'r')
+    if len(folder) > 0 and folder != '/':
+        if '/' == folder[-1]:
+            f = open(folder+fname, 'r')
+        else:
+            f = open(folder+'/'+fname, 'r')
     else:
-        f = open(folder+'/'+fname, 'r')
+        f = open(fname, 'r')
 
     d = {}
     for line in f:
