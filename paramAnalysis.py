@@ -7,34 +7,40 @@ import et_lib as et
 import glob
 import sys
 
-def compare_param_lists(pdl1,pdl2,nscale):
-    if len(pdl1) < len(pdl2):
-        minList = pdl1
-    else:
-        minList = pdl2
-    for d in pdl1:
-
+def avg_dict_list(dl):
+    avgD = {}
+    for k in dl[0].keys():
+        avgD[k] = 0.0
+    # caution: assumes all d's have same keys
+    for d in dl:
+        for k in d.keys():
+            avgD[k] += d[k]
+    for k in d.keys():
+        avgD[k] /= len(dl)
+    return avgD
 
 def compare_param_list_avgs(pdl1, pdl2,nscale):
     avd1 = {}
     avd2 = {}
-    n=0
+    n1=0
     for k in pdl1[0].keys():
         avd1[k] = 0.0
         avd2[k] = 0.0
     for d in pdl1:
         for k in d.keys():
             avd1[k] += d[k]
-        n += 1
-    n=0
+        n1 += 1
+    n2=0
     for d in pdl2:
         for k in d.keys():
             avd2[k] += d[k]
-        n += 1
+        n2 += 1
 
     for k in pdl1[0].keys():
-        avd1[k] /= n
-        avd2[k] /= n
+        avd1[k] /= n1
+        avd2[k] /= n2
+    #print('lists: ', pdl1, pdl2)
+    #print('averaged dicts: \n', avd1, '\n', avd2)
     changes = compare_param_dicts(avd1, avd2, nscale)
     return changes
 
@@ -44,32 +50,32 @@ def compare_param_dicts(pd1, pd2, nscale):
     #pd1 and pd2 are param dicts
     for pk in pd1.keys():
         diff= [ pdiff(pd1[pk],pd2[pk],nscale) ]
-        #print('comparing: ', pd1[pk], pd2[pk], pdiff(pd1[pk],pd2[pk],nscale))
+        #print('comparing param dicts: ', pd1[pk], pd2[pk], pdiff(pd1[pk],pd2[pk],nscale))
         changes[pk] = change_str(diff,nscale)
     return changes
 
 
 def change_str(diffs,nscale):
-    left = '*0.1'
-    right = '*10'
-    scale = ['.']*((nscale-1)*2 + 1)
+    left = '*0.1 '
+    right = ' *10'
+    scale = ['.']*((nscale)*2 + 1)
+    scale[nscale] = '_'
     NoDiff = True
     for d in diffs:
-        if abs(d) > 0.1:
+        if abs(d) > 0.000025:
             NoDiff = False
             dIndex = int(len(scale)/2 + 0.5 + d)
-            if dIndex > -nscale:
-                scale[dIndex] = 'X'
-    scale[nscale] = '_'
+            dIndex = max(0, min( nscale*2 , dIndex))
+            scale[dIndex] = 'X'
     if NoDiff:
         return ''
     else:
         return left+str(''.join(scale))+right
 
 def pdiff(a,b,nscale):
-    n = int(nscale*(np.log10(b/a)))
-    n = max(n, -nscale)
-    n = min(n, nscale)
+    n = (nscale*(np.log10(b/a)))
+    #n = max(n, -nscale)
+    #n = min(n, nscale)
     return n
 
 
@@ -109,7 +115,11 @@ def analyze_params():
     #files, mdfiles = et.get_files()
     #print('Parameter File Analysis')
     pfiles = list(glob.glob(paramDir + "Set*.txt"))
-    pfiles.sort(key=lambda x: x[3]) # Set0, Set1, ...
+    pfiles.sort() # Set0, Set1, ...
+    print('Testing: \n files in order: ')
+    for i in range(len(pfiles)):
+        print(i, pfiles[i])
+
     if len(pfiles) == 0:
         et.error('No eversion parameter files found')
     pdicts = []
@@ -157,38 +167,68 @@ def analyze_params():
     loFricParms = [ pdicts[1],  pdicts[6],  pdicts[7]  ]
     hiFricParms = [ pdicts[0],  pdicts[2],  pdicts[3], pdicts[4],  pdicts[5],  pdicts[8]  ]
 
+    print('testing: ')
+    print('   TauFric d6:', pdicts[6]['Tau_coulomb'])
+    print('   TauFric d2:', pdicts[2]['Tau_coulomb'])
     nscale = 20
-    pchanges = compare_param_lists(loFricParms, hiFricParms,nscale)
+
+    pchanges = compare_param_list_avgs(loFricParms, hiFricParms,nscale)
 
     print_params_by_group(pdicts[6], pg, pu, pg2=pdicts[2], pch=pchanges, tstr='\n    Compare Lo to Hi fric')
 
-    #pchanges = compare_params(parAvg, hiPressureParms)
-    #print_params_by_group(parAvg, pg, pch=pchanges, tstr='\n    Compare Avg w HI fric')
+
+    # compare trail #1 w trial #3 on each tube
+    T1parms = [pdicts[1], pdicts[4], pdicts[6]]
+    T3parms = [pdicts[3], pdicts[7]]
+
+    pchanges = compare_param_list_avgs(loFricParms, hiFricParms,nscale)
+
+    print_params_by_group(pdicts[1], pg, pu, pg2=pdicts[3], pch=pchanges, tstr='\n    Compare trial 1 to trial 3')
+
+    avgTrial1 = avg_dict_list(T1parms)
+    avgTrial2 = avg_dict_list(T3parms)
+
+    pchanges = compare_params(avgTria1, avgTrial2)
+    print_params_by_group(avgTrial1, pg, p2=avgTrial2, pch=pchanges, tstr='\n    Compare Avg Trial 1 to Avg trial 2')
 
 
 if __name__ == '__main__':
 
-    test = True
+    test = False
+    #test = True
 
     if not test:
         analyze_params()
 
     else:
 
+        print('TESTING: avg_dict_list()')
+        d1 = {'A':1.0,   'B':2.0}
+        d2 = {'A':1.1,   'B':2.2}   # changes from d1
+        d3 = {'A':0.9,   'B':1.8}
+        avgd = avg_dict_list([d1,d2,d3])
+        assert avgd['A'] == 1.0
+        assert avgd['B'] == 2.0
+
+        print('\n                          avg_dict_list()             PASS\n')
+
+
         print('TESTING:  change_str()')
         # test change string "bar graph"
         diffs = [-12, -6, 0, 6, 12]
         npts = 20
         ch_str = change_str(diffs, npts)
-        print('--------------')
-        print(ch_str)
-        print('--------------')
-        assert ch_str == '*0.1........X.....X....._.....X.....X......*10', 'failed change string test'
+        #print('--------------')
+        #print(diffs)
+        #print(ch_str)
+        #print('--------------')
+        assert ch_str == '*0.1 .........X.....X...._......X.....X....... *10', 'failed change string test'
 
-        print('                             change_str()    PASS\n')
+        print('\n                             change_str()             PASS\n')
 
 
         f = np.sqrt(10)
+        #f = 20
         d1 = {'A':1.2,   'B':2.2}
         d2 = {'A':1.2/f, 'B':2.2*f}   # changes from d1
         d3 = {'A':2.2,   'B':3.2}
@@ -199,25 +239,29 @@ if __name__ == '__main__':
         pu = {'A':'m' , 'B':'kg'}
 
         print('TESTING:  compare_param_dicts')
-        ch_d = compare_param_dicts(d1, d2, npts)
-        print('--------------')
-        print(ch_d)
-        print('--------------')
-        assert ch_d['A'] == '*0.1..........X........._..................*10'
-        assert ch_d['B'] == '*0.1...................._.........X........*10'
+        ch_ds = compare_param_dicts(d1, d2, npts)
+        #print('--------------')
+        #print('d1,d2: ', d1, d2)
+        #print(ch_ds)
+        #print('--------------')
+        assert ch_ds['A'] == '*0.1 ...........X........_.................... *10'
+        assert ch_ds['B'] == '*0.1 ...................._..........X......... *10'
 
-        print('                             compare_param_dicts()    PASS\n')
+        print('\n                             compare_param_dicts()    PASS\n')
 
 
         print('\nTESTING: compare_param_lists')
         ld1 = [d1,d3,d5]
         ld2 = [d2,d4,d6]
-        ch_ds = compare_param_lists(ld1,ld2,npts)
+        ch_ds = compare_param_list_avgs(ld1,ld2,npts)
 
-        print('--------------')
-        print(ch_ds)
-        print('--------------')
+        #print('--------------')
+        #print(ch_ds)
+        #print('--------------')
+        assert ch_ds['A'] == '*0.1 .....X.............._.................... *10'
+        assert ch_ds['B'] == '*0.1 ...................._................X... *10'
 
+        print('\n                             compare_param_lists()    PASS\n')
 
 
         #pchanges = compare_param_lists([d1],[d2],npts)
