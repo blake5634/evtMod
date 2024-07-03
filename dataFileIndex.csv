@@ -1,0 +1,10 @@
+Index, FileName, Fit Quality, Date
+0,eversion_flow-hi-inr_hi-fric_tube-2_trial-1.csv,Ex, 3-Jul-24
+1,eversion_flow-hi-inr_lo-fric_tube-1_trial-2.csv,Vg, 3-Jul-24, trade btwn mid-Left vs mid-Right quality.
+2,eversion_flow-hi-inr_hi-fric_tube-3_trial-2.csv,Ex, 3-Jul-24
+3,eversion_flow-hi-inr_hi-fric_tube-3_trial-3.csv,Vg, 3-Jul-24
+4,eversion_flow-hi-inr_hi-fric_tube-3_trial-1.csv,Ex, 3-Jul-24
+5,eversion_flow-hi-inr_hi-fric_tube-2_trial-2.csv,Gd, 3-Jul-24, threshold taper model limits fit.
+6,eversion_flow-hi-inr_lo-fric_tube-1_trial-1.csv,Ex, 3-Jul-24
+7,eversion_flow-hi-inr_lo-fric_tube-1_trial-3.csv,Ex, 3-Jul-24
+8,eversion_flow-hi-inr_hi-fric_tube-1_trial-2.csv,Ex, 3-Jul-24
