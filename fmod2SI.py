@@ -110,6 +110,8 @@ R = 8.314 # wikipedia Gas Constant
 T= 295.4  # 72F in deg K
 
 
+#   Get data file to compare
+#
 if PLOT_TYPE == 'OVERLAY':
     files, mdfiles = et.get_files()
     for i,fn in enumerate(files):
