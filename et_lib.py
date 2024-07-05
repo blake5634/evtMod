@@ -333,6 +333,10 @@ def setup_params():
     pu['Vhousing_m3'] = 'm3'
 
     #Tube diameter
+
+    pd['ET_RofL_mode'] = 'constant'  # ['constant', 'box', 'ramp', 'constrict' ]
+    pu['ET_RofL_mode'] = 'text'
+
     Diam_MM = 25
     pd['ET_diam'] = Diam_MM/1000
     pu['ET_diam'] = 'm'
