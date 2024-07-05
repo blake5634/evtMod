@@ -81,11 +81,6 @@ PLOT_TYPE = 'OVERLAY'   # includes experimental data
 FPLOT = True             # make a force plot as well
 
 
-print('Pressure and velocity intercept points (SI units)')
-print(pd['Pintercept'], 'Pascals')
-print(pd['Vintercept'], 'meters/sec')
-
-
 
 # States
 PRESSURE_TEST = 2

@@ -360,18 +360,13 @@ def setup_params():
     #  FLOW load line for source
     #
 
-    #  Source Pressure
+    #  Source Pressure (P intercept)
     print(pd)
     Psource_SIu = pd['Patmosphere'] + 3.0 * uc['Pa_per_PSI']    # pascals
     pd['Psource_SIu'] = Psource_SIu
     pu['Psource_SIu'] = 'Pascals'
 
-    # Presure intercept:
-    pd['Pintercept'] = pd['Psource_SIu']
-    pu['Pintercept'] = 'Pascals'
-
-    # Flow intercept:
-
+    # Flow intercept
     LLine_meas = 0.6   # L/ min / kPa  (Lewis paper, page 5 col 2)
     LLine_SIu = LLine_meas * uc['m3_per_Liter'] /(uc['sec_per_min'] * uc['Pa_per_kPa'])  # m3 / sec / Pa
     Fopen = LLine_SIu * pd['Psource_SIu']  # open cavity flow (no ev tube)
@@ -380,14 +375,16 @@ def setup_params():
     pd['LLine_SIu']  = LLine_SIu
     pu['LLine_SIu']  = 'm3/sec / Pascal'
 
-    FlowMax_SIu = (pd['Psource_SIu'] - pd['Patmosphere'])/pd['Rsource_SIu']
-    pd['Fintercept'] =  FlowMax_SIu
-    pu['Fintercept'] = 'm3/sec'
 
-    # VELOCITY load line
-    Vintercept = pd['Fintercept'] / area_m2
-    pd['Vintercept'] =  Vintercept
-    pu['Vintercept'] = 'm/sec'
+    ## these seem not used???
+    #FlowMax_SIu = (pd['Psource_SIu'] - pd['Patmosphere'])/pd['Rsource_SIu']
+    #pd['Fintercept'] =  FlowMax_SIu
+    #pu['Fintercept'] = 'm3/sec'
+
+    ## VELOCITY load line
+    #Vintercept = pd['Fintercept'] / area_m2
+    #pd['Vintercept'] =  Vintercept
+    #pu['Vintercept'] = 'm/sec'
 
 
     #
