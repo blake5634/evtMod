@@ -86,6 +86,9 @@ PRESSURE_TEST = 2
 GROWING = 1
 STUCK = 0
 
+pd['radius_modes'] = ['constant','box','ramp','constrict']
+pu['radius_modes'] = 'text list'
+
 ## Constant Eversion forces
 #f_Brake_SIu = 1.0  # Newtons (positive opposes motion)
 #fEverForce_SIu = 1.0 # Newtons (could be prop to L!)

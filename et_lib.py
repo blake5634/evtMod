@@ -3,28 +3,50 @@ import glob,os
 
 import matplotlib.pyplot as plt
 
+#
+#    functions to support variable diameter with length ( V(L) )
+#
 
-## unit constants
-#sec_per_min = 60
-#kPa_per_Pa = 0.001
-#Pa_per_kPa = 1.0/kPa_per_Pa
-#min_per_sec = 1/sec_per_min
-#Gal_per_Liter = 0.2642
-#Liter_per_Gal = 3.7854
-#Liter_per_m3  = 1000.0
-#m3_per_Liter =  1.0 / Liter_per_m3  # m3
-#Liter_per_mm3 = Liter_per_m3 / 1000**3
-#Gal_per_mm3 = Liter_per_mm3 *Gal_per_Liter
-#mm3_per_Gal = 1.0/Gal_per_mm3
-#MM3perLiter = 1.0 / Liter_per_mm3
-## Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-#m3_per_mole = 0.02241 # m3/mol of Air
-#moles_per_m3 = 1.0/m3_per_mole
-#Pa_per_PSI  = 6894.76
-#atmos_Pa = 14.5 * Pa_per_PSI
-#Patmosphere = 101325.0    # Pascals
+# radius of everting tube as function of Length
+def Ret(L,pd):
+    mode = pd['ET_RofL_mode']
+    if mode == 'constant':
+        return etr_constant(L,pd)
+    elif mode == 'box':
+        return etr_box(L,pd)
+    else:
+        error('R of (L): unknown radius mode')
 
-# Unit Conversions
+def Vet(L,pd):      # volume of ET
+    Vet.et_vol_dot = np.pi* Ret(L,pd)**2
+    Vwt.et_vol += et_vol_dot * pd['dt']
+    return Vet.et_vol
+# initialize 'static' variables
+Vet.et_vol_dot = 0.0
+Vet.et_vol = 0.0
+
+def etr_constant(L,pd):
+    return pd['ET_radius']
+
+def etr_box(L,pd):
+    if L < 0.15:
+        return pd['ET_radius']
+    elif L >= 0.15 and L < 0.3:
+        return 1.25*pd['ET_radius']
+    else:
+        return pd['ET_radius']
+
+def etr_constric(L,pd):
+    if L > 0.20:
+        return 0.75*pd['ET_radius']
+    else:
+        return pd['ET_radius']
+
+
+
+
+
+# Unit Conversions (only here to generate initial param units file)
 
 uc = {
     "sec_per_min": 60,
@@ -95,6 +117,7 @@ def get_inr_fric_from_name(fn):
         print('  Fric: LO')
     return I, F
 
+#  read data from Andy Lewis' data files
 def get_data_from_AL_csv(fn):
     #read data
     header = [
