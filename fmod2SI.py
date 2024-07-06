@@ -356,5 +356,8 @@ if PLOT_TYPE == 'OVERLAY':
 
     et.print_param_table2(pd,pd_orig, pu)  # print with change markers
 
+if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot it.
+    et.plot_tube_shape(pd)
+
 plt.show()
 
