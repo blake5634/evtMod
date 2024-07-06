@@ -3,28 +3,85 @@ import glob,os
 
 import matplotlib.pyplot as plt
 
+#
+#    functions to support variable diameter with length ( V(L) )
+#
 
-## unit constants
-#sec_per_min = 60
-#kPa_per_Pa = 0.001
-#Pa_per_kPa = 1.0/kPa_per_Pa
-#min_per_sec = 1/sec_per_min
-#Gal_per_Liter = 0.2642
-#Liter_per_Gal = 3.7854
-#Liter_per_m3  = 1000.0
-#m3_per_Liter =  1.0 / Liter_per_m3  # m3
-#Liter_per_mm3 = Liter_per_m3 / 1000**3
-#Gal_per_mm3 = Liter_per_mm3 *Gal_per_Liter
-#mm3_per_Gal = 1.0/Gal_per_mm3
-#MM3perLiter = 1.0 / Liter_per_mm3
-## Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-#m3_per_mole = 0.02241 # m3/mol of Air
-#moles_per_m3 = 1.0/m3_per_mole
-#Pa_per_PSI  = 6894.76
-#atmos_Pa = 14.5 * Pa_per_PSI
-#Patmosphere = 101325.0    # Pascals
+# radius of everting tube as function of Length
+def Ret(L,pd):
+    mode = pd['ET_RofL_mode']
+    if mode == 'constant':
+        return pd['ET_radius']
+    elif mode == 'box':
+        return etr_box(L,pd)
+    elif mode == 'constrict':
+        return etr_constrict(L,pd)
+    elif mode == 'gap':
+        return etr_gap(L,pd)
+    elif mode == 'ramp':
+        return etr_ramp(L,pd)
+    else:
+        error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
 
-# Unit Conversions
+def Vet(L,pd):      # volume of ET
+    Vet.dL = L-Vet.LP
+    Vet.et_dVol_dL = np.pi* Ret(L,pd)**2        #dV/dL
+    Vet.et_vol +=    Vet.et_dVol_dL * Vet.dL
+    Vet.LP = L
+    return Vet.et_vol
+# initialize 'static' variables (func attribs)
+Vet.LP=0.0                # previous L value
+Vet.et_dVol_dL = 0.0      # dV/dL
+Vet.et_vol = 0.0          # volume of Everting tube
+
+def etr_box(L,pd):
+    if L < 0.15:
+        return pd['ET_radius']
+    elif L >= 0.15 and L < 0.3:
+        return 1.25*pd['ET_radius']
+    else:
+        return pd['ET_radius']
+
+def etr_gap(L,pd):
+    if L < 0.15:
+        return pd['ET_radius']
+    elif L >= 0.15 and L < 0.25:
+        return 0.25*pd['ET_radius']
+    else:
+        return pd['ET_radius']
+
+def etr_constrict(L,pd):
+    if L > 0.20:
+        return 0.5*pd['ET_radius']
+    else:
+        return pd['ET_radius']
+
+def etr_ramp(L,pd):
+    drdL = (0.5 * pd['ET_radius']) / (pd['Lmax'] - 0.2)
+    if L < 0.2:
+        return pd['ET_radius']
+    else:
+        return pd['ET_radius'] + (L-0.2)*drdL
+
+def plot_tube_shape(pd):
+    l = np.linspace(0.0, pd['Lmax'], 150)
+    fig, axs = plt.subplots(1,1, figsize=(10,2))
+    y1 = []
+    y2 = []
+    for L in l:
+        y1.append(1000.0*Ret(L,pd))
+        y2.append(-1000.0*Ret(L,pd))
+    axs.plot(l,y1,l,y2)
+    axs.set_title('Tube Geometry: '+pd['ET_RofL_mode'])
+    axs.set_xlabel('Length (m)')
+    axs.set_ylim([-20,20])
+    axs.set_ylabel('tube width (mm)')
+    # Adjust layout
+    plt.tight_layout()
+    return    # must then call plot.show()
+
+
+# Unit Conversions (only here to generate initial param units file)
 
 uc = {
     "sec_per_min": 60,
@@ -47,6 +104,22 @@ uc = {
     "atmos_Pa": 14.5 * 6894.76,
 }
 
+def get_param_files():
+    paramDirNames = ['evtParams']
+    #  Collect existing data files for overplotting
+    files = []
+    dirfiles = []
+    for pdir in paramDirNames:
+            # these files *include* the path relative to working dir.
+            pfiles = list(glob.glob(pdir + '/' + "*arams.txt"))
+            if len(pfiles) == 0:
+                cto.error('No brl_data files found')
+            dirfiles = []
+            for f in pfiles:
+                dirfiles.append(f)
+
+    print ('get_param_files: ', dirfiles)
+    return dirfiles
 
 def get_files():
     dataDirNames = ['dataAndyMay24']
@@ -56,13 +129,13 @@ def get_files():
     for datadir in dataDirNames:
             # these files *include* the path relative to working dir.
             #  e.g. 'datadir/filename.csv'
-            tfiles = list(glob.glob(datadir + '/' + "*"))
-            tfiles.sort(key=lambda x: os.path.getmtime(x),reverse=True) # newest first
-            if len(tfiles) == 0:
+            pfiles = list(glob.glob(datadir + '/' + "*"))
+            pfiles.sort(key=lambda x: os.path.getmtime(x),reverse=True) # newest first
+            if len(pfiles) == 0:
                 cto.error('No brl_data files found')
             dirfiles = []
             dirmdfiles = []
-            for f in tfiles:
+            for f in pfiles:
                 #print('found: ',f)
                 if f[-4:] == '.csv':          # data
                     dirfiles.append(f)
@@ -95,6 +168,7 @@ def get_inr_fric_from_name(fn):
         print('  Fric: LO')
     return I, F
 
+#  read data from Andy Lewis' data files
 def get_data_from_AL_csv(fn):
     #read data
     header = [
@@ -333,6 +407,10 @@ def setup_params():
     pu['Vhousing_m3'] = 'm3'
 
     #Tube diameter
+
+    pd['ET_RofL_mode'] = 'constant'  # ['constant', 'box', 'ramp', 'constrict' ]
+    pu['ET_RofL_mode'] = 'text'
+
     Diam_MM = 25
     pd['ET_diam'] = Diam_MM/1000
     pu['ET_diam'] = 'm'
@@ -478,24 +556,35 @@ def print_param_table(pd,pu):
     print('\n Parameter Table ')
     for k in sorted(pd.keys()):
         val = pd[k]
-        if type(val) != type('x'):
+        #print('        --- ',k,pd[k])
+        if type(val) == type(['x','y']):  # list param
+            print(f'{k:18} \n    {pd[k]}      {pu[k]:15}')
+        elif type(val) == type('x'):
+            print(f'{k:18}  {pd[k]:10}  {pu[k]:15})')  # string params
+        else: #  ints and floats
             print(f'{k:18}  {pd[k]:8.4E}  {pu[k]:15}')
-        else:
-            print(f'{k:18}  {pd[k]:10}  {pu[k]:15}  (string????)')
 
     print('')
 
 def print_param_table2(pd,pdo,pu):  # highlight changes in params due to hacks
     print('\n Parameter Table ')
     for k in sorted(pd.keys()):
-        f = ' '
-        if pd[k] != pdo[k]:
-            f = '*'  # flag the changes
+        flg = ' '
+        try:
+            if pd[k] != pdo[k]:
+                flg = '*'  # flag the changes
+        except:
+            pass
 
-        if pu[k] == 'text':
-            print(f'{k:12} {f} {pd[k]:12}  {pu[k]:15}')
-        else:
-            print(f'{k:12} {f} {pd[k]:8.4E}  {pu[k]:15}')
+        #print('        --- ',k,pd[k])
+        val = pd[k]
+        if type(val) == type(['x','y']):  # list param
+            print(f'{k:18} \n    {flg} {pd[k]}      {pu[k]}')
+        elif type(val) == type('x'):
+            print(f'{k:18}  {flg} {pd[k]:10}  {pu[k]}')  # string params
+        else: #  ints and floats
+            print(f'{k:18}  {flg} {pd[k]:8.4E}  {pu[k]}')
+
     print('')
 
 

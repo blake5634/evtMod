@@ -80,12 +80,13 @@ PLOT_TYPE = 'SIMULATION' # only simulation
 PLOT_TYPE = 'OVERLAY'   # includes experimental data
 FPLOT = True             # make a force plot as well
 
-
-
 # States
 PRESSURE_TEST = 2
 GROWING = 1
 STUCK = 0
+
+pd['radius_modes'] = ['constant','box','ramp','constrict']
+pu['radius_modes'] = 'text list'
 
 ## Constant Eversion forces
 #f_Brake_SIu = 1.0  # Newtons (positive opposes motion)
@@ -353,6 +354,9 @@ if PLOT_TYPE == 'OVERLAY':
     plt.tight_layout()
 
     et.print_param_table2(pd,pd_orig, pu)  # print with change markers
+
+if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot it.
+    et.plot_tube_shape(pd)
 
 plt.show()
 

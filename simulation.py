@@ -21,7 +21,7 @@ def F_drag(L,Ldot, pd):
     #return everDrag
 
     #  increase drag at end of tubing (max eversion length)
-    Psteadystate = pd['Psource_SIu']*pd['ET_area']
+    Psteadystate = pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
     F_limit = (L/pd['Lmax'])**7 * Psteadystate
     return max(everDrag, min(Psteadystate, F_limit))
 
@@ -43,7 +43,6 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     #
     ##  Initial Conditions
     #
-
     P = pd['Patmosphere']  # 1 atmosphere in Pa
     #
 
@@ -102,9 +101,10 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #breakpoint()
 
         # Eq 1
-        Voltot = pd['Vhousing_m3'] + L*pd['ET_area']
+        #Voltot = pd['Vhousing_m3'] + L*np.pi*et.Ret(L,pd)**2
+        Voltot = pd['Vhousing_m3'] + et.Vet(L,pd)
 
-        # Eq 2
+        # Eq 2   Solve PV = NRT (ideal gas equation)
         P = N*pd['RT'] / Voltot
 
         # Eq 5.1
@@ -120,7 +120,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # F_ever
 
-        F_ever = max(0, 0.5 * P*pd['ET_area'])
+        F_ever = max(0, 0.5 * P*np.pi*et.Ret(L,pd)**2)
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
@@ -239,7 +239,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         ldot.append(Ldot)
         # flow from source
         f.append(sourceFlowIn)
-        fet.append(Ldot * pd['ET_area'])  #flow out into the tube
+        fet.append(Ldot * np.pi*et.Ret(L,pd)**2)  #flow out into the tube
         # Pressure
         p.append(P) # Pa
         # Volume
