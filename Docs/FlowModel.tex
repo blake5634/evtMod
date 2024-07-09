@@ -142,7 +142,7 @@ and the everted tube of length $L$ with cross sectional area $A$.
 
 From the ideal gas equation:
 \begin{equation}\label{eqOneCompartmentPress}
-P = \frac{N  R  T}{ V_t}
+P = \frac{N  RT}{ V_t}
 \end{equation}
 where $N$ is the molar mass of gas in the system, $R$ is the gas constant, and $T$ is the temperature
 in $^\circ$K, (which we assume is constant).
@@ -210,7 +210,7 @@ Fl_{source} = \frac {P_{source}-P} {R_{source}}
 \end{equation}
 
 Converting airflow ($m^3/sec$) to rate of molar mass flow:
-\begin{equation}
+\begin{equation}\label{eqOneCompartmentNdot}
 \dot{N} = Fl_{source} \cdot \mathrm{moles\_per\_m3}
 \end{equation}
 
@@ -451,11 +451,54 @@ The tubing volume increases with length (as it did in Eqn \ref{eqOneCompartmentV
 
 Such a model is shown in Figure \ref{Fig:TwoCompartment}.
 
-\begin{figure}\centering
-\includegraphics[width=.75\textwidth]{Figure_TwoCompartment.png}
+
+\begin{figure}[h]\centering
+\includegraphics[width=.5\textwidth]{Figure_TwoCompartment.png}
 \caption{Two compartment, lumped parameter model. }
 \label{Fig:TwoCompartment}
 \end{figure}
+
+We need to expand our model state variables as follows:
+
+\beq
+\begin{aligned}
+N, \dot{N}     &\to \{ N_1, N_2, \dot{N}_1, \dot{N}_2\}\\
+V_{t}          &\to \{V_{housing}, V_T(L)\}\\
+f_{source}     &\to \{f_{source}, f_{int}, f_{T} \}  \\
+P              &\to \{ P_{C1}, P_{C2} \}
+\end{aligned}
+\eeq
+
+We then have new equations to eliminate Equation \ref{eqOneCompartmentPress}, and replace or expand Equations \ref{eqOneCompartmentPress}, \ref{eqOneCompartmentflow}, and \ref{eqOneCompartmentNdot}
+as follows:
+
+\beq
+\dot{N_1} = f_{source}-f_{int}-f_T
+\eeq
+
+\beq
+\dot{N_2} =  f_T
+\eeq
+
+\beq
+P_{C1} = \frac {N_1RT}  {V_{housing}}
+\eeq
+
+\beq
+P_{C2} = \frac {N_2RT}  {V_T(L)}
+\eeq
+
+\beq
+f_{source} = (P_{source}-P_{C1}) /  R_{source}
+\eeq
+
+\beq
+f_{T} = (P_{C1}-P_{C2}) /  R_{T}(L)
+\eeq
+
+\beq
+f_{int} = f_{source} - f_T
+\eeq
 
 %  Use name of bibliography files without .bib extension
 %\bibliography{brl}

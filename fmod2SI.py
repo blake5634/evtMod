@@ -164,7 +164,11 @@ pd_orig = et.loadParams(paramDir, defaultParamName)
 t1 = 0.0
 t2 = 8.0
 state = STUCK
-(time,l,lc,ldot,f, fet, p, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+
+
+#return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
+
+(time,l,lc,ldot,f, fet, pc1,pc2, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
 
@@ -210,8 +214,9 @@ if state==PRESSURE_TEST:
 
 clrs = ['b','g','r','c','m']
 #trajectory:
-# "ideal" loadline
 
+
+# "ideal" loadline
 x1 = 0.0
 y1 = pd['Psource_SIu']
 #x2 = pd['Psource_SIu'] / pd['Rsource_SIu']
@@ -220,14 +225,16 @@ y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
+# plot ideal load line
 axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
 #axs[0,0].plot(fet,p) #pressure is Pa
 #
 # fet = flow into everting tube (not measured in reality)
 # f  = flow from source (experimental data e.g.)
 #plot_curve_with_arrows2(fet, p, axs[0,0], 50,color=clrs[0])
-et.plot_curve_with_arrows2(f, p, axs[0,0], 500, color=clrs[0])
 
+# plot simulation trajectory
+et.plot_curve_with_arrows2(f, pc1, axs[0,0], 500, color=clrs[0])
 axs[0,0].legend(['Source Load Line',  'Trajectory'])
 axs[0,0].set_xlabel('Source Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
@@ -237,8 +244,9 @@ plt.xticks([0.0001, 0.0002, 0.0003])
 axs[0,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
 
 # Plot 2   # PRESSURE
-axs[1,0].plot(time, p)
-axs[1,0].legend(['Pressure (Pa)' ])
+axs[1,0].plot(time, pc1)
+axs[1,0].plot(time, pc2)
+axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
@@ -307,18 +315,6 @@ if PLOT_TYPE == 'OVERLAY':
 
     x = ed['flow']
     y = ed['P']
-
-    if False:   # testing for phase plotting with data
-        ######################################3
-        # TESTING
-        #  a circle
-        th = np.linspace(0, 2*np.pi, 100)
-        x  = np.cos(th)
-        y = np.sin(th)
-        # an elipse:
-        xsc = 0.03
-        x *= xsc
-        #############################################
 
     Plt_ranges = [0, 0.001, pd['Patmosphere'], pd['Psource_SIu'] ]
 

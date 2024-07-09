@@ -3,6 +3,15 @@ import glob,os
 
 import matplotlib.pyplot as plt
 
+
+#
+#   2Compartment model functions
+#
+def RT(L,pd):     # airflow resistance of E tube vs length
+    r = L * pd['ET_R_per_M']
+    return r
+
+
 #
 #    functions to support variable diameter with length ( V(L) )
 #
@@ -407,19 +416,17 @@ def setup_params():
     pu['Vhousing_m3'] = 'm3'
 
     #Tube diameter
-
     pd['ET_RofL_mode'] = 'constant'  # ['constant', 'box', 'ramp', 'constrict' ]
     pu['ET_RofL_mode'] = 'text'
-
     Diam_MM = 25
-    pd['ET_diam'] = Diam_MM/1000
-    pu['ET_diam'] = 'm'
-    pd['ET_radius'] = pd['ET_diam']/2
+    #pd['ET_diam'] = Diam_MM/1000
+    #pu['ET_diam'] = 'm'
+    pd['ET_radius'] = 0.001* Diam_MM/2
     pu['ET_radius'] = 'm'
 
-    area_m2  = np.pi * pd['ET_radius']**2
-    pd['ET_area'] = area_m2
-    pu['ET_area'] = 'm2'
+    #area_m2  = np.pi * pd['ET_radius']**2
+    #pd['ET_area'] = area_m2
+    #pu['ET_area'] = 'm2'
 
     # Tube material
     tubing_mass_per_meter = 0.100 # kg/meter
@@ -433,6 +440,12 @@ def setup_params():
     K2drag = 8.0/0.8    # N m    (drag increases w/ len)
     pd['K2drag'] = K2drag         # inverse Length coeff
     pu['K2drag'] = 'Nm'
+
+    #
+    #  Tube airflow resistance
+    #
+    pd['ET_R_per_M'] = 0.5E8      # airflow resistance per meter
+    pu['ET_R_per_M'] = 'Pa/m2/sec'
 
     #
     #  FLOW load line for source
