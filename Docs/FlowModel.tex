@@ -126,22 +126,22 @@ After setting initial conditions (see below), we model eversion dynamics by:
 Specifically:
 
 %     # Eq 5.1
-%     Fcoulomb = Tau_coulomb / rReel_SIu
+%     Fcoulomb = Tau_coulomb / rReel\_SIu
 %     F_c.append(Fcoulomb)
 %
 %     # Eq 5.2
 %     #Fdrag = L * Kdrag * 2.0 * Ldot  # material speed is 2x Ldot
 %     F_d.append(Fdrag(L,Ldot))
-%     F_j.append(Lddot*J/rReel_SIu**2)
+%     F_j.append(Lddot*J/rReel\_SIu**2)
 
-\begin{equation}
+\begin{equation}\label{eqOneCompartmentVol}
 V_t = V_{housing} - V_{contents} + L  A
 \end{equation}
 $V_t$ includes both the reel housing minus the volume of its contents,
 and the everted tube of length $L$ with cross sectional area $A$.
 
 From the ideal gas equation:
-\begin{equation}
+\begin{equation}\label{eqOneCompartmentPress}
 P = \frac{N  R  T}{ V_t}
 \end{equation}
 where $N$ is the molar mass of gas in the system, $R$ is the gas constant, and $T$ is the temperature
@@ -157,7 +157,7 @@ Computing Forces:
 
 
 \begin{equation}
-  F_{ever} = \mathrm{max}(0, P*A/2)
+  F_{ever} = \mathrm{max}(0, PA/2)
 \end{equation}
 \beq
   F_{c} = \tau_{Coulomb} / r
@@ -170,7 +170,7 @@ Computing acceleration according to the dynamic state:
 GROWING and SLACK:
 
 \beq
-\ddot{L} = \frac{F_{ever} - F_D(L,\dot{L}-F_C}/{M_T}
+\ddot{L} = \frac{F_{ever} - F_D(L,\dot{L})-F_C}  {M_T}
 \eeq
 \beq
 \dot{\theta} = \tau_{Coulomb}/J
@@ -178,8 +178,8 @@ GROWING and SLACK:
 
 GROWING and TAUGHT:
 
-%         Lddot = (1/Mt + (rReel_SIu**2/J) ) * ( F_ever - Fdrag(L,Ldot) - Fcoulomb )
-%         th_ddot = Lddot/rReel_SIu
+%         Lddot = (1/Mt + (rReel\_SIu**2/J) ) * ( F_ever - Fdrag(L,Ldot) - Fcoulomb )
+%         th_ddot = Lddot/rReel\_SIu
 \beq
 \ddot{L} =(F_{ever} - F_D - F_C) /  (M_T + J/r^2)
 \eeq
@@ -202,10 +202,10 @@ STUCK and (SLACK or TAUGHT):
 \beq
 \ddot{\theta} = \tau_{Coulomb} / J
 \eeq
-where $\alpha$ is an empiical time constant modeling the dynamics of eversion stopping.
+where $\alpha$ is an empirical time constant modeling the dynamics of eversion stopping.
 
 Modeling flow from the pressure source (Thevenin equivalent):
-\begin{equation}
+\begin{equation}\label{eqOneCompartmentflow}
 Fl_{source} = \frac {P_{source}-P} {R_{source}}
 \end{equation}
 
@@ -337,9 +337,9 @@ Simulation with the modified parameters (Figure \ref{Fig:ModifParResults}) impro
 \begin{verbatim}
 
       moles_per_m3   4.4623E+01  moles / m3
-      Psource_SIu    1.2066E+05  Pascals
-      LLine_SIu      1.0000E-08  m3/sec / Pascal
-      Rsource_SIu    1.0000E+08  Pa/m3/sec
+      Psource\_SIu    1.2066E+05  Pascals
+      LLine\_SIu      1.0000E-08  m3/sec / Pascal
+      Rsource\_SIu    1.0000E+08  Pa/m3/sec
       Vhousing_m3    1.4616E-03  m3
       Kdrag          3.0000E-01  N / m2 / sec
       area_m2        4.9087E-04  m2
@@ -358,9 +358,9 @@ Simulation with the modified parameters (Figure \ref{Fig:ModifParResults}) impro
 
       moles_per_m3   4.4623E+01  moles / m3 of Air
       Patmosphere    1.0132E+05  Pascals
-      Psource_SIu    1.2201E+05  Pascals
-      LLine_SIu      1.0000E-08  m3/sec / Pascal
-      Rsource_SIu    1.0000E+08  Pa/m3/sec
+      Psource\_SIu    1.2201E+05  Pascals
+      LLine\_SIu      1.0000E-08  m3/sec / Pascal
+      Rsource\_SIu    1.0000E+08  Pa/m3/sec
       J            * 1.0200E-03  kg/m2
       Vhousing_m3  * 1.4616E-04  m3
       Kdrag        * 1.2000E+00  N / m2 / sec
@@ -373,6 +373,89 @@ Simulation with the modified parameters (Figure \ref{Fig:ModifParResults}) impro
       PHalt_dyn      1.1167E+05  Pascals
 
 \end{verbatim}
+
+\section{Parameter Estimation from Data}
+
+The following process can be used to fit parameters to an eversion data record where the record consists of
+the following data as a function of time:
+
+\begin{itemize}
+    \item Pressure in the tube storage chamber (Pa)
+    \item Air flow from source into tube storage chamber ($m^3/sec$)
+    \item Length of everting tube relative to chamber opening (m)
+    \item Velocity of eversion (derived) ($m/sec$)
+\end{itemize}
+
+These can be plotted multiple ways such as in Fig \ref{Fig:baselineResults} for example.
+
+We can then use the following procedure to iteratively tune some of the  model  parameters to match a
+particular experimental run.   Other parameters such as the tube reel radius, inertia, and braking
+friction are readily measured independently \cite{Andy Papers}  and not fit to the eversion experiments.
+
+\begin{itemize}
+    \item  Adjust load line pressure intercept.
+
+    {\bf Data Focus: } Pressure/Flow curves (upper left):\\
+    {\bf Procedure: } Adjust Psource\_SIu to move the load line and sim trajectory (they should overlap)
+    up and down.  Adjust Rsource\_SIu to adjust its slope (higher values slope down more).
+
+    \item Adjust stop-start thresholds.
+
+     {\bf Data Focus: } Pressure-Time curves (middle left):\\
+    {\bf Procedure: } Adjust PBA\_static up or down to match the pressure peaks in experiment (green dashed).
+    Adjust PHalt\_dyn  up or down to match the pressure valleys.
+
+    \item Adjust threshold taper.
+
+     {\bf Data Focus: } Pressure-Time curves (middle left):\\
+    {\bf Procedure: } Adjust Threshold Taper up or down to speed or slow down convergence of the thresholds.
+
+    \item Adjust Friction or drag
+
+     {\bf Data Focus: } Length-Time curves (middle right):\\
+    {\bf Procedure: } Adjust the viscus drag constant of tubing (K\_drag) up or down to match the overall slope
+    of the data trace.
+    Adjust max tubing length (Lmax) to match stopping point of data.
+
+    \item Experiment with other parameters or go back and repeat the procedure.
+
+\end{itemize}
+
+
+\section{Model Refinements}
+
+\subsection{Varying tube profile}
+
+While most ET research uses tubing of constant diameter, the effective diameter of an ET can vary with
+length in two main ways.   First, the tube can be fabricated with variable diameter by thermal welding of two sheets.
+Second, tubing of constant diameter may be everted into a tubular space of changing diameters.
+While the mechanics of eversion will in general be different in these two cases, we will initially ignore that difference
+and make tube diameter a function of eversion distance $L$, $V(L)$.
+
+Tube profiles
+
+Simulations
+
+
+\subsection{Multiple compartment model}
+So far, pressure and flow dynamics have considered the tubing supply chamber and the everted tubing to be a single compartment
+for computation of volume (Eqn \ref{eqOneCompartmentVol}) and pressure (Eqn \ref{eqOneCompartmentPress}) yielding a single
+flow (Eqn \ref{eqOneCompartmentflow}).
+
+In some experimental data [...details...]  we noted loops in the pressure-flow plane in which a growing ET deviated
+significantly from the source load line.   This indicates that air pressure does not instantaneously equilibrate
+along the ET, but instead takes time to flow from the tubing compartment down to new volume at the growing tip.
+A lumped parameter model of this flow can be formed of two compartments, one is the reel chamber, and the second is
+the tubing.   A flow resistance, $R_T(L)$, connects the two chambers and this resistance increases with length.
+The tubing volume increases with length (as it did in Eqn \ref{eqOneCompartmentVol}).
+
+Such a model is shown in Figure \ref{Fig:TwoCompartment}.
+
+\begin{figure}\centering
+\includegraphics[width=.75\textwidth]{Figure_TwoCompartment.png}
+\caption{Two compartment, lumped parameter model. }
+\label{Fig:TwoCompartment}
+\end{figure}
 
 %  Use name of bibliography files without .bib extension
 %\bibliography{brl}
