@@ -120,7 +120,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # F_ever
 
-        F_ever = max(0, 0.5 * P*np.pi*et.Ret(L,pd)**2)
+        #  only P-Patmosphere counts for eversion!!
+        F_ever = max(0, 0.5 * (P-pd['Patmosphere'])*np.pi*et.Ret(L,pd)**2)
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
