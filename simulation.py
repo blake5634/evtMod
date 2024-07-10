@@ -44,25 +44,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     ##  Initial Conditions
     #
     PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
+    PC2 = PC1*.9
     #
 
-    # Starting STATE
-    state = STUCK
-    #state = PRESSURE_TEST
-
-    # state var initial values (initial conditions)
-
-    N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
-    N2 = 0
-    fint = 0
-    fT = 0
-    L = 0       # ET length (m)
-    Lc = 0  #  length of tube crumpled in the housing
-    Ldot  = 0
-    Lddot = 0
-    theta = 0
-    th_dot = 0
-    th_ddot = 0
 
     # declare data storage
     #2Compartment
@@ -100,25 +84,65 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     # Detect thresholds too close
     CONVERGED = False
 
+    #########################################################
+    #
+    #   Initial Conditions
+    #
+
+    # Starting STATE
+    state = STUCK
+    #state = PRESSURE_TEST
+
+    # state var initial values (initial conditions)
+
+    N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
+    N2 = PC2*pd['Vhousing_m3']/pd['RT']
+    et.Vet(0.002,pd)  # initialize everting tube computation
+    fint = 0
+    fT = 0
+    L = 0.002       # ET length (m)
+    Lc = 0  #  length of tube crumpled in the housing
+    Ldot  = 0
+    Lddot = 0
+    theta = 0
+    th_dot = 0
+    th_ddot = 0
     time = np.arange(TMIN,TMAX,dt)
     tdata = []
     for t in time:
         tdata.append(t)  # in case of error exit
         #breakpoint()
 
-        # Eq 1
-        #Voltot = pd['Vhousing_m3'] + L*np.pi*et.Ret(L,pd)**2
-        #Voltot = pd['Vhousing_m3'] + et.Vet(L,pd)
 
-        # Eq 2   Solve PV = NRT (ideal gas equation)
-        #P = N*pd['RT'] / Voltot
-
-        #2Componartment
+        # Solve Pressures
+        #2Compartment
         PC1 = N1*pd['RT'] / pd['Vhousing_m3']
-        if et.Vet.et_vol > 1.0E-5:   #get et volume (no integrate)
-            PC2 = N2*pd['RT'] / et.Vet.et_vol
+
+        #StartLen = 0.010
+        #if L < StartLen:   #
+            #PC2 = pd['Patmosphere']
+        #else:
+            #PC2 = N2*pd['RT'] / et.Vet.et_vol
+        PC2 = N2*pd['RT'] / et.Vet.et_vol
+
+        #if t > 0.828:
+            #print(f't: {t:6.4f} state: {statenames[state]}  PC1: {PC1:7.1f} PC2: {PC2:7.1f}')
+            #breakpoint()
+
+        # Eq 2.5
+        #fsource = (pd['Psource_SIu'] - P)/pd['Rsource_SIu']
+        fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
+        if PC2>=PC1:  #meters
+            fT = et.Vet.et_vol * 0.005  # Ldot = constant 0.05e.g.
         else:
-            PC2 = PC1
+            #fT = (PC1-PC2)/et.RT(L,pd)
+            fT = (PC1-PC2)/pd['Rsource_SIu']
+        fint = fsource - fT
+
+        # 2Compartment:
+        N1dot = fint * uc['moles_per_m3']
+        N2dot = fT   * uc['moles_per_m3']
+
 
         # Eq 5.1
         Fcoulomb = Tau_brake(pd['Tau_coulomb'], th_dot, pd)
@@ -133,7 +157,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # F_ever
         # 2Compartment
-        F_ever = max(0, 0.5 * PC2*np.pi*et.Ret(L,pd)**2)
+        F_ever = max(0, 0.5 * PC1 * np.pi*et.Ret(L,pd)**2) # C2 pres. applied to tip
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
@@ -165,29 +189,12 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         else:
             error('Invalid State: '+state)
 
-        # Eq 2.5
-        #sourceFlowIn = (pd['Psource_SIu'] - P)/pd['Rsource_SIu']
-        sourceFlowIn = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
-        if et.RT(L,pd) < 1.0E3:
-            fT   = et.Vet.et_vol * Ldot
-        else:
-            fT = (PC1-PC2)/et.RT(L,pd)
-        fint = sourceFlowIn - fT
-
-        # Eq 3
-        #ETGrowthFlow = Ldot*area_m2    # vol is growing so N is growing
-        #Ndot = sourceFlowIn * uc['moles_per_m3']  # w
-
-        # 2Compartment:
-        N1dot = fint
-        N2dot = fT
-
         # Eq 3.5
         #  thresholds seem to grow closer together with eversion
         # lower threshold (Halting)
-        Pth1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
+        Pth1 = pd['PHalt_dyn'] # + pd['Threshold Taper'] * L
         # upper threshold (break-away)
-        Pth2 = pd['PBA_static'] - pd['Threshold Taper'] * L
+        Pth2 = pd['PBA_static'] #- pd['Threshold Taper'] * L
 
         PdTol = 0.0075
         midpoint = (pd['PBA_static'] + pd['PHalt_dyn'])/2.0
@@ -208,7 +215,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 4
 
         if PRESSURE_BREAK:
-            if PC1 > Pth2:
+            if PC1 > Pth2:       # use tube (PC2) OR housing (PC1) pressure(!)
                 state = GROWING
             if PC1 < Pth1:
                 state = STUCK
@@ -225,7 +232,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # tube eversion velocity
         ldot.append(Ldot)
         # flow from source
-        f.append(sourceFlowIn)
+        f.append(fsource)
         #ft.append(Ldot * np.pi*et.Ret(L,pd)**2)  #flow out into the tube
         #2Compartment
         ft.append(fT)

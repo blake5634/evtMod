@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 #   2Compartment model functions
 #
 def RT(L,pd):     # airflow resistance of E tube vs length
-    r = L * pd['ET_R_per_M']
+    r =  pd['ET_R_per_M'] * L / pd['Lmax']
     return r
 
 
@@ -33,15 +33,17 @@ def Ret(L,pd):
         error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
 
 def Vet(L,pd):      # volume of ET
+    if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
+        Vet.LP = 0.002  # 2mm length
+        Vet.et_vol = Vet.LP * pd['ET_radius']**2 * np.pi
     Vet.dL = L-Vet.LP
     Vet.et_dVol_dL = np.pi* Ret(L,pd)**2        #dV/dL
     Vet.et_vol +=    Vet.et_dVol_dL * Vet.dL
     Vet.LP = L
     return Vet.et_vol
 # initialize 'static' variables (func attribs)
-Vet.LP=0.0                # previous L value
-Vet.et_dVol_dL = 0.0      # dV/dL
-Vet.et_vol = 0.0          # volume of Everting tube
+# flag for initial condition setting
+Vet.LP= -1              # previous L value (IC 2mm)
 
 def etr_box(L,pd):
     if L < 0.15:

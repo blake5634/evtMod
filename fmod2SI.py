@@ -168,11 +168,11 @@ state = STUCK
 
 #return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
 
-(time,l,lc,ldot,f, fet, pc1,pc2, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+(time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
 
-FPLOT = False
+FPLOT = True
 PltTMIN = t1
 PltTMAX = t2
 
@@ -263,9 +263,10 @@ axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
 axs[2,0].set_ylim( 0.0010, 0.0020 )
 
-axs[0,1].plot(time, f)
+axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
 axs[0,1].set_ylabel('Source Flow (m3/sec)')
+axs[0,1].legend(['Source Flow', 'Tube Flow'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
 axs[0,1].set_ylim(      0, 0.00020 )
 
