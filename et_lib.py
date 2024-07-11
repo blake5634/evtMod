@@ -13,8 +13,8 @@ def ResET(L,pd):
     Rmin = 1.0E4 # 10% of Rsource
     r =  pd['ET_Res_per_m'] * L / pd['Lmax'] + Rmin
     #print(f'                    ET Resistance: L:{L:7.4f} r: {r:6.3E} Rsource:{pd["Rsource_SIu"]:6.3E}')
-    rhack = 0.1*pd['Rsource_SIu']
-    print(f'      FIXED         ET Resistance: rhack: {rhack:6.3E}')
+    rhack = pd['ET_Res_ratio']*pd['Rsource_SIu']
+    #print(f'      FIXED         ET Resistance: rhack: {rhack:6.3E}')
     return rhack
 
 
@@ -38,7 +38,7 @@ def Ret(L,pd):
     else:
         error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
 
-tubeLinit = 0.00005
+tubeLinit = 0.0025
 def Vet(L,pd):      # volume of ET
     if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
         Vet.LP = tubeLinit  # 2mm length

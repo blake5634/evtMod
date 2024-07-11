@@ -194,7 +194,7 @@ if FPLOT:
     plt.legend(['F_Eversion','F_Coulomb','F_Drag','F_Inertia','Crumple'])
     ax = plt.gca()
     ax.set_xlim(PltTMIN, PltTMAX)
-    ax.set_ylim(-100,300)
+    ax.set_ylim(-1,5)
 
 
 

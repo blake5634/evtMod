@@ -103,6 +103,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     Lc = 0  #  length of tube crumpled in the housing
     Ldot  = 0
     Lddot = 0
+    N1 = PC1*pd['Vhousing_m3']/pd['RT']
+    N2 = PC2* et.Vet.et_vol/pd['RT']
     N1dot = 0
     N2dot = 0
     theta = 0
@@ -129,7 +131,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 2.5
         #fsource = (pd['Psource_SIu'] - P)/pd['Rsource_SIu']
         fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
-        if t>0.050:
+        if True:
             if PC2>=PC1:
             #if False:
                 fT = et.Vet.et_vol * Ldot # Ldot = constant 0.05e.g.
@@ -156,7 +158,6 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         Fcoulomb = Tau_brake(pd['Tau_coulomb'], th_dot, pd)
         F_c.append(Fcoulomb)
 
-
         #
         # F_dr
         F_dr = F_drag(L,Ldot,pd)     # material speed is 2x Ldot
@@ -171,7 +172,6 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #  Crumple length
         Lc = max(0, pd['rReel']*theta - L)
         lc.append(Lc)
-
 
         #tubing mass
         Mt =  (L+0.3) *  pd['et_MPM']
@@ -189,7 +189,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         elif state == STUCK:
             # smooth slow down
-            alpha = 2000 * pd['dt']  # empirical fit
+            alpha = 20 / pd['dt']  # empirical fit
             Lddot =   -1 * max(0, alpha * Ldot)
 
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'],th_dot,pd)/pd['J']
@@ -233,23 +233,20 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             if F_ever < F1:
                 state = STUCK
 
-
         # Record data
-        # tube length
-        l.append(L)
-        # tube eversion velocity
-        ldot.append(Ldot)
-        # flow from source
-        f.append(fsource)
+        l.append(L)                      # tube length
+        ldot.append(Ldot)                # tube eversion velocity
+        f.append(fsource)                # flow from source
+
         #ft.append(Ldot * np.pi*et.Ret(L,pd)**2)  #flow out into the tube
-        #2Compartment
-        ft.append(fT)
+
+        # 2Compartment
+        ft.append(fT)                    # tubing airflow
         # Pressure
-        Phous.append(PC1) # Housing pressure Pa
-        Ptube.append(PC2) # Tubing Pressure
-        # Volume
-        vol1.append(pd['Vhousing_m3']) # query the volume
-        vol2.append(et.Vet.et_vol)
+        Phous.append(PC1)                # Housing pressure Pa
+        Ptube.append(PC2)                # Tubing Pressure
+        vol1.append(pd['Vhousing_m3'])   # right now housing vol is constant(!)
+        vol2.append(et.Vet.et_vol)       # query the Etube volume
 
         # Integrate the state variables.
         Ldot   += Lddot   * dt
@@ -257,13 +254,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         L      += Ldot    * dt
         th_dot += th_ddot * dt
         theta  += th_dot  * dt
-        # 2Component state integration
+        # 2Compartment state integration
         N1     += N1dot   * dt
         N2     += N2dot   * dt
-        et.Vet(L,pd)  #integrate et volume
+        et.Vet(L,pd)             #integrate et volume
 
-
-
-        if error_count > 10:
-            break
     return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results
