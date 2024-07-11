@@ -39,20 +39,14 @@ def Tau_brake(Tc, th_dot, pd):
 
 def simulate(pd,uc,tmin=0,tmax=8.0):
     error_count = 0
-    #########
-    #
-    ##  Initial Conditions
-    #
-    PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
-    PC2 = PC1*.9
-    #
 
 
     # declare data storage
     #2Compartment
     Phous = []      # Housing Pressure (Pa)
     Ptube = []      # tubing tip pressure
-    vol = []    # Volume (m3)
+    vol1 = []    # Housing Volume (m3)
+    vol2 = []   # tubing vol
     f = []      # SourceFlow (m3/sec)  (lower case f = flow)
     fint = []   # internal flow to housing
     ft = []     # Flow out due to everting
@@ -94,16 +88,23 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     #state = PRESSURE_TEST
 
     # state var initial values (initial conditions)
-
+    PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
+    PC2 = PC1
+    #
+    et.Vet(et.tubeLinit,pd)  # initialize everting tube computation
     N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
-    N2 = PC2*pd['Vhousing_m3']/pd['RT']
-    et.Vet(0.002,pd)  # initialize everting tube computation
+    N2 = PC2*et.Vet.et_vol / pd['RT']
+    #print(f'Initial Cond:  PC1: {PC1}, PC2: {PC2}')
+    #print(f'Initial Cond:  N1: {N1},   N2: {N2}')
+    #x = input('pause: (cr)')
     fint = 0
     fT = 0
-    L = 0.002       # ET length (m)
+    L = et.tubeLinit       # ET length (m)
     Lc = 0  #  length of tube crumpled in the housing
     Ldot  = 0
     Lddot = 0
+    N1dot = 0
+    N2dot = 0
     theta = 0
     th_dot = 0
     th_ddot = 0
@@ -117,12 +118,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Solve Pressures
         #2Compartment
         PC1 = N1*pd['RT'] / pd['Vhousing_m3']
-
-        #StartLen = 0.010
-        #if L < StartLen:   #
-            #PC2 = pd['Patmosphere']
-        #else:
-            #PC2 = N2*pd['RT'] / et.Vet.et_vol
+        #if PC2 > pd['Psource_SIu']:
+        #if t>0.049:
         PC2 = N2*pd['RT'] / et.Vet.et_vol
 
         #if t > 0.828:
@@ -132,17 +129,28 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 2.5
         #fsource = (pd['Psource_SIu'] - P)/pd['Rsource_SIu']
         fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
-        if PC2>=PC1:  #meters
-            fT = et.Vet.et_vol * 0.005  # Ldot = constant 0.05e.g.
+        if t>0.050:
+            if PC2>=PC1:
+            #if False:
+                fT = et.Vet.et_vol * Ldot # Ldot = constant 0.05e.g.
+            else:
+                fT = (PC1-PC2)/et.ResET(L,pd)
+                #fT = (PC1-PC2)/pd['Rsource_SIu']
         else:
-            #fT = (PC1-PC2)/et.RT(L,pd)
-            fT = (PC1-PC2)/pd['Rsource_SIu']
+            fT = 0.0000002  # HACK
+
         fint = fsource - fT
 
         # 2Compartment:
         N1dot = fint * uc['moles_per_m3']
         N2dot = fT   * uc['moles_per_m3']
 
+        #print(f'{t:6.4f}  Ptube: {PC2}  Phouse: {PC1} etVol: {et.Vet.et_vol:5.2E}')
+        #print(f"        tube flow: {(PC1-PC2)/et.ResET(L,pd):10.5f}, source flow: { (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']:10.5f}")
+        #print(f'        N2dot: {N2dot:10.5f}      N1dot: {N1dot:10.5f}')
+        #print(f'           N2: {N2:10.5f}         N1: {N1:10.5f}')
+
+        #breakpoint()
 
         # Eq 5.1
         Fcoulomb = Tau_brake(pd['Tau_coulomb'], th_dot, pd)
@@ -157,7 +165,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # F_ever
         # 2Compartment
-        F_ever = max(0, 0.5 * PC1 * np.pi*et.Ret(L,pd)**2) # C2 pres. applied to tip
+        F_ever = max(0, 0.5 * (PC2-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # C2 pres. applied to tip
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
@@ -215,9 +223,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 4
 
         if PRESSURE_BREAK:
-            if PC1 > Pth2:       # use tube (PC2) OR housing (PC1) pressure(!)
+            if PC2 > Pth2:       # use tube (PC2) OR housing (PC1) pressure(!)
                 state = GROWING
-            if PC1 < Pth1:
+            if PC2 < Pth1:
                 state = STUCK
         else:                 # switch states based on Force instead of pressure
             if F_ever > F2:
@@ -240,8 +248,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         Phous.append(PC1) # Housing pressure Pa
         Ptube.append(PC2) # Tubing Pressure
         # Volume
-        vol.append(pd['Vhousing_m3'] + et.Vet.et_vol) # query the volume
-
+        vol1.append(pd['Vhousing_m3']) # query the volume
+        vol2.append(et.Vet.et_vol)
 
         # Integrate the state variables.
         Ldot   += Lddot   * dt
@@ -258,4 +266,4 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         if error_count > 10:
             break
-    return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
+    return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results

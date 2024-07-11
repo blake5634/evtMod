@@ -7,9 +7,15 @@ import matplotlib.pyplot as plt
 #
 #   2Compartment model functions
 #
-def RT(L,pd):     # airflow resistance of E tube vs length
-    r =  pd['ET_R_per_M'] * L / pd['Lmax']
-    return r
+
+# flow resistance of everting tube as a function of Length
+def ResET(L,pd):
+    Rmin = 1.0E4 # 10% of Rsource
+    r =  pd['ET_Res_per_m'] * L / pd['Lmax'] + Rmin
+    #print(f'                    ET Resistance: L:{L:7.4f} r: {r:6.3E} Rsource:{pd["Rsource_SIu"]:6.3E}')
+    rhack = 0.1*pd['Rsource_SIu']
+    print(f'      FIXED         ET Resistance: rhack: {rhack:6.3E}')
+    return rhack
 
 
 #
@@ -32,9 +38,10 @@ def Ret(L,pd):
     else:
         error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
 
+tubeLinit = 0.00005
 def Vet(L,pd):      # volume of ET
     if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
-        Vet.LP = 0.002  # 2mm length
+        Vet.LP = tubeLinit  # 2mm length
         Vet.et_vol = Vet.LP * pd['ET_radius']**2 * np.pi
     Vet.dL = L-Vet.LP
     Vet.et_dVol_dL = np.pi* Ret(L,pd)**2        #dV/dL
@@ -400,7 +407,7 @@ def setup_params():
     pu['rReel'] = 'm'
 
     #  Reel friction (Coulomb type)
-    Tau_coulomb = [0.0029, 0.0174, 0.0694][1] # N m :   Table II
+    Tau_coulomb= [ 0.0029, 0.0174, 0.0694][1] # N m :   Table II
     pd['Tau_coulomb'] = Tau_coulomb
     pu['Tau_coulomb'] = 'Nm'
 
@@ -446,8 +453,8 @@ def setup_params():
     #
     #  Tube airflow resistance
     #
-    pd['ET_R_per_M'] = 0.5E8      # airflow resistance per meter
-    pu['ET_R_per_M'] = 'Pa/m2/sec'
+    pd['ET_Res_per_m'] = 1.0E7      # airflow resistance per meter
+    pu['ET_Res_per_m'] = 'Pa/m2/sec'
 
     #
     #  FLOW load line for source
@@ -510,7 +517,7 @@ def setup_params():
 
 
     # simulation details
-    pd['dt'] = 0.0025
+    pd['dt'] = tubeLinit5
     pu['dt'] = 'sec'
 
 

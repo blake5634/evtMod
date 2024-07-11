@@ -55,7 +55,11 @@ if len(args) == 1:
     pu = et.loadPUnits(paramDir, 'units_'+defaultParamName)
 
 else:
-    paramFileName = args[1]
+    paramFileNo = args[1]
+    paramFileName = 'Set'+paramFileNo+'Params.txt'
+    if paramFileNo not in '012345678':
+        print('unknown param file: ',paramFileName, '  ...  quitting')
+        quit()
     print('loading ',paramFileName)
     pd = et.loadParams(paramDir, paramFileName)
 
@@ -168,11 +172,11 @@ state = STUCK
 
 #return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
 
-(time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+(time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
 
-FPLOT = True
+FPLOT = False
 PltTMIN = t1
 PltTMAX = t2
 
@@ -234,9 +238,11 @@ axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined ab
 #plot_curve_with_arrows2(fet, p, axs[0,0], 50,color=clrs[0])
 
 # plot simulation trajectory
-et.plot_curve_with_arrows2(f, pc1, axs[0,0], 500, color=clrs[0])
-axs[0,0].legend(['Source Load Line',  'Trajectory'])
-axs[0,0].set_xlabel('Source Flow (m3/sec)')
+#et.plot_curve_with_arrows2(f, pc1, axs[0,0], 500, color=clrs[0]) # housing pres.
+#et.plot_curve_with_arrows2(f, pc2, axs[0,0], 500, color=clrs[0]) # tube pres.
+axs[0,0].plot(f,pc1,f,pc2)
+axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
+axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(0,0.0003)
 plt.sca(axs[0,0])
@@ -250,22 +256,23 @@ axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
+pplotmax = (pd['Psource_SIu']-pd['Patmosphere'])*1.1 + pd['Patmosphere']
 axs[1,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
 #  plot the eversion thresholds (function of L)
 axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
 axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
 
 # Plot 3
-axs[2,0].plot(time, vol )
-axs[2,0].legend(['Vol (m3)'])
+axs[2,0].plot(time, vol1, time, vol2 )
+axs[2,0].legend(['Vhousing', 'Vtube'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
-axs[2,0].set_ylim( 0.0010, 0.0020 )
+#axs[2,0].set_ylim( 0.0012, 0.0022 )
 
 axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
-axs[0,1].set_ylabel('Source Flow (m3/sec)')
+axs[0,1].set_ylabel('Flow (m3/sec)')
 axs[0,1].legend(['Source Flow', 'Tube Flow'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
 axs[0,1].set_ylim(      0, 0.00020 )
