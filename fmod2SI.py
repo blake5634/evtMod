@@ -27,6 +27,7 @@ uc = {
 }
 
 
+paramDir = 'evtParams/'
 unitsConvfilename = 'unitConv.txt'
 defaultParamName = 'InitialParams.txt'
 defaultUnitsName = 'units_'+defaultParamName
@@ -44,8 +45,6 @@ defaultUnitsName = 'units_'+defaultParamName
 args = sys.argv
 
 # load parameter file
-
-paramDir = 'evtParams/'
 
 if len(args) == 1:
     paramFileName = defaultParamName

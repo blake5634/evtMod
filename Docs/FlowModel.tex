@@ -67,6 +67,52 @@ Blake Hannaford
 \end{centering}
 
 \section{Introduction}
+
+\subsection{Literature Review}
+
+\subsection{Observed Eversion Characteristics}
+
+\begin{figure}[h]\centering
+\includegraphics[width=.475\textwidth]{ExpDataExampleAll.png}
+\includegraphics[width=.475\textwidth]{ExpDataExample.png}
+\caption{Experimental data displaying dynamic characteristics of loaded eversion.  All data (Left), single example (Right) (See Lewis, Fig 9. Loads: high inertia, high Friction)}
+\label{Fig:experData}
+\end{figure}
+
+The theory of everting tubes has been reviewed above.   Complex dynamic behaviors of a tube everting
+inside
+a straight tube of approximately the same diameter as the inflated tubing material were measured
+by Lewis \cite{xxxx} (Figure \ref{Fig:experData}, Left panel).   One experiment which displays several interesting everting characteristics
+is shown in Figure \ref{Fig:experData}, Right Panel.
+
+Referring first to the length-vs-time plot (middle right), we see a start-stop or staircase
+behavior sometimes seen with eversion under relatively constant input pressure.   It
+should be noted that this particular eversion experiment was loaded by reel inertia and
+by friction applied to the reel.  Velocity (lower right) indicates a series of peaks where the eversion
+``breaks-free" but then stops again a short time later.
+
+Pressure (middle left) first grows for about 1 second without corresponding eversion motion, and
+then oscillates in approximate synchrony with the velocity peaks.
+
+Finally, the pressure-flow phase plot (top left) shows diagonal slope (the trajectory proceeds from
+lower right (high initial flow with low pressure) to upper left (lower flow, higher pressure).
+The trajectory makes loops to lower pressures and back up to the slope at higher pressures.  These
+loops correspond in time to the pressure oscillations (middle left).
+
+These dynamic characteristics (start-stop bursting, pressure oscillations, diagonal phase trajectory, and
+downward loops) were not all present under all experimental conditions.
+
+\subsection{Simulation Goals}
+The goals of this simulation are:
+\begin{enumerate}
+  \item Increase fundamental understanding of the eversion process.
+  \item Identify key parameters capable of representing the complex dynamic characteristics above.
+  \item Identify values and value ranges for unknown parameters which fit individual experiments.
+  \item Clearly segregate the parameters into known, measured quantities vs. free parameters.
+  \item Codify an efficient manual method for parameter identification.
+\end{enumerate}
+
+\subsection{Dynamic Model}
 The dynamic model of an eversion drive system includes;
 \begin{itemize}
   \item An everting tube of length $L$ and growth rate $\dot{L}$.
@@ -124,15 +170,6 @@ After setting initial conditions (see below), we model eversion dynamics by:
 
 \noindent
 Specifically:
-
-%     # Eq 5.1
-%     Fcoulomb = Tau_coulomb / rReel\_SIu
-%     F_c.append(Fcoulomb)
-%
-%     # Eq 5.2
-%     #Fdrag = L * Kdrag * 2.0 * Ldot  # material speed is 2x Ldot
-%     F_d.append(Fdrag(L,Ldot))
-%     F_j.append(Lddot*J/rReel\_SIu**2)
 
 \begin{equation}\label{eqOneCompartmentVol}
 V_t = V_{housing} - V_{contents} + L  A
@@ -445,7 +482,8 @@ flow (Eqn \ref{eqOneCompartmentflow}).
 In some experimental data [...details...]  we noted loops in the pressure-flow plane in which a growing ET deviated
 significantly from the source load line.   This indicates that air pressure does not instantaneously equilibrate
 along the ET, but instead takes time to flow from the tubing compartment down to new volume at the growing tip.
-A lumped parameter model of this flow can be formed of two compartments, one is the reel chamber, and the second is
+A lumped parameter model of this flow can be formed of two compartments, one is the reel housing from
+which the tube is everted, and the second is
 the tubing.   A flow resistance, $R_T(L)$, connects the two chambers and this resistance increases with length.
 The tubing volume increases with length (as it did in Eqn \ref{eqOneCompartmentVol}).
 
@@ -467,9 +505,15 @@ V_{t}          &\to \{V_{housing}, V_T(L)\}\\
 f_{source}     &\to \{f_{source}, f_{int}, f_{T} \}  \\
 P              &\to \{ P_{C1}, P_{C2} \}
 \end{aligned}
-\eeq
+\eeq where
+$N_1$ and $N_2$ are the molar quantity of air in the housing and tube respectively,
+$f_i$ are the respective flows indicated in Figure \ref{Fig:TwoCompartment},
+and
+$P_{C1}$ and $P_{C2}$ are the pressures in the housing and tube respectivly.
 
-We then have new equations to eliminate Equation \ref{eqOneCompartmentPress}, and replace or expand Equations \ref{eqOneCompartmentPress}, \ref{eqOneCompartmentflow}, and \ref{eqOneCompartmentNdot}
+
+
+We then have new equations to replace or expand Equations \ref{eqOneCompartmentPress}, \ref{eqOneCompartmentflow}, and \ref{eqOneCompartmentNdot}
 as follows:
 
 \beq
@@ -500,6 +544,22 @@ f_{T} = (P_{C1}-P_{C2}) /  R_{T}(L)
 f_{int} = f_{source} - f_T
 \eeq
 
+\section{Results of Two Compartment Model}
+
+\begin{figure}[h]\centering
+\includegraphics[width=.75\textwidth]{2CompSimulationSet8.png}
+\caption{Two compartment model compared with simulation (See Lewis, Fig 9, hiI, hiTf)}
+\label{Fig:2Comp}
+\end{figure}
+
+
+The data sets were simulated with the two-compartment version of the model.  Volume of the ET was
+a function of length, $L$.  Flow resistance between reel housing (compartment 1) and
+the ET was approximated by a ratio of Rsource\_SIu (typically 0.1).
+
+Results from Tube 1, Trial 2 (hi inertia, hi friction) are given in Figure \ref{Fig:2Comp}.
+Notably, the simulated tube pressure deviates below the source loadline during the start-stop
+oscillations similar to the experimental data.
 %  Use name of bibliography files without .bib extension
 %\bibliography{brl}
 \end{document}
