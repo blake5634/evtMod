@@ -5,7 +5,7 @@
 \documentclass[letterpaper]{article}
 
 % Uncomment for bibliog.
-%\bibliographystyle{unsrt}
+\bibliographystyle{unsrt}
 
 \usepackage{graphicx}
 \usepackage{lineno}
@@ -70,6 +70,23 @@ Blake Hannaford
 
 \subsection{Literature Review}
 
+Prior studies of eversion mechanics have relied on the assumption of constant
+pressure over time and throughout the extent of the device.
+\cite{blumenschein2017modeling}
+Applied biomechanical models for plant shoot growth to analogous physical
+processes in everting tubes and combined it with experimental measurements.
+Notably, for their speeds and design parameters, they did not find an
+effect of air flow drag caused by filling the everting tube.
+\cite{Hawkes2017} Performed mostly quasi-static modeling of ETs
+but studied the important buckling phenomena in complex geometric
+environments.
+\cite{vartholomeos2024lumped} created a dynamic, lumped parameter
+mechanical model
+of eversion with special emphasis on friction properties between
+an everting tube and its environment as well as a second contact
+between the tube and a rod (catheter) in contact with the
+everted material.
+
 \subsection{Observed Eversion Characteristics}
 
 \begin{figure}[h]\centering
@@ -79,7 +96,7 @@ Blake Hannaford
 \label{Fig:experData}
 \end{figure}
 
-The theory of everting tubes has been reviewed above.   Complex dynamic behaviors of a tube everting
+Some theory of everting tubes has been reviewed above.   Complex dynamic behaviors of a tube everting
 inside
 a straight tube of approximately the same diameter as the inflated tubing material were measured
 by Lewis \cite{xxxx} (Figure \ref{Fig:experData}, Left panel).   One experiment which displays several interesting everting characteristics
@@ -561,6 +578,6 @@ Results from Tube 1, Trial 2 (hi inertia, hi friction) are given in Figure \ref{
 Notably, the simulated tube pressure deviates below the source loadline during the start-stop
 oscillations similar to the experimental data.
 %  Use name of bibliography files without .bib extension
-%\bibliography{brl}
+\bibliography{flowMOdel}
 \end{document}
 

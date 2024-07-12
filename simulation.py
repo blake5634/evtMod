@@ -227,7 +227,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
                 state = GROWING
             if PC2 < Pth1:
                 state = STUCK
-        else:                 # switch states based on Force instead of pressure
+        else:                 # switch states based on ET Force instead of pressure
             if F_ever > F2:
                 state = GROWING
             if F_ever < F1:
