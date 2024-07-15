@@ -71,6 +71,8 @@ for datadir in dataDirNames:
             cto.error('No brl_data files found')
         for f in files:
             #print('found: ',f)
+            if '.zip' in f:
+                next
             if '.csv' in f :
                 filenameroots.append(str(f).replace('.csv',''))
             if  '_meta.json' in f:
@@ -79,6 +81,26 @@ for datadir in dataDirNames:
         filenameroots = list(dict.fromkeys(filenameroots)) # elim dupes
         files += tfiles
         fnRoots += filenameroots
+
+print('file set: ', files)
+###################################################
+#
+#   Select Files
+#
+###################################################
+for i,fn in enumerate(files):
+    fn2 = fn.split('/')[1]
+    print(f'{i:3}  {fn2}')
+
+sel = str(input('Select file numbers (-1) for all: '))
+nums = sel.split()
+fset=[] # place to collect selected filenames
+if int(nums[0]) < 0:
+    fset = range(len(files))
+else:
+    for n in nums:
+        fset.append(int(n))
+
 
 ###################################################
 #
@@ -111,8 +133,11 @@ PltVoMAX = prd['Volume'][1]
 # Create a figure with subplots
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
 
-for i,fn in enumerate(files):
-    #print(f'{i:5}', fn)
+#for i,fn in enumerate(files):
+for fnum in fset:
+    fn = files[int(fnum)]
+
+    print(f'{i:5}', fn)
 
     #fn = dataDirName + '/' + fn
 
