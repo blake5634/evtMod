@@ -39,33 +39,17 @@ def Tau_brake(Tc, th_dot, pd):
 
 def simulate(pd,uc,tmin=0,tmax=8.0):
     error_count = 0
-    #########
-    #
-    ##  Initial Conditions
-    #
-    P = pd['Patmosphere']  # 1 atmosphere in Pa
-    #
 
-    # Starting STATE
-    state = STUCK
-    #state = PRESSURE_TEST
-
-    # state var initial values
-
-    N = P*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
-    L = 0       # ET length (m)
-    Lc = 0  #  length of tube crumpled in the housing
-    Ldot  = 0
-    Lddot = 0
-    theta = 0
-    th_dot = 0
-    th_ddot = 0
 
     # declare data storage
-    p = []      # Pressure (Pa)
-    vol = []    # Volume (m3)
+    #2Compartment
+    Phous = []      # Housing Pressure (Pa)
+    Ptube = []      # tubing tip pressure
+    vol1 = []    # Housing Volume (m3)
+    vol2 = []   # tubing vol
     f = []      # SourceFlow (m3/sec)  (lower case f = flow)
-    fet = []    # Flow out due to everting
+    fint = []   # internal flow to housing
+    ft = []     # Flow out due to everting
     l = []      # L (m)
     lc = []     # Len of crumple material (m)
     ldot = []   # velocity (m/sec)
@@ -94,23 +78,79 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     # Detect thresholds too close
     CONVERGED = False
 
+    #########################################################
+    #
+    #   Initial Conditions
+    #
+
+    # Starting STATE
+    state = STUCK
+    #state = PRESSURE_TEST
+
+    # state var initial values (initial conditions)
+    PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
+    PC2 = PC1
+    #
+    et.Vet(0.0,pd)  # initialize everting tube computation (L param not used)
+    N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
+    N2 = PC2*et.Vet.et_vol / pd['RT']
+    #print(f'Initial Cond:  PC1: {PC1}, PC2: {PC2}')
+    #print(f'Initial Cond:  N1: {N1},   N2: {N2}')
+    #x = input('pause: (cr)')
+    fint = 0
+    fT = 0
+    L = et.tubeLinit       # ET length (m)
+    Lc = 0  #  length of tube crumpled in the housing
+    Ldot  = 0
+    Lddot = 0
+    N1 = PC1*pd['Vhousing_m3']/pd['RT']
+    N2 = PC2* et.Vet.et_vol/pd['RT']
+    N1dot = 0
+    N2dot = 0
+    theta = 0
+    th_dot = 0
+    th_ddot = 0
     time = np.arange(TMIN,TMAX,dt)
     tdata = []
     for t in time:
         tdata.append(t)  # in case of error exit
         #breakpoint()
 
-        # Eq 1
-        #Voltot = pd['Vhousing_m3'] + L*np.pi*et.Ret(L,pd)**2
-        Voltot = pd['Vhousing_m3'] + et.Vet(L,pd)
 
-        # Eq 2   Solve PV = NRT (ideal gas equation)
-        P = N*pd['RT'] / Voltot
+        # Solve Pressures
+        #2Compartment
+        PC1 = N1*pd['RT'] / pd['Vhousing_m3']
+        PC2 = N2*pd['RT'] / et.Vet.et_vol
+
+        # Eq 2.5
+        fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
+        # if True:
+        #     if PC2>=PC1:
+        #     #if False:
+        #         fT = et.Vet.et_vol * Ldot # Ldot = constant 0.05e.g.
+        #     else:
+        #         fT = (PC1-PC2)/et.ResET(L,pd)
+        #         #fT = (PC1-PC2)/pd['Rsource_SIu']
+        # else:
+        #     fT = 0.0000002  # HACK
+        #
+        fT = (PC1-PC2)/et.ResET(L,pd)
+        fint = fsource - fT
+
+        # 2Compartment:
+        N1dot = fint * uc['moles_per_m3']
+        N2dot = fT   * uc['moles_per_m3']
+
+        #print(f'{t:6.4f}  Ptube: {PC2}  Phouse: {PC1} etVol: {et.Vet.et_vol:5.2E}')
+        #print(f"        tube flow: {(PC1-PC2)/et.ResET(L,pd):10.5f}, source flow: { (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']:10.5f}")
+        #print(f'        N2dot: {N2dot:10.5f}      N1dot: {N1dot:10.5f}')
+        #print(f'           N2: {N2:10.5f}         N1: {N1:10.5f}')
+
+        #breakpoint()
 
         # Eq 5.1
         Fcoulomb = Tau_brake(pd['Tau_coulomb'], th_dot, pd)
         F_c.append(Fcoulomb)
-
 
         #
         # F_dr
@@ -119,15 +159,13 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         F_j.append(-Lddot*pd['J']/pd['rReel']**2)
 
         # F_ever
-
-        #  only P-Patmosphere counts for eversion!!
-        F_ever = max(0, 0.5 * (P-pd['Patmosphere'])*np.pi*et.Ret(L,pd)**2)
+        # 2Compartment
+        F_ever = max(0, 0.5 * (PC2-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # C2 pres. applied to tip
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
         Lc = max(0, pd['rReel']*theta - L)
         lc.append(Lc)
-
 
         #tubing mass
         Mt =  (L+0.3) *  pd['et_MPM']
@@ -145,7 +183,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         elif state == STUCK:
             # smooth slow down
-            alpha = 2000 * pd['dt']  # empirical fit
+            alpha = 20 / pd['dt']  # empirical fit
             Lddot =   -1 * max(0, alpha * Ldot)
 
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'],th_dot,pd)/pd['J']
@@ -153,30 +191,23 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         else:
             error('Invalid State: '+state)
 
-        # Eq 2.5
-        sourceFlowIn = (pd['Psource_SIu'] - P)/pd['Rsource_SIu']
-
-        # Eq 3
-        #ETGrowthFlow = Ldot*area_m2    # vol is growing so N is growing
-        Ndot = sourceFlowIn * uc['moles_per_m3']  # w
-
         # Eq 3.5
         #  thresholds seem to grow closer together with eversion
         # lower threshold (Halting)
-        P1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
+        Pth1 = pd['PHalt_dyn'] # + pd['Threshold Taper'] * L
         # upper threshold (break-away)
-        P2 = pd['PBA_static'] - pd['Threshold Taper'] * L
+        Pth2 = pd['PBA_static'] #- pd['Threshold Taper'] * L
 
         PdTol = 0.0075
         midpoint = (pd['PBA_static'] + pd['PHalt_dyn'])/2.0
         PdMax = PdTol * midpoint
-        if abs(P2-P1) < PdMax:  # prevent crossover (optional)
+        if abs(Pth2-Pth1) < PdMax:  # prevent crossover (optional)
             CONVERGED=True  # lock this state
         if CONVERGED:
-            P1 = (1.0-0.5*PdTol) * midpoint
-            P2 = (1.0+0.5*PdTol) * midpoint
-        pstt.append(P1)
-        pbat.append(P2)
+            Pth1 = (1.0-0.5*PdTol) * midpoint
+            Pth2 = (1.0+0.5*PdTol) * midpoint
+        pstt.append(Pth1)
+        pbat.append(Pth2)
 
         # if used in Force break mode
         F1 = 18  + pd['dF1dL'] * L * 0.5 # Newtons
@@ -185,45 +216,31 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         PRESSURE_BREAK = True  # False = Force breakaway
         # Eq 4
 
-        #if t > 4.570 and t < 4.600:
-            #print('')
-            #print(f't: {t:8.4f}   State: {statenames[state]}     Pressure: {P:8.1f}')
-            #print(f'SourceFlow: {sourceFlowIn:8.3f}   Rsource_SIu: {pd["Rsource_SIu"]:8.3E}')
-            ##Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt + (pd['J']/pd['rReel']**2) )
-            #print(f'F_ever {F_ever:8.3f}  F_drag: {F_drag(L,Ldot,pd):8.3f}  Fcoul: {Fcoulomb:8.3f}  Mt: {Mt:8.3f}')
-            #print(f'Ndot: {Ndot:8.3f}   N: {N:8.3f},  Voltot: {Voltot:8.3f}')
-            #print(f'Lddot: {Lddot:8.3f}  Ldot: {Ldot:8.3f}, Mt: {Mt:8.3f} L: {L:8.3f} ')
-        #if t > 4.5820-pd['dt']:
-            #breakpoint()
-
-            #print('')
-            #print('Thresholds Crossed!')
-            #print(f'midpoint: {midpoint:8.3f}')
-            #print(f't: {t:8.4f}   State: {statenames[state]}     Pressure: {P:8.1f}')
-            #print(f'Thresholds: Break: {P2:8.1f}    Halt: {P1:8.1f}')
-            #print(f'SourceFlow: {sourceFlowIn:8.3f}   Rsource_SIu: {pd["Rsource_SIu"]:8.3E}')
-            #print(f'Ndot: {Ndot:8.3f}   N: {N:8.3f},  Voltot: {Voltot:8.3f}')
-            #print(f'Lddot: {Lddot:8.3f}  Ldot: {Ldot:8.3f},  L: {L:8.3f} ')
-
         if PRESSURE_BREAK:
-            if P > P2:
+            if PC2 > Pth2:       # use tube (PC2) OR housing (PC1) pressure(!)
                 state = GROWING
-            if P < P1:
+            if PC2 < Pth1:
                 state = STUCK
-        else:                 # switch states based on Force instead of pressure
+        else:                 # switch states based on ET Force instead of pressure
             if F_ever > F2:
                 state = GROWING
             if F_ever < F1:
                 state = STUCK
 
-        #if t> 4.50:
-                #print('')
-                #print(f't: {t:8.4f}   State: {statenames[state]}     Pressure: {P:8.1f}')
-                #print(f'Thresholds: Break: {P2:8.1f}    Halt: {P1:8.1f}')
-                #print(f'SourceFlow: {sourceFlowIn:8.3f}   Rsource_SIu: {pd["Rsource_SIu"]:8.3E}')
-                #print(f'Ndot: {Ndot:8.3f}   N: {N:8.3f},  Voltot: {Voltot:8.3f}')
-                #print(f'Lddot: {Lddot:8.3f}  Ldot: {Ldot:8.3f},  L: {L:8.3f} ')
-                #breakpoint()
+        # Record data
+        l.append(L)                      # tube length
+        ldot.append(Ldot)                # tube eversion velocity
+        f.append(fsource)                # flow from source
+
+        #ft.append(Ldot * np.pi*et.Ret(L,pd)**2)  #flow out into the tube
+
+        # 2Compartment
+        ft.append(fT)                    # tubing airflow
+        # Pressure
+        Phous.append(PC1)                # Housing pressure Pa
+        Ptube.append(PC2)                # Tubing Pressure
+        vol1.append(pd['Vhousing_m3'])   # right now housing vol is constant(!)
+        vol2.append(et.Vet.et_vol)       # query the Etube volume
 
         # Integrate the state variables.
         Ldot   += Lddot   * dt
@@ -231,35 +248,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         L      += Ldot    * dt
         th_dot += th_ddot * dt
         theta  += th_dot  * dt
-        N      += Ndot    * dt
+        # 2Compartment state integration
+        N1     += N1dot   * dt
+        N2     += N2dot   * dt
+        et.Vet(L,pd)             #integrate et volume
 
-        # Record data
-        # tube length
-        l.append(L)
-        # tube eversion velocity
-        ldot.append(Ldot)
-        # flow from source
-        f.append(sourceFlowIn)
-        fet.append(Ldot * np.pi*et.Ret(L,pd)**2)  #flow out into the tube
-        # Pressure
-        p.append(P) # Pa
-        # Volume
-        vol.append(Voltot)
-
-        # results to be returned:
-            ## declare data storage
-            #p = []      # Pressure (Pa)
-            #vol = []    # Volume (m3)
-            #f = []      # SourceFlow (m3/sec)  (lower case f = flow)
-            #fet = []    # Flow out due to everting
-            #l = []      # L (m)
-            #lc = []     # Len of crumple material (m)
-            #ldot = []   # velocity (m/sec)
-
-            #F_e = []   # eversion force   (upper case F = force)
-            #F_c = []   # coulomb force
-            #F_d = []   # drag force
-            #F_j = []   # reel inertia force
-        if error_count > 10:
-            break
-    return (tdata,l,lc,ldot,f, fet, p, pbat, pstt, vol, F_e,F_c,F_d,F_j)  # return the simulation results
+    return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results

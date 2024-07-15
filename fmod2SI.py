@@ -27,6 +27,7 @@ uc = {
 }
 
 
+paramDir = 'evtParams/'
 unitsConvfilename = 'unitConv.txt'
 defaultParamName = 'InitialParams.txt'
 defaultUnitsName = 'units_'+defaultParamName
@@ -45,8 +46,6 @@ args = sys.argv
 
 # load parameter file
 
-paramDir = 'evtParams/'
-
 if len(args) == 1:
     paramFileName = defaultParamName
     print('Usage: fmod2SI <parameterfile>')
@@ -55,7 +54,11 @@ if len(args) == 1:
     pu = et.loadPUnits(paramDir, 'units_'+defaultParamName)
 
 else:
-    paramFileName = args[1]
+    paramFileNo = args[1]
+    paramFileName = 'Set'+paramFileNo+'Params.txt'
+    if paramFileNo not in '012345678':
+        print('unknown param file: ',paramFileName, '  ...  quitting')
+        quit()
     print('loading ',paramFileName)
     pd = et.loadParams(paramDir, paramFileName)
 
@@ -164,13 +167,39 @@ pd_orig = et.loadParams(paramDir, defaultParamName)
 t1 = 0.0
 t2 = 8.0
 state = STUCK
-(time,l,lc,ldot,f, fet, p, pbat, pstt, vol, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+
+
+#return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
+
+(time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
+#
+#    Load plotting parameters
+#
+###################################################
+fnpr = 'plottingRanges.txt'
+fpp = open(fnpr,'r')
+prd = {}  #plotting range dict
+for line in fpp:
+    par, n1, n2 = line.split(':')
+    prd[par.strip()] = (float(n1), float(n2))
+print(prd)
 
 FPLOT = False
-PltTMIN = t1
-PltTMAX = t2
+PltTMIN  = prd['Time'][0]
+PltTMAX  = prd['Time'][1]
+PltPrMIN = prd['Pressure'][0]
+PltPrMAX = prd['Pressure'][1]
+print('Pressure lims: ', PltPrMIN, PltPrMAX)
+PltFlMIN = prd['Flow'][0]
+PltFlMAX = prd['Flow'][1]
+PltLeMIN = prd['Length'][0]
+PltLeMAX = prd['Length'][1]
+PltSpMIN = prd['Speed'][0]
+PltSpMAX = prd['Speed'][1]
+PltVoMIN = prd['Volume'][0]
+PltVoMAX = prd['Volume'][1]
 
 if FPLOT:
     # Create force plot
@@ -186,7 +215,7 @@ if FPLOT:
     plt.legend(['F_Eversion','F_Coulomb','F_Drag','F_Inertia','Crumple'])
     ax = plt.gca()
     ax.set_xlim(PltTMIN, PltTMAX)
-    ax.set_ylim(-100,300)
+    ax.set_ylim(-1,5)
 
 
 
@@ -210,8 +239,9 @@ if state==PRESSURE_TEST:
 
 clrs = ['b','g','r','c','m']
 #trajectory:
-# "ideal" loadline
 
+
+# "ideal" loadline
 x1 = 0.0
 y1 = pd['Psource_SIu']
 #x2 = pd['Psource_SIu'] / pd['Rsource_SIu']
@@ -220,59 +250,63 @@ y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
-axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
-#axs[0,0].plot(fet,p) #pressure is Pa
-#
-# fet = flow into everting tube (not measured in reality)
-# f  = flow from source (experimental data e.g.)
 #plot_curve_with_arrows2(fet, p, axs[0,0], 50,color=clrs[0])
-et.plot_curve_with_arrows2(f, p, axs[0,0], 500, color=clrs[0])
+# plot simulation trajectory
+#et.plot_curve_with_arrows2(f, pc1, axs[0,0], 500, color=clrs[0]) # housing pres.
 
-axs[0,0].legend(['Source Load Line',  'Trajectory'])
-axs[0,0].set_xlabel('Source Flow (m3/sec)')
+# plot ideal load line
+axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
+# simluated housing and tube pressures
+axs[0,0].plot(f,pc1,f,pc2)
+axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
+axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
-axs[0,0].set_xlim(0,0.0003)
+axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
 plt.xticks([0.0001, 0.0002, 0.0003])
-axs[0,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
 
+#plt.sca(axs[0,0])
 # Plot 2   # PRESSURE
-axs[1,0].plot(time, p)
-axs[1,0].legend(['Pressure (Pa)' ])
+axs[1,0].plot(time, pc1)
+axs[1,0].plot(time, pc2)
+axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
-axs[1,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
+pplotmax = (pd['Psource_SIu']-pd['Patmosphere'])*1.1 + pd['Patmosphere']
+axs[1,0].set_ylim(PltPrMIN, PltPrMAX)
 #  plot the eversion thresholds (function of L)
 axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
 axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
 
 # Plot 3
-axs[2,0].plot(time, vol )
-axs[2,0].legend(['Vol (m3)'])
+axs[2,0].plot(time, vol1, time, vol2 )
+axs[2,0].legend(['Vhousing', 'Vtube'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
-axs[2,0].set_ylim( 0.0010, 0.0020 )
+axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
 
-axs[0,1].plot(time, f)
+axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
-axs[0,1].set_ylabel('Source Flow (m3/sec)')
+axs[0,1].set_ylabel('Flow (m3/sec)')
+axs[0,1].legend(['Source Flow', 'Tube Flow'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
-axs[0,1].set_ylim(      0, 0.00020 )
+axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
 axs[1,1].plot(time, l, time, lc)
 axs[1,1].set_xlabel('Time (sec)')
 axs[1,1].set_ylabel('Length (m)')
 axs[1,1].legend(['Tube Length', 'Crumple Length'])
 axs[1,1].set_xlim(PltTMIN, PltTMAX)
-axs[1,1].set_ylim(      0, 0.600 )
+axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
 
 axs[2,1].plot(time, ldot)
 axs[2,1].set_xlabel('Time (sec)')
 axs[2,1].set_ylabel('Tube Velocity (m/sec)')
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
-axs[2,1].set_ylim(      0, 0.5 )
+axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
 
 
 
@@ -308,20 +342,6 @@ if PLOT_TYPE == 'OVERLAY':
     x = ed['flow']
     y = ed['P']
 
-    if False:   # testing for phase plotting with data
-        ######################################3
-        # TESTING
-        #  a circle
-        th = np.linspace(0, 2*np.pi, 100)
-        x  = np.cos(th)
-        y = np.sin(th)
-        # an elipse:
-        xsc = 0.03
-        x *= xsc
-        #############################################
-
-    Plt_ranges = [0, 0.001, pd['Patmosphere'], pd['Psource_SIu'] ]
-
     #plt.figure()
     #ax = plt.gca()
     ax = axs[0,0]
@@ -329,15 +349,13 @@ if PLOT_TYPE == 'OVERLAY':
     et.plot_curve_with_arrows2(x, y, ax, Interval,color=clrs[1])
 
     axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data
-
-    dtexp = ed['dtexp']
-    dtsim = pd['dt']
-    print('dt Sim:', dtsim, 'dt Exp:', dtexp)
-
     #axs[2,0].plot(ed['time'], ed['vol'], '--',color=clrs[1])  # Experimental Data
     axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[1])  # Experimental Data
     axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[1])  # Experimental Data
     axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
+
+    # Adjust layout
+    plt.tight_layout()
 
     if False:
         print('Pressure Simulation Losses: ')
@@ -349,9 +367,11 @@ if PLOT_TYPE == 'OVERLAY':
         print('Time Domain: ',  et.TD_loss(ldot,  ed['Ldot']))
         print('Freq Domain: ',  et.FD_loss2(ldot, ed['Ldot'],dtsim,dtexp,test=True,ptitle='Velocity') )
 
+    # compare dt's between experment and sim
+    dtexp = ed['dtexp']
+    dtsim = pd['dt']
+    print('dt Sim:', dtsim, 'dt Exp:', dtexp)
 
-    # Adjust layout
-    plt.tight_layout()
 
     et.print_param_table2(pd,pd_orig, pu)  # print with change markers
 
@@ -359,4 +379,3 @@ if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot i
     et.plot_tube_shape(pd)
 
 plt.show()
-

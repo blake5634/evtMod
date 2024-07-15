@@ -3,10 +3,41 @@ import glob,os
 
 import matplotlib.pyplot as plt
 
+
+#
+#   2Compartment model functions
+#
+
+# flow resistance of everting tube as a function of Length
+def ResET(L,pd):
+    # Rmin = 1.0E4 # 10% of Rsource
+    # r =  pd['ET_Res_per_m'] * L / pd['Lmax'] + Rmin
+    #print(f'                    ET Resistance: L:{L:7.4f} r: {r:6.3E} Rsource:{pd["Rsource_SIu"]:6.3E}')
+    rhack = pd['ET_Res_ratio']*pd['Rsource_SIu']
+    #print(f'      FIXED         ET Resistance: rhack: {rhack:6.3E}')
+    return rhack
+
+ # volume of ET
+tubeLinit = 0.0025
+def Vet(L,pd):
+     # LP =  previous L value
+    if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
+        Vet.LP = tubeLinit  # initial non-zero length
+        Vet.et_vol = Vet.LP * Ret(L,pd)**2 * np.pi
+        return
+    else:
+        Vet.dL =  max(0.0, L-Vet.LP)
+        Vet.et_dVol_dL = np.pi* Ret(L,pd)**2    #dV/dL
+        Vet.et_vol +=   Vet.et_dVol_dL * Vet.dL
+        Vet.LP = L
+        return Vet.et_vol
+# initialize 'static' variable (func attribs)
+# flag for initial condition setting
+Vet.LP= -1    # flag for init. cond. setting
+
 #
 #    functions to support variable diameter with length ( V(L) )
 #
-
 # radius of everting tube as function of Length
 def Ret(L,pd):
     mode = pd['ET_RofL_mode']
@@ -22,17 +53,6 @@ def Ret(L,pd):
         return etr_ramp(L,pd)
     else:
         error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
-
-def Vet(L,pd):      # volume of ET
-    Vet.dL = L-Vet.LP
-    Vet.et_dVol_dL = np.pi* Ret(L,pd)**2        #dV/dL
-    Vet.et_vol +=    Vet.et_dVol_dL * Vet.dL
-    Vet.LP = L
-    return Vet.et_vol
-# initialize 'static' variables (func attribs)
-Vet.LP=0.0                # previous L value
-Vet.et_dVol_dL = 0.0      # dV/dL
-Vet.et_vol = 0.0          # volume of Everting tube
 
 def etr_box(L,pd):
     if L < 0.15:
@@ -389,7 +409,7 @@ def setup_params():
     pu['rReel'] = 'm'
 
     #  Reel friction (Coulomb type)
-    Tau_coulomb = [0.0029, 0.0174, 0.0694][1] # N m :   Table II
+    Tau_coulomb= [ 0.0029, 0.0174, 0.0694][1] # N m :   Table II
     pd['Tau_coulomb'] = Tau_coulomb
     pu['Tau_coulomb'] = 'Nm'
 
@@ -407,19 +427,17 @@ def setup_params():
     pu['Vhousing_m3'] = 'm3'
 
     #Tube diameter
-
     pd['ET_RofL_mode'] = 'constant'  # ['constant', 'box', 'ramp', 'constrict' ]
     pu['ET_RofL_mode'] = 'text'
-
     Diam_MM = 25
-    pd['ET_diam'] = Diam_MM/1000
-    pu['ET_diam'] = 'm'
-    pd['ET_radius'] = pd['ET_diam']/2
+    #pd['ET_diam'] = Diam_MM/1000
+    #pu['ET_diam'] = 'm'
+    pd['ET_radius'] = 0.001* Diam_MM/2
     pu['ET_radius'] = 'm'
 
-    area_m2  = np.pi * pd['ET_radius']**2
-    pd['ET_area'] = area_m2
-    pu['ET_area'] = 'm2'
+    #area_m2  = np.pi * pd['ET_radius']**2
+    #pd['ET_area'] = area_m2
+    #pu['ET_area'] = 'm2'
 
     # Tube material
     tubing_mass_per_meter = 0.100 # kg/meter
@@ -433,6 +451,12 @@ def setup_params():
     K2drag = 8.0/0.8    # N m    (drag increases w/ len)
     pd['K2drag'] = K2drag         # inverse Length coeff
     pu['K2drag'] = 'Nm'
+
+    #
+    #  Tube airflow resistance
+    #
+    pd['ET_Res_per_m'] = 1.0E7      # airflow resistance per meter
+    pu['ET_Res_per_m'] = 'Pa/m2/sec'
 
     #
     #  FLOW load line for source
@@ -495,7 +519,7 @@ def setup_params():
 
 
     # simulation details
-    pd['dt'] = 0.0025
+    pd['dt'] = tubeLinit5
     pu['dt'] = 'sec'
 
 
@@ -533,6 +557,9 @@ def loadPUnits(dir, fname):
 
 def loadUnitConv(dir,fname):
     return loadDict(dir,fname)
+
+def loadPlotRanges(dir, fname):
+    return loadDict(dir,)
 
 def loadDict(folder, fname):
     if len(folder) > 0 and folder != '/':

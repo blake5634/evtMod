@@ -1,25 +1,38 @@
 
+The following process can be used to fit parameters to an eversion data record where the record consists of
+the following data as a function of time:
+
+\begin{itemize}
+    \item Pressure in the tube storage chamber (Pa)
+    \item Air flow from source into tube storage chamber ($m^3/sec$)
+    \item Length of everting tube relative to chamber opening (m)
+    \item Velocity of eversion (derived) ($m/sec$)
+\end{itemize}
+
+These can be plotted multiple ways such as in Fig \ref{xxxxxx} for example.
+
+
 \begin{itemize}
     \item  Adjust load line pressure intercept.
 
-    Pressure/Flow curves (upper left):
+    {\bf Data Focus: } Pressure/Flow curves (upper left):\\
     adjust Psource_SIu to move the load line and sim trajectory (they should overlap)
     up and down.  Adjust Rsource_SIu to adjust its slope (higher values slope down more).
 
     \item Adjust stop-start thresholds.
 
-    Pressure-Time curves (middle left):
+     {\bf Data Focus: } Pressure-Time curves (middle left):\\
     Adjust PBA_static up or down to match the pressure peaks in experiment (green dashed).
     Adjust PHalt_dyn  up or down to match the pressure valleys.
 
     \item Adjust threshold taper.
 
-    Pressure-Time curves (middle left):
+     {\bf Data Focus: } Pressure-Time curves (middle left):\\
     Adjust Threshold Taper up or down to speed or slow down convergence of the thresholds.
 
     \item Adjust Friction or drag
 
-    Length-Time curves (middle right):
+     {\bf Data Focus: } Length-Time curves (middle right):\\
     Adjust the viscus drag constant of tubing (K_drag) up or down to match the overall slope
     of the data trace.
 

@@ -3,6 +3,37 @@ import matplotlib.pyplot as plt
 import et_lib as et
 import glob, os
 
+# Unit Conversions
+uc = {
+    "sec_per_min": 60,
+    "kPa_per_Pa": 0.001,
+    "Pa_per_kPa": 1.0 / 0.001,
+    "min_per_sec": 1 / 60,
+    "Gal_per_Liter": 0.2642,
+    "Liter_per_Gal": 3.7854,
+    "Liter_per_m3": 1000.0,
+    "Liter_per_mm3": 1000.0 / 1000**3,
+    "Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
+    "mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
+    "MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
+    "m3_per_mole": 0.02241,  # m3/mol of Air
+    "moles_per_m3": 1.0 / 0.02241,
+    "Pa_per_PSI": 6894.76,
+    "atmos_Pa": 14.5 * 6894.76,
+    "m3_per_Liter": 1.0 / 1000.0  # m3
+}
+
+
+paramDir = 'evtParams/'
+unitsConvfilename = 'unitConv.txt'
+defaultParamName = 'InitialParams.txt'
+defaultUnitsName = 'units_'+defaultParamName
+paramFileName = defaultParamName
+unitsConvfilename = defaultUnitsName
+
+pd = et.loadParams(paramDir, paramFileName)
+#uc = et.loadUnitConv(paramDir, unitsConvfilename)
+
 # unit constants
 sec_per_min = 60
 kPa_per_Pa = 0.001
@@ -49,8 +80,33 @@ for datadir in dataDirNames:
         files += tfiles
         fnRoots += filenameroots
 
-PltTMIN = 0.0
-PltTMAX = 8.0
+###################################################
+#
+#    Load plotting parameters
+#
+###################################################
+fnpr = 'plottingRanges.txt'
+fpp = open(fnpr,'r')
+prd = {}  #plotting range dict
+for line in fpp:
+    par, n1, n2 = line.split(':')
+    prd[par.strip()] = (float(n1), float(n2))
+print(prd)
+
+PltTMIN  = prd['Time'][0]
+PltTMAX  = prd['Time'][1]
+PltPrMIN = prd['Pressure'][0]
+PltPrMAX = prd['Pressure'][1]
+print('Pressure lims: ', PltPrMIN, PltPrMAX)
+PltFlMIN = prd['Flow'][0]
+PltFlMAX = prd['Flow'][1]
+PltLeMIN = prd['Length'][0]
+PltLeMAX = prd['Length'][1]
+PltSpMIN = prd['Speed'][0]
+PltSpMAX = prd['Speed'][1]
+PltVoMIN = prd['Volume'][0]
+PltVoMAX = prd['Volume'][1]
+
 
 # Create a figure with subplots
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
@@ -67,49 +123,77 @@ for i,fn in enumerate(files):
         continue
     print('       opening:   ', i, fn)
 
-    ed = et.convert_units(ed)
+    ed = et.convert_units(ed,uc)
+
+
+    # HACK  (need to get to bottom of this!!)
+    ed['flow'] *= 10.0
+
+    # compute volume via pi r**2 L
+    vcomp = []
+    for l in ed['L']:
+        vcomp.append(np.pi*pd['ET_radius']**2*l)
 
     axs[0,0].plot(ed['flow'],  ed['P'])  # Experimental Data
     axs[0,0].set_xlabel('Source Flow (m3/sec)')
     axs[0,0].set_ylabel('Pressure (Pa)')
-    #axs[0,0].set_xlim(0,0.01)
-    axs[0,0].set_ylim(Patmosphere, Psource_SIu)
 
+    axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+    axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
+
+    plt.sca(axs[0,0])
+    plt.xticks([0.0001, 0.0002, 0.0003])
 
     axs[1,0].plot(ed['time'], ed['P'])  # Experimental Data
     axs[1,0].set_xlabel('Time (sec)')
     axs[1,0].set_ylabel('Pressure (Pa)')
+
     axs[1,0].set_xlim(PltTMIN, PltTMAX)
-    axs[1,0].set_ylim(Patmosphere, Psource_SIu)
+    axs[1,0].set_ylim(PltPrMIN, PltPrMAX)
 
     #axs[2,0].plot(ed['time'], ed['vol'])  # Experimental Data
     #axs[2,0].set_xlabel('Time (sec)')
     #axs[2,0].set_ylabel('Pressure (Pa)')
 
+    leglist = []
+    for i in range(len(files)):
+        leglist.append(f'file {i}')
+    axs[2,0].plot(ed['time'],[ pd['Vhousing_m3'] ]*len(ed['time']))
+    axs[2,0].plot(ed['time'],vcomp)
+    axs[2,0].legend(leglist)
+    axs[2,0].set_ylabel('Volume (m3)')
+    axs[2,0].set_xlabel('Time (sec)')
+
+    axs[2,0].set_xlim(PltTMIN, PltTMAX)
+    axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
+
+    axs[2,0].set_xlim(PltTMIN, PltTMAX)
+    axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
+
     axs[0,1].plot(ed['time'], ed['flow'])  # Experimental Data
     axs[0,1].set_xlabel('Time (sec)')
-    axs[0,1].set_ylabel('Flow (m3)')
+    axs[0,1].set_ylabel('Flow (m3/sec)')
     axs[0,1].set_xlim(PltTMIN, PltTMAX)
-    axs[0,1].set_ylim(      0, 0.00020 )
+
+    axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
     axs[1,1].plot(ed['time'], ed['L'])  # Experimental Data
     axs[1,1].set_xlabel('Time (sec)')
-    axs[1,1].set_ylabel('Length (m) (reel)')
+    axs[1,1].set_ylabel('Length (m)')
+
     axs[1,1].set_xlim(PltTMIN, PltTMAX)
-    axs[1,1].set_ylim(      0, 0.600 )
+    axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
 
     axs[2,1].plot(ed['time'], ed['Ldot'])  # Experimental Data
     axs[2,1].set_xlabel('Time (sec)')
     axs[2,1].set_ylabel('Speed (m/sec)')
     axs[2,1].set_xlim(PltTMIN, PltTMAX)
-    axs[2,1].set_ylim(      0, 0.8 )
 
-    leglist = []
-    for i in range(len(files)):
-        leglist.append(f'file {i}')
-    axs[2,0].plot(ed['time'],[1.0]*len(ed['time']))
-    axs[2,0].legend(leglist)
+    axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
+
+
+fig.suptitle('Eversion Data Set, A. Lewis, May 24')
+
 # Adjust layout
 plt.tight_layout()
-
 plt.show()
