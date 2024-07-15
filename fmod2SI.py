@@ -174,10 +174,33 @@ state = STUCK
 (time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
+#
+#    Load plotting parameters
+#
+###################################################
+fnpr = 'plottingRanges.txt'
+fpp = open(fnpr,'r')
+prd = {}  #plotting range dict
+for line in fpp:
+    par, n1, n2 = line.split(':')
+    prd[par.strip()] = (float(n1), float(n2))
+print(prd)
 
 FPLOT = False
-PltTMIN = t1
-PltTMAX = t2
+PltTMIN  = prd['Time'][0]
+#PltTMAX  = prd['Time'][1]
+PltTMAX = 10.0
+PltPrMIN = prd['Pressure'][0]
+PltPrMAX = prd['Pressure'][1]
+print('Pressure lims: ', PltPrMIN, PltPrMAX)
+PltFlMIN = prd['Flow'][0]
+PltFlMAX = prd['Flow'][1]
+PltLeMIN = prd['Length'][0]
+PltLeMAX = prd['Length'][1]
+PltSpMIN = prd['Speed'][0]
+PltSpMAX = prd['Speed'][1]
+PltVoMIN = prd['Volume'][0]
+PltVoMAX = prd['Volume'][1]
 
 if FPLOT:
     # Create force plot
@@ -239,11 +262,11 @@ axs[0,0].plot(f,pc1,f,pc2)
 axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
-axs[0,0].set_xlim(0,0.0003)
-plt.sca(axs[0,0])
+axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.xticks([0.0001, 0.0002, 0.0003])
-axs[0,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
 
+#plt.sca(axs[0,0])
 # Plot 2   # PRESSURE
 axs[1,0].plot(time, pc1)
 axs[1,0].plot(time, pc2)
@@ -252,7 +275,7 @@ axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
 pplotmax = (pd['Psource_SIu']-pd['Patmosphere'])*1.1 + pd['Patmosphere']
-axs[1,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
+axs[1,0].set_ylim(PltPrMIN, PltPrMAX)
 #  plot the eversion thresholds (function of L)
 axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
 axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
@@ -263,27 +286,27 @@ axs[2,0].legend(['Vhousing', 'Vtube'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
-#axs[2,0].set_ylim( 0.0012, 0.0022 )
+axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
 
 axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
 axs[0,1].set_ylabel('Flow (m3/sec)')
 axs[0,1].legend(['Source Flow', 'Tube Flow'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
-axs[0,1].set_ylim(      0, 0.00020 )
+axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
 axs[1,1].plot(time, l, time, lc)
 axs[1,1].set_xlabel('Time (sec)')
 axs[1,1].set_ylabel('Length (m)')
 axs[1,1].legend(['Tube Length', 'Crumple Length'])
 axs[1,1].set_xlim(PltTMIN, PltTMAX)
-axs[1,1].set_ylim(      0, 0.600 )
+axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
 
 axs[2,1].plot(time, ldot)
 axs[2,1].set_xlabel('Time (sec)')
 axs[2,1].set_ylabel('Tube Velocity (m/sec)')
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
-axs[2,1].set_ylim(      0, 0.5 )
+axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
 
 
 
