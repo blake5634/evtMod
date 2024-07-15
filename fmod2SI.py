@@ -188,8 +188,7 @@ print(prd)
 
 FPLOT = False
 PltTMIN  = prd['Time'][0]
-#PltTMAX  = prd['Time'][1]
-PltTMAX = 10.0
+PltTMAX  = prd['Time'][1]
 PltPrMIN = prd['Pressure'][0]
 PltPrMAX = prd['Pressure'][1]
 print('Pressure lims: ', PltPrMIN, PltPrMAX)
@@ -264,6 +263,7 @@ axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
+plt.sca(axs[0,0])
 plt.xticks([0.0001, 0.0002, 0.0003])
 
 #plt.sca(axs[0,0])
@@ -342,8 +342,6 @@ if PLOT_TYPE == 'OVERLAY':
     x = ed['flow']
     y = ed['P']
 
-    Plt_ranges = [0, 0.001, pd['Patmosphere'], pd['Psource_SIu'] ]
-
     #plt.figure()
     #ax = plt.gca()
     ax = axs[0,0]
@@ -351,15 +349,13 @@ if PLOT_TYPE == 'OVERLAY':
     et.plot_curve_with_arrows2(x, y, ax, Interval,color=clrs[1])
 
     axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data
-
-    dtexp = ed['dtexp']
-    dtsim = pd['dt']
-    print('dt Sim:', dtsim, 'dt Exp:', dtexp)
-
     #axs[2,0].plot(ed['time'], ed['vol'], '--',color=clrs[1])  # Experimental Data
     axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[1])  # Experimental Data
     axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[1])  # Experimental Data
     axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
+
+    # Adjust layout
+    plt.tight_layout()
 
     if False:
         print('Pressure Simulation Losses: ')
@@ -371,9 +367,11 @@ if PLOT_TYPE == 'OVERLAY':
         print('Time Domain: ',  et.TD_loss(ldot,  ed['Ldot']))
         print('Freq Domain: ',  et.FD_loss2(ldot, ed['Ldot'],dtsim,dtexp,test=True,ptitle='Velocity') )
 
+    # compare dt's between experment and sim
+    dtexp = ed['dtexp']
+    dtsim = pd['dt']
+    print('dt Sim:', dtsim, 'dt Exp:', dtexp)
 
-    # Adjust layout
-    plt.tight_layout()
 
     et.print_param_table2(pd,pd_orig, pu)  # print with change markers
 
