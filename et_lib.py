@@ -10,18 +10,34 @@ import matplotlib.pyplot as plt
 
 # flow resistance of everting tube as a function of Length
 def ResET(L,pd):
-    Rmin = 1.0E4 # 10% of Rsource
-    r =  pd['ET_Res_per_m'] * L / pd['Lmax'] + Rmin
+    # Rmin = 1.0E4 # 10% of Rsource
+    # r =  pd['ET_Res_per_m'] * L / pd['Lmax'] + Rmin
     #print(f'                    ET Resistance: L:{L:7.4f} r: {r:6.3E} Rsource:{pd["Rsource_SIu"]:6.3E}')
     rhack = pd['ET_Res_ratio']*pd['Rsource_SIu']
     #print(f'      FIXED         ET Resistance: rhack: {rhack:6.3E}')
     return rhack
 
+ # volume of ET
+tubeLinit = 0.0025
+def Vet(L,pd):
+     # LP =  previous L value
+    if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
+        Vet.LP = tubeLinit  # initial non-zero length
+        Vet.et_vol = Vet.LP * Ret(L,pd)**2 * np.pi
+        return
+    else:
+        Vet.dL =  max(0.0, L-Vet.LP)
+        Vet.et_dVol_dL = np.pi* Ret(L,pd)**2    #dV/dL
+        Vet.et_vol +=   Vet.et_dVol_dL * Vet.dL
+        Vet.LP = L
+        return Vet.et_vol
+# initialize 'static' variable (func attribs)
+# flag for initial condition setting
+Vet.LP= -1    # flag for init. cond. setting
 
 #
 #    functions to support variable diameter with length ( V(L) )
 #
-
 # radius of everting tube as function of Length
 def Ret(L,pd):
     mode = pd['ET_RofL_mode']
@@ -37,20 +53,6 @@ def Ret(L,pd):
         return etr_ramp(L,pd)
     else:
         error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
-
-tubeLinit = 0.0025
-def Vet(L,pd):      # volume of ET
-    if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
-        Vet.LP = tubeLinit  # 2mm length
-        Vet.et_vol = Vet.LP * pd['ET_radius']**2 * np.pi
-    Vet.dL = L-Vet.LP
-    Vet.et_dVol_dL = np.pi* Ret(L,pd)**2        #dV/dL
-    Vet.et_vol +=    Vet.et_dVol_dL * Vet.dL
-    Vet.LP = L
-    return Vet.et_vol
-# initialize 'static' variables (func attribs)
-# flag for initial condition setting
-Vet.LP= -1              # previous L value (IC 2mm)
 
 def etr_box(L,pd):
     if L < 0.15:
@@ -555,6 +557,9 @@ def loadPUnits(dir, fname):
 
 def loadUnitConv(dir,fname):
     return loadDict(dir,fname)
+
+def loadPlotRanges(dir, fname):
+    return loadDict(dir,)
 
 def loadDict(folder, fname):
     if len(folder) > 0 and folder != '/':

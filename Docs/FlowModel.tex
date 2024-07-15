@@ -99,14 +99,16 @@ everted material.
 Some theory of everting tubes has been reviewed above.   Complex dynamic behaviors of a tube everting
 inside
 a straight tube of approximately the same diameter as the inflated tubing material were measured
-by Lewis \cite{xxxx} (Figure \ref{Fig:experData}, Left panel).   One experiment which displays several interesting everting characteristics
+by Lewis \cite{xxxx} (Figure \ref{Fig:experData}, Left panel).
+There seem to be two distinct clusters of responses, five slower and three faster (particularly clear
+in the flow plots (top row).
+One experiment which displays several interesting everting characteristics
 is shown in Figure \ref{Fig:experData}, Right Panel.
-
 Referring first to the length-vs-time plot (middle right), we see a start-stop or staircase
 behavior sometimes seen with eversion under relatively constant input pressure.   It
-should be noted that this particular eversion experiment was loaded by reel inertia and
+should be noted that the selected eversion experiment (Right panel) was loaded by reel inertia and
 by friction applied to the reel.  Velocity (lower right) indicates a series of peaks where the eversion
-``breaks-free" but then stops again a short time later.
+``breaks-free" but then stops again a short time later giving length-vs-time a stair-step characteristic.
 
 Pressure (middle left) first grows for about 1 second without corresponding eversion motion, and
 then oscillates in approximate synchrony with the velocity peaks.
@@ -117,7 +119,9 @@ The trajectory makes loops to lower pressures and back up to the slope at higher
 loops correspond in time to the pressure oscillations (middle left).
 
 These dynamic characteristics (start-stop bursting, pressure oscillations, diagonal phase trajectory, and
-downward loops) were not all present under all experimental conditions.
+downward loops) were not all present under all experimental conditions.  In summary then, depending on
+factors to be determined, some or all of these characteristics may or may not be present in a given
+eversion run.
 
 \subsection{Simulation Goals}
 The goals of this simulation are:
@@ -128,6 +132,12 @@ The goals of this simulation are:
   \item Clearly segregate the parameters into known, measured quantities vs. free parameters.
   \item Codify an efficient manual method for parameter identification.
 \end{enumerate}
+
+In any simulation study caution must be exercised when there are a large number of free parameters
+as there may be several combinations of parameters or manifolds in the parameter space which
+may fit any dataset.   In Section \ref{xxxxx}, below, we review the overall parameter set and
+classify the parameters into known, independently measureable parameters vs free parameters.
+
 
 \subsection{Dynamic Model}
 The dynamic model of an eversion drive system includes;
@@ -338,32 +348,38 @@ Finally, we integrate the state variables:
 \end{aligned}
 \end{equation}
 
-\section{Simulation Results}
+\subsection{Parameters}
+The model parameters are classified in Table \ref{Tab:paramClass}
 
-
-
-\section{Simplified Simulation Results}
-{\bf These initial results are from a simplified model assuming the TAUGHT state at all times. }
-All parameters for the above model were computed from measurements of the experimental
-system with the exception of {\tt PBA\_static, PHalt\_dyn, Kdrag} which were estimated
-by a visual match to experimental data.
-Initial simulation results using the baseline parameters (Sec. \ref{baselineParms}, below) are
-given in Figure \ref{Fig:baselineResults}.
-
-Some parameters were iteratively changed based on remaining observed differences
-between Figure \ref{Fig:baselineResults} and experiment. Specifically:
-
-\vspace{0.175in}
-% \begin{table}[]
-\begin{tabular}{p{1.5in}|l|l|l}
-Observation       & Param    & Original Value & Modified Value      \\\hline
-Velocities too high  & ${\tt Kdrag}$  &   0.3     & 0.6          \\\hline
-Pressure thresholds converge with time& {\tt PBA\_static} & $1.17\times10^5 $Pa & $1.17\times10^5 - 500L$ Pa          \\\hline
-Pressure thresholds converge with time & {\tt PHalt\_dyn} & $1.17\times10^5 $Pa & $1.013\times10^5 + 500L$ Pa       \\\hline
-Pressure rise too slow  & $V_{housing}$   &  $0.5\times10^{-3}$ m$^3$   & $0.05\times10^{-3} $ m$^3$   \\\hline
-Peak Velocity too high  & $J$             &  $5.10\times10^4$  kg/m$^2$     & 10.2$\times10^4$  kg/m$^2$ \\\hline
+\begin{table}
+\begin{tabular}{l|l|l|l|l|l}
+Parameter     &  Class     & Value   & Units     & Description      & source \\ \hline
+ET\_radius     &  Known     & 12.5    &  $mm$       & Tube radius      & tube design \\
+J             &  Known     & 5.1E-4 &  $kg/m^2$    & Reel inertia     & design and testing \cite{Lewis2024XX} \\
+Lmax          &  Known     & 0.5-0.8 &  $m$        & Tube length      & tube design \& fitting \\
+Patmosphere   &  Known     & 101.325 &  $kPa$      & Atmospheric pressure & \\
+RT            &  Known     & 2.5E+3 &   $m^3 Pa/mol$   & Gas constant x temperature &  \\
+T             &  Known     & 2.95E+2 &  $^\circ K$    & Room temperature   & Thermometer \\
+Tau\_coulomb   &  Known     &        &  $Nm$       & Coulomb fric. torque on reel  & design and testing \cite{Lewis2024XX} \\
+Vhousing\_m3   &  Known     &  1.5E-3&  $m^3$      & Net housing air volume  & CAD model \\
+et\_MPM        &  Known     &  0.1    &  $kg$       & Tubing mass per meter  & measured \\
+rReel         &  Known     &         &   $m$       & Reel radius & CAD model \\ \hline
+K2drag        &  Free      &         &  $Nm$       & Empirical Fit    & manual tuning \\
+Kdrag         &  Free      &         &  $N/m^2/sec$ & Empirical Fit & manual tuning \\
+PBA\_static    &  Free      &         &  $kPa$      & Break-away pressure  & manual tuning \\
+PHalt\_dyn     &  Free      &         &  $kPa$      & Eversion stopping press.  & manual tuning \\
+Psource\_SIu   &  Free      & 0-20    &  $kPa$      & Gas source pressure & manual tuning\\
+Rsource\_SIu   &  Free      & 1.0E8   &  $Pa/m^3$    & Slope of P-Fl load-line & manual tuning\\
+Threshold Taper & Free     &          &  $Pa/m$      & Change in PBA w/ length   & manual tuning\\
+% Observation         & Param       & Orig. value   &  Modified Value  \\\hline
+% Velocities too high  & ${\tt Kdrag}$  &   0.3     & 0.6          \\\hline
+% Pressure thresholds converge with time& {\tt PBA\_static} & $1.17\times10^5 $Pa & $1.17\times10^5 - 500L$ Pa          \\\hline
+% Pressure thresholds converge with time & {\tt PHalt\_dyn} & $1.17\times10^5 $Pa & $1.013\times10^5 + 500L$ Pa       \\\hline
+% Pressure rise too slow  & $V_{housing}$   &  $0.5\times10^{-3}$ m$^3$   & $0.05\times10^{-3} $ m$^3$   \\\hline
+% Peak Velocity too high  & $J$             &  $5.10\times10^4$  kg/m$^2$     & 10.2$\times10^4$  kg/m$^2$ \\\hline
 \end{tabular}
-% \end{table}
+\caption{Parameters used and their sources and values. }
+\end{table}\label{Tab:paramClass}
 
 \vspace{0.175in}
 
@@ -446,7 +462,7 @@ We can then use the following procedure to iteratively tune some of the  model  
 particular experimental run.   Other parameters such as the tube reel radius, inertia, and braking
 friction are readily measured independently \cite{Andy Papers}  and not fit to the eversion experiments.
 
-\begin{itemize}
+\begin{enumerate}
     \item  Adjust load line pressure intercept.
 
     {\bf Data Focus: } Pressure/Flow curves (upper left):\\
@@ -473,7 +489,7 @@ friction are readily measured independently \cite{Andy Papers}  and not fit to t
 
     \item Experiment with other parameters or go back and repeat the procedure.
 
-\end{itemize}
+\end{enumerate}
 
 
 \section{Model Refinements}
@@ -580,4 +596,3 @@ oscillations similar to the experimental data.
 %  Use name of bibliography files without .bib extension
 \bibliography{flowMOdel}
 \end{document}
-

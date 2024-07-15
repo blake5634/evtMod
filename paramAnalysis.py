@@ -28,12 +28,18 @@ def compare_param_list_avgs(pdl1, pdl2,nscale):
         avd2[k] = 0.0
     for d in pdl1:
         for k in d.keys():
-            avd1[k] += d[k]
+            try:
+                avd1[k] += d[k]
+            except:
+                pass
         n1 += 1
     n2=0
     for d in pdl2:
         for k in d.keys():
-            avd2[k] += d[k]
+            try:
+                avd2[k] += d[k]
+            except:
+                pass
         n2 += 1
 
     for k in pdl1[0].keys():
@@ -127,7 +133,7 @@ def analyze_params():
         print(f'{i:5}  Loading: {fn}')
         pdicts.append(et.loadParams('',fn))
 
-    # remove all params in group "Admin"
+    # remove all params in group "Admin" and "text"
     for pd in pdicts:
         parlist = list(pd.keys())
         for par in parlist:
@@ -140,20 +146,35 @@ def analyze_params():
                 if pg[par] == 'Physics':    # check against parameter groups
                     #print('             deleting key: ',par)
                     del pd[par]
+                if pg[par] == 'text':    # check against parameter groups
+                    #print('             deleting key: ',par)
+                    del pd[par]
             except:
                 pass
 
     pnames = pdicts[0].keys()  # assume they're the same
 
     parAvg = {}
+    parMaxMin = {}
+
     for k in pnames:
         parAvg[k] = 0.0
-
+        parMaxMin[k] = (-999999.999E+50, 999999.9999E+50)
     n = 0
     for f in pdicts:
         n += 1
         for k in pnames:
-            parAvg[k] += f[k]
+            try:
+                val = float(f[k])
+                parAvg[k] += val
+                mx, mi = parMaxMin[k]
+                if val > mx:
+                    mx = val
+                if val < mi:
+                    mi = val
+                parMaxMin[k] = (mx,mi)
+            except:
+                parAvg[k] = 0.0
 
     print('Average parameters')
     for k in pnames:
@@ -161,6 +182,12 @@ def analyze_params():
 
     print_params_by_group(parAvg, pg, pu, tstr='\n     Average Parameters by Group')
 
+    print('Range for each Numerical Param')
+    for k in pnames:
+        mx, mi = parMaxMin[k]
+        print(f'{k:20}  {mi} --- {mx}')
+
+    print('')
 
     print('Parameter Changes vs Set5')
 
@@ -199,6 +226,7 @@ if __name__ == '__main__':
 
     if not test:
         analyze_params()
+
 
     else:
 

@@ -91,7 +91,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
     PC2 = PC1
     #
-    et.Vet(et.tubeLinit,pd)  # initialize everting tube computation
+    et.Vet(0.0,pd)  # initialize everting tube computation (L param not used)
     N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
     N2 = PC2*et.Vet.et_vol / pd['RT']
     #print(f'Initial Cond:  PC1: {PC1}, PC2: {PC2}')
@@ -120,27 +120,21 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Solve Pressures
         #2Compartment
         PC1 = N1*pd['RT'] / pd['Vhousing_m3']
-        #if PC2 > pd['Psource_SIu']:
-        #if t>0.049:
         PC2 = N2*pd['RT'] / et.Vet.et_vol
 
-        #if t > 0.828:
-            #print(f't: {t:6.4f} state: {statenames[state]}  PC1: {PC1:7.1f} PC2: {PC2:7.1f}')
-            #breakpoint()
-
         # Eq 2.5
-        #fsource = (pd['Psource_SIu'] - P)/pd['Rsource_SIu']
         fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
-        if True:
-            if PC2>=PC1:
-            #if False:
-                fT = et.Vet.et_vol * Ldot # Ldot = constant 0.05e.g.
-            else:
-                fT = (PC1-PC2)/et.ResET(L,pd)
-                #fT = (PC1-PC2)/pd['Rsource_SIu']
-        else:
-            fT = 0.0000002  # HACK
-
+        # if True:
+        #     if PC2>=PC1:
+        #     #if False:
+        #         fT = et.Vet.et_vol * Ldot # Ldot = constant 0.05e.g.
+        #     else:
+        #         fT = (PC1-PC2)/et.ResET(L,pd)
+        #         #fT = (PC1-PC2)/pd['Rsource_SIu']
+        # else:
+        #     fT = 0.0000002  # HACK
+        #
+        fT = (PC1-PC2)/et.ResET(L,pd)
         fint = fsource - fT
 
         # 2Compartment:

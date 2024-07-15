@@ -228,17 +228,13 @@ y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
-# plot ideal load line
-axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
-#axs[0,0].plot(fet,p) #pressure is Pa
-#
-# fet = flow into everting tube (not measured in reality)
-# f  = flow from source (experimental data e.g.)
 #plot_curve_with_arrows2(fet, p, axs[0,0], 50,color=clrs[0])
-
 # plot simulation trajectory
 #et.plot_curve_with_arrows2(f, pc1, axs[0,0], 500, color=clrs[0]) # housing pres.
-#et.plot_curve_with_arrows2(f, pc2, axs[0,0], 500, color=clrs[0]) # tube pres.
+
+# plot ideal load line
+axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
+# simluated housing and tube pressures
 axs[0,0].plot(f,pc1,f,pc2)
 axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
@@ -362,4 +358,3 @@ if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot i
     et.plot_tube_shape(pd)
 
 plt.show()
-
