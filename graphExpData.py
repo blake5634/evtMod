@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 import et_lib as et
 import glob, os
 
@@ -170,7 +171,9 @@ for i,fnum in enumerate(fset):
     axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 
     plt.sca(axs[0,0])
-    plt.xticks([0.0001, 0.0002, 0.0003])
+    ax = plt.gca()
+    xpressticks = ticker.MaxNLocator(3)
+    ax.xaxis.set_major_locator(xpressticks)
 
     axs[1,0].plot(ed['time'], ed['P'])  # Experimental Data
     axs[1,0].set_xlabel('Time (sec)')

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib import ticker
 import simulation as sim
 import et_lib as et
 from et_lib import error
@@ -120,16 +121,21 @@ if PLOT_TYPE == 'OVERLAY':
     fn = dataDirName + '/' + pd['DataFile']
 
     inp = input('Select file by number: (-1 to use parameter DataFile)')
+
     try:
         n = int(inp)
     except:
         n = -1
 
     if n >= 0:
-        if (n>=len(files) or len(files) <0):
-            print('illegal file name index')
+        if n>=len(files):
+            print('illegal file name index:', n)
             quit()
-        fn = files[n]   # includes datadir/
+
+    if n< 0:
+        fn = dataDirName + '/' + pd['DataFile']
+    else:
+        fn = files[n]  # includes datadir/
 
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
@@ -248,6 +254,9 @@ axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
+ax = plt.gca()
+xpressticks = ticker.MaxNLocator(3)
+ax.xaxis.set_major_locator(xpressticks)
 #plt.xticks([0.0001, 0.0002, 0.0003])
 
 #plt.sca(axs[0,0])
