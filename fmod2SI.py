@@ -7,24 +7,24 @@ from et_lib import error
 import sys
 
 # Unit Conversions
-uc = {
-    "sec_per_min": 60,
-    "kPa_per_Pa": 0.001,
-    "Pa_per_kPa": 1.0 / 0.001,
-    "min_per_sec": 1 / 60,
-    "Gal_per_Liter": 0.2642,
-    "Liter_per_Gal": 3.7854,
-    "Liter_per_m3": 1000.0,
-    "Liter_per_mm3": 1000.0 / 1000**3,
-    "Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
-    "mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
-    "MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-    "m3_per_mole": 0.02241,  # m3/mol of Air
-    "moles_per_m3": 1.0 / 0.02241,
-    "Pa_per_PSI": 6894.76,
-    "atmos_Pa": 14.5 * 6894.76,
-    "m3_per_Liter": 1.0 / 1000.0  # m3
-}
+#uc = {
+    #"sec_per_min": 60,
+    #"kPa_per_Pa": 0.001,
+    #"Pa_per_kPa": 1.0 / 0.001,
+    #"min_per_sec": 1 / 60,
+    #"Gal_per_Liter": 0.2642,
+    #"Liter_per_Gal": 3.7854,
+    #"Liter_per_m3": 1000.0,
+    #"Liter_per_mm3": 1000.0 / 1000**3,
+    #"Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
+    #"mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
+    #"MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
+    #"m3_per_mole": 0.02241,  # m3/mol of Air
+    #"moles_per_m3": 1.0 / 0.02241,
+    #"Pa_per_PSI": 6894.76,
+    #"atmos_Pa": 14.5 * 6894.76,
+    #"m3_per_Liter": 1.0 / 1000.0  # m3
+#}
 
 
 paramDir = 'evtParams/'
@@ -141,22 +141,6 @@ pd['Tau_coulomb'] = Tau_coulomb
 pu['Tau_coulomb'] = 'Nm'
 
 
-###########################################################
-##
-##  Parameter hacks needed to match results (Fig 3)
-##
-##   TESTING  HACK
-
-
-#pd['Rsource_SIu'] *= 1.25
-
-#pd['Vhousing_m3'] *= 0.5
-
-##Kdrag *= 2
-##pd['Kdrag'] = Kdrag
-
-#pd['J'] *= 4
-
 #########################################################################################33
 
 # print and save orig baseline params
@@ -264,7 +248,7 @@ axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
-plt.xticks([0.0001, 0.0002, 0.0003])
+#plt.xticks([0.0001, 0.0002, 0.0003])
 
 #plt.sca(axs[0,0])
 # Plot 2   # PRESSURE
@@ -274,7 +258,6 @@ axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
-pplotmax = (pd['Psource_SIu']-pd['Patmosphere'])*1.1 + pd['Patmosphere']
 axs[1,0].set_ylim(PltPrMIN, PltPrMAX)
 #  plot the eversion thresholds (function of L)
 axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])

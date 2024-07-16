@@ -92,14 +92,15 @@ everted material.
 \begin{figure}[h]\centering
 \includegraphics[width=.475\textwidth]{ExpDataExampleAll.png}
 \includegraphics[width=.475\textwidth]{ExpDataExample.png}
-\caption{Experimental data displaying dynamic characteristics of loaded eversion.  All data (Left), single example (Right) (See Lewis, Fig 9. Loads: high inertia, high Friction)}
+\caption{Experimental data displaying dynamic characteristics of loaded eversion.  All data (Left), single example (Right) note different time axes for the two plots. (See Lewis, Fig 9. Loads: high inertia, high Friction)}
 \label{Fig:experData}
 \end{figure}
 
-Some theory of everting tubes has been reviewed above.   Complex dynamic behaviors of a tube everting
+{\bf  ****    Resolve 10x flow rate hack!!!   *** }
+
+Some theory of everting tubes has been reviewed above.  Recently,  Lewis \cite{xxxx} measured some complex dynamic behaviors of a tube everting
 inside
-a straight tube of approximately the same diameter as the inflated tubing material were measured
-by Lewis \cite{xxxx} (Figure \ref{Fig:experData}, Left panel).
+a straight support tube of approximately the same diameter as the inflated tubing material (Figure \ref{Fig:experData}, Left panel).
 There seem to be two distinct clusters of responses, five slower and three faster (particularly clear
 in the flow plots (top row).
 One experiment which displays several interesting everting characteristics
@@ -364,13 +365,14 @@ Tau\_coulomb   &  Known     &        &  $Nm$       & Coulomb fric. torque on ree
 Vhousing\_m3   &  Known     &  1.5E-3&  $m^3$      & Net housing air volume  & CAD model \\
 et\_MPM        &  Known     &  0.1    &  $kg$       & Tubing mass per meter  & measured \\
 rReel         &  Known     &         &   $m$       & Reel radius & CAD model \\ \hline
-K2drag        &  Free      &         &  $Nm$       & Empirical Fit    & manual tuning \\
-Kdrag         &  Free      &         &  $N/m^2/sec$ & Empirical Fit & manual tuning \\
-PBA\_static    &  Free      &         &  $kPa$      & Break-away pressure  & manual tuning \\
-PHalt\_dyn     &  Free      &         &  $kPa$      & Eversion stopping press.  & manual tuning \\
-Psource\_SIu   &  Free      & 0-20    &  $kPa$      & Gas source pressure & manual tuning\\
-Rsource\_SIu   &  Free      & 1.0E8   &  $Pa/m^3$    & Slope of P-Fl load-line & manual tuning\\
-Threshold Taper & Free     &          &  $Pa/m$      & Change in PBA w/ length   & manual tuning\\
+ET\_Res\_ratio  &  Free      & 0.3---0.6 &  dimensionless &  ET resistance scale & manual tuning \\
+K2drag        &  Free      & 0.16---4.0  &  $Nm$       & Empirical Fit    & manual tuning \\
+Kdrag         &  Free      & 0.15---6.0   &  $N/m^2/sec$ & Empirical Fit & manual tuning \\
+PBA\_static    &  Free      & 107---118.5  &  $kPa$      & Break-away pressure  & manual tuning \\
+PHalt\_dyn     &  Free      & 61---116     &  $kPa$      & Eversion stopping press.  & manual tuning \\
+Psource\_SIu   &  Free      & 118---145    &  $kPa$      & Gas source pressure & manual tuning\\
+Rsource\_SIu   &  Free      & (8---14)$\times10^7$ &  $Pa/m^3/sec$    & Slope of P-Fl load-line & manual tuning\\
+Threshold Taper & Free     &  640---3800  &  $Pa/m$      & Change in PBA w/ length   & manual tuning\\
 % Observation         & Param       & Orig. value   &  Modified Value  \\\hline
 % Velocities too high  & ${\tt Kdrag}$  &   0.3     & 0.6          \\\hline
 % Pressure thresholds converge with time& {\tt PBA\_static} & $1.17\times10^5 $Pa & $1.17\times10^5 - 500L$ Pa          \\\hline
@@ -524,6 +526,7 @@ Such a model is shown in Figure \ref{Fig:TwoCompartment}.
 
 
 \begin{figure}[h]\centering
+% \includegraphics[width=.5\textwidth]{Photo_TwoCompartment.png}
 \includegraphics[width=.5\textwidth]{Figure_TwoCompartment.png}
 \caption{Two compartment, lumped parameter model. }
 \label{Fig:TwoCompartment}

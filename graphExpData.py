@@ -69,32 +69,36 @@ for datadir in dataDirNames:
         filenameroots = []
         if len(tfiles) ==0:
             cto.error('No brl_data files found')
-        for f in files:
+        for f in tfiles:
             #print('found: ',f)
             if '.zip' in f:
                 next
             if '.csv' in f :
                 filenameroots.append(str(f).replace('.csv',''))
+                files.append(f)
             if  '_meta.json' in f:
                 filenameroots.append(str(f).replace('_meta.json',''))
         # dict.fromkeys better than set because preserves order (thanks google)
         filenameroots = list(dict.fromkeys(filenameroots)) # elim dupes
-        files += tfiles
+        #files += tfiles
         fnRoots += filenameroots
 
-print('file set: ', files)
+#print('file set:  ', files)
 ###################################################
 #
 #   Select Files
 #
 ###################################################
+print('Discovered Data Files: ')
 for i,fn in enumerate(files):
     fn2 = fn.split('/')[1]
     print(f'{i:3}  {fn2}')
 
 sel = str(input('Select file numbers (-1) for all: '))
 nums = sel.split()
-fset=[] # place to collect selected filenames
+if len(nums)<1:
+    nums = [-1]
+fset=[] # place to collect user-selected filenames
 if int(nums[0]) < 0:
     fset = range(len(files))
 else:
@@ -133,11 +137,10 @@ PltVoMAX = prd['Volume'][1]
 # Create a figure with subplots
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
 
-#for i,fn in enumerate(files):
-for fnum in fset:
+for i,fnum in enumerate(fset):
     fn = files[int(fnum)]
 
-    print(f'{i:5}', fn)
+    #print(f'{i:5}', fn)
 
     #fn = dataDirName + '/' + fn
 
