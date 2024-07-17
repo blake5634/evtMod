@@ -72,20 +72,29 @@ Blake Hannaford
 
 Prior studies of eversion mechanics have relied on the assumption of constant
 pressure over time and throughout the extent of the device.
-\cite{blumenschein2017modeling}
-Applied biomechanical models for plant shoot growth to analogous physical
-processes in everting tubes and combined it with experimental measurements.
-Notably, for their speeds and design parameters, they did not find an
-effect of air flow drag caused by filling the everting tube.
+Blumenschein et al.\cite{blumenschein2017modeling}
+applied biomechanical models for plant shoot growth to analogous physical
+processes in everting tubes and compared simulations with experimental measurements.
+Notably, for the speeds and design parameters they studied, they did not find an
+effect indicating air flow resistance between the housing and  the everting tube.
 \cite{Hawkes2017} Performed mostly quasi-static modeling of ETs
 but studied the important buckling phenomena in complex geometric
-environments.
+environments which we do not consider here.
+
 \cite{vartholomeos2024lumped} created a dynamic, lumped parameter
 mechanical model
 of eversion with special emphasis on friction properties between
 an everting tube and its environment as well as a second contact
 between the tube and a rod (catheter) in contact with the
-everted material.
+everted material.  This work is close in spirit to ours, but
+their eversion system was controlled by an ``active channel" to which the inner
+part of the everting tube was connected.   Thus eversion was only possible as allowed
+by active channel motion.  This work studied
+slower rates of eversion (0-6$mm sec^{-1}$) and did not compare time responses, instead
+comparing velocity which was apparently constant under measured conditions.
+They measured a ``breakway" pressure of 115kPa which was comparable to our experiments.
+This model included a sophisticated friction model having static, Coulomb, and viscous
+components.
 
 \subsection{Observed Eversion Characteristics}
 
@@ -98,23 +107,34 @@ everted material.
 
 {\bf  ****    Resolve 10x flow rate hack!!!   *** }
 
-Some theory of everting tubes has been reviewed above.  Recently,  Lewis \cite{xxxx} measured some complex dynamic behaviors of a tube everting
+Recently,  Lewis \cite{xxxx} measured some complex dynamic behaviors of a tube everting
 inside
-a straight support tube of approximately the same diameter as the inflated tubing material (Figure \ref{Fig:experData}, Left panel).
-There seem to be two distinct clusters of responses, five slower and three faster (particularly clear
-in the flow plots (top row).
-One experiment which displays several interesting everting characteristics
+a straight support tube of approximately the same diameter (25mm)
+as the inflated tubing material (Figure \ref{Fig:experData}, Left panel).
+Data consist of 9 trials on 3 tubes.  Tube \#1 had 4 trials, tube \#2 had
+2 trials, and tube \#3 had 3 trials.
+% Andy: housing dims:   0.0013976 m^3. Accounting for the reel assembly, it's 0.00125562 cubic meters.
+Tubes were supplied by a reel which was free to rotate inside the pressure vessel (housing).
+Variable loads could be applied to the reel including  inertia and coulomb friction.
+Applied loads are given in Table \ref{table:loadsAndTrials}.
+
+There are two distinct clusters of responses, five slower and three faster (particularly clear
+in the flow plots (top row). The three datasets having higher flow rates in the top row of Figure
+\ref{Fig:experData} are the three trials of tube \#3.
+
+One experiment which displays several interesting evertion characteristics
 is shown in Figure \ref{Fig:experData}, Right Panel.
 Referring first to the length-vs-time plot (middle right), we see a start-stop or staircase
 behavior sometimes seen with eversion under relatively constant input pressure.   It
-should be noted that the selected eversion experiment (Right panel) was loaded by reel inertia and
-by friction applied to the reel.  Velocity (lower right) indicates a series of peaks where the eversion
+should be noted that the selected eversion experiment (Right panel) was loaded by ``high" inertia and
+``High" friction applied to the reel.  Velocity (lower right) indicates a series of peaks where the eversion
 ``breaks-free" but then stops again a short time later giving length-vs-time a stair-step characteristic.
 
 Pressure (middle left) first grows for about 1 second without corresponding eversion motion, and
 then oscillates in approximate synchrony with the velocity peaks.
 
-Finally, the pressure-flow phase plot (top left) shows diagonal slope (the trajectory proceeds from
+Finally, the pressure-flow phase plot (top left) shows a predominantly diagonal straight line slope.
+Flow grows rapidly and then the trajectory proceeds from
 lower right (high initial flow with low pressure) to upper left (lower flow, higher pressure).
 The trajectory makes loops to lower pressures and back up to the slope at higher pressures.  These
 loops correspond in time to the pressure oscillations (middle left).
@@ -122,7 +142,7 @@ loops correspond in time to the pressure oscillations (middle left).
 These dynamic characteristics (start-stop bursting, pressure oscillations, diagonal phase trajectory, and
 downward loops) were not all present under all experimental conditions.  In summary then, depending on
 factors to be determined, some or all of these characteristics may or may not be present in a given
-eversion run.
+free eversion run.
 
 \subsection{Simulation Goals}
 The goals of this simulation are:
@@ -179,7 +199,29 @@ and the reel/crumple zone can be in one of two additional states:
 Together the system can be in four states comprising the permutations
 of these two state variables.
 
-\section{System Equations:}
+\section{Model Structure and System Equations:}
+
+We will consider two possible structures:
+
+A {\it one-compartment} model (Figure \ref{Fig:TwoStructures}, Left)
+assumes that first-order pressure dynamics are present between a source of   pressure  ($P_{source}$ from a compressor, regulator, or tank accumulator)
+and a single  everting tube system volume (housing plus tube volume, $V_{et} = L\times \pi r^2$.) with uniform pressure, $P$.
+
+The {\it two-compartment} model(Figure \ref{Fig:TwoStructures}, Right)
+assumes that additional first-order pressure dynamics are present between
+the housing volume (pressure, $P_1$, volume $V_{housing}$ and the tube system volume ($V_{et}$ as above).
+
+For both structures, we can make the tube radius a function of its length, $R_{et}(L)$.   This can simulate novel designs with varying
+radii exploiting new ET
+fabrication methods such as laser welding or CNC heat sealing.
+
+\begin{figure}[h]\centering
+\includegraphics[width=.475\textwidth]{Photo_OneCompartment.png}
+\includegraphics[width=.475\textwidth]{Figure_TwoCompartment.png}
+\caption{Two model structures applied to eversion experiments of
+Fig. \ref{Fig:experData} }\label{Fig:TwoStructures}
+\end{figure}
+
 
 After setting initial conditions (see below), we model eversion dynamics by:
 \begin{enumerate}
@@ -362,7 +404,7 @@ Patmosphere   &  Known     & 101.325 &  $kPa$      & Atmospheric pressure & \\
 RT            &  Known     & 2.5E+3 &   $m^3 Pa/mol$   & Gas constant x temperature &  \\
 T             &  Known     & 2.95E+2 &  $^\circ K$    & Room temperature   & Thermometer \\
 Tau\_coulomb   &  Known     &        &  $Nm$       & Coulomb fric. torque on reel  & design and testing \cite{Lewis2024XX} \\
-Vhousing\_m3   &  Known     &  1.5E-3&  $m^3$      & Net housing air volume  & CAD model \\
+Vhousing\_m3   &  Known     &  1.256E-3 &  $m^3$      & Net housing air volume  & CAD model \\
 et\_MPM        &  Known     &  0.1    &  $kg$       & Tubing mass per meter  & measured \\
 rReel         &  Known     &         &   $m$       & Reel radius & CAD model \\ \hline
 ET\_Res\_ratio  &  Free      & 0.3---0.6 &  dimensionless &  ET resistance scale & manual tuning \\

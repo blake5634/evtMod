@@ -164,7 +164,7 @@ def get_files():
 
             files += dirfiles
             mdfiles += dirmdfiles
-    print ('get_files: ', files)
+    #print ('get_files: ', files)
     return files, mdfiles
 
 #
