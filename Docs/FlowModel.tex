@@ -229,24 +229,30 @@ introduces length-dependent resistance between the housing and tube, $RT(L)$, to
 
 After setting initial conditions (see below), we model eversion dynamics by:
 \begin{enumerate}
-  \item Computing pressure, volume, and flow from the source.
-  \item Computing forces applied to the eversion tip.
-  \item Accounting for the mechanical advantage (everting material speed is $2\times\dot{L}$, Pressure applied to everting front develops 1/2 the everting force expected from $P\times A$.)
+  \item Computing volume and pressure.
+  \item Computing forces applied to the eversion tip and accounting for the mechanical advantage (everting material speed is $2\times\dot{L}$, Pressure applied to everting front develops 1/2 the everting force expected from $P\times A$.)
 
-  \item Selecting the dynamic mode from the four combined states above.
+  \item Selecting the dynamic mode from the four combined states above and computing accelerations.
   GROWING or STUCK state is selected by pressure thresholds (related to net
   eversion force by $F=PA(L)$.
   TAUGHT or SLACK state is selected by checking length of
-  the crumple zone material.
-
-  \item According to the dynamic mode, summing forces, equating to  zero, solving for tube and reel accelerations.
+  the crumple zone material. Then, according to the dynamic mode, summing forces, equating to  zero, solving for tube and reel accelerations.
 
   \item Eversion does not come to an instant halt. We  empirically model a short exponential decay of velocity as tube decelerates.
+
+  \item Implement the transitions between states STUCK, Growing, and TAUGHT,  SLACK. %item5
+
+
+  \item  Integrate acceleration and velocity to update state variables.  %item6
+
+
 \end{enumerate}
 
 \noindent
 Specifically for the one-compartment model:
 
+\begin{enumerate}
+\item
 \begin{equation}\label{eqOneCompartmentVol}
 V_t = V_{housing} - V_{contents} + L  A
 \end{equation}
@@ -283,6 +289,9 @@ in $^\circ$K.  We assume temperature is constant during eversion (isothermal bou
 \label{Fig:baselineResults}
 \end{figure}
 
+
+\item
+
 Computing Forces:
 
 
@@ -296,19 +305,23 @@ Computing Forces:
 Coulomb friction is independent of velocity so does not get scaled by the $2\times$ mechanical advantage.
 Computing acceleration according to the dynamic state:
 
+\item Computing Acceleration in the four states.
+
 GROWING and SLACK:
 
 \beq
 \ddot{L} = \frac{F_{ever} - F_D(FL,\dot{L})-F_C}  {M_T/2}
 \eeq
+
 \beq
-\dot{\theta} = \tau_{Coulomb}/J
+\ddot{\theta} = - \tau_{Coulomb}/J
 \eeq
 where $M_T$ is the mass of inside tubing, pulled at $1/2$ speed
 by the eversion process, and $J$ is the rotational inertia of
 the tubing reel inside the housing. We assume $J$ is constant
-(despite some material being unspooled) and that $M_T =
-L \cdot \mathrm{ET\_mass\_per\_mm} $
+(despite some material being unspooled) and that
+$\tau_{Coulomb}$ is a known constant torque. Finally tubing mass is proportional to length:
+$M_T = L \cdot \mathrm{ET\_mass\_per\_mm} $.
 
 GROWING and TAUGHT:
 
@@ -321,6 +334,8 @@ GROWING and TAUGHT:
 \beq
 \ddot{\theta} = \ddot{L}/r
 \eeq
+\noindent
+in this state reel acceleration is kinematically linked to tube growth.
 
 STUCK and (SLACK or TAUGHT):
 
@@ -329,12 +344,14 @@ STUCK and (SLACK or TAUGHT):
 %         Lddot = -1 * max(0, alpha * Ldot)
 %         th_ddot = tau_coulomb/J
 
+
+
 \beq
 \ddot{L} = -1 * \mathrm{dmax}(0, \alpha * \dot{L})
 \eeq
 
 \beq
-\ddot{\theta} = \tau_{Coulomb} / J
+\ddot{\theta} = - \tau_{Coulomb} / J
 \eeq
 where $\alpha$ is an empirical time constant modeling the dynamics of eversion stopping.
 
@@ -366,6 +383,11 @@ Update length of  crumpled material (if any)
 \beq
 L_C = \mathrm{max}(0,  r\theta - L)
 \eeq
+
+
+
+
+\item Implement state transitions
 
 We have a switching model to replicate observed intermittent starting and stopping of eversion
 which updates the state based on current pressure:
@@ -400,6 +422,8 @@ In either case above, we update the crumple state as
     \end{cases}
 \end{equation}
 
+\item Integrate state variables.
+
 Finally, we integrate the state variables:
 \begin{equation}
 \begin{aligned}
@@ -415,6 +439,9 @@ and, if necessary ($Ret(L)$ is not constant),
 \beq
 Vet = Vet +  \pi Ret(L)^2  \; \dot(L)
 \eeq
+
+\end{enumerate}
+
 
 \subsection{Initial Conditions}
 For a typical simulation, the initial conditions are
@@ -440,26 +467,27 @@ The maximum tubing length, Lmax, is obviously known (about 0.6m), but was modifi
 between experiment and simulations.
 
 \begin{table}
-\begin{tabular}{l|l|l|l|l|l}
+\begin{tabular}{l|l|l|l|p{1.35in}|l}
 Parameter     &  Class     & Value   & Units     & Description      & source \\ \hline
 ET\_radius     &  Known     & 12.5    &  $mm$       & Tube radius      & tube design \\
-J             &  Known     & 5.1E-4 &  $kg/m^2$    & Reel inertia     & design and testing \cite{Lewis2024XX} \\
-Lmax          &  Known     & 0.5-0.8 &  $m$        & Tube length      & tube design \& fitting \\
+%     J = 1.0E-4*[ 4.67, 5.10, 5.64][Ji]
+J             &  Known     & [ 4.67, 5.1, 5.64]$\times10^{-4}$ &  $kg/m^2$    & Reel inertia     [Lo, Med, Hi]& design, tests \cite{Lewis2024XX} \\
+Tau\_coulomb    &  Known     &[ 2.9, 17.4, 69.4]$\times10^{-3}$&  $Nm$       & Coulomb friction torque on reel [Lo, Med, Hi]  & design, tests \cite{Lewis2024XX} \\
+Lmax          &  Known     & 0.5-0.8 &  $m$        & Tube length      & tube design  \\
 Patmosphere   &  Known     & 101.325 &  $kPa$      & Atmospheric pressure & \\
-RT            &  Known     & 2.5E+3 &   $m^3 Pa/mol$   & Gas constant x temperature &  \\
+RT            &  Known     & 2.5E+3 &   $m^3 Pa/mol$   & Gas constant x temperature & Ref. \\
 T             &  Known     & 2.95E+2 &  $^\circ K$    & Room temperature   & Thermometer \\
-Tau\_coulomb   &  Known     &        &  $Nm$       & Coulomb fric. torque on reel  & design and testing \cite{Lewis2024XX} \\
-Vhousing\_m3   &  Known     &  1.256E-3 &  $m^3$      & Net housing air volume  & CAD model \\
+Vhousing\_m3   &  Known     &  1.256E-3 &  $m^3$      & Housing air volume  & CAD model \\
 et\_MPM        &  Known     &  0.1    &  $kg$       & Tubing mass per meter  & measured \\
 rReel         &  Known     &         &   $m$       & Reel radius & CAD model \\ \hline
 ET\_Res\_ratio  &  Free      & 0.3---0.6 &  dimensionless &  ET resistance scale & manual tuning \\
 K2drag        &  Free      & 0.16---4.0  &  $Nm$       & Empirical Fit    & manual tuning \\
 Kdrag         &  Free      & 0.15---6.0   &  $N/m^2/sec$ & Empirical Fit & manual tuning \\
 PBA\_static    &  Free      & 107---118.5  &  $kPa$      & Break-away pressure  & manual tuning \\
-PHalt\_dyn     &  Free      & 61---116     &  $kPa$      & Eversion stopping press.  & manual tuning \\
+PHalt\_dyn     &  Free      & 61---116     &  $kPa$      & Eversion stopping pressure  & manual tuning \\
 Psource\_SIu   &  Free      & 118---145    &  $kPa$      & Gas source pressure & manual tuning\\
 Rsource\_SIu   &  Free      & (8---14)$\times10^7$ &  $Pa/m^3/sec$    & Slope of P-Fl load-line & manual tuning\\
-Threshold Taper & Free     &  640---3800  &  $Pa/m$      & Change in PBA w/ length   & manual tuning\\
+Thresh. Taper & Free     &  640---3800  &  $Pa/m$      & Change in thresholds w/ length   & manual tuning\\
 % Observation         & Param       & Orig. value   &  Modified Value  \\\hline
 % Velocities too high  & ${\tt Kdrag}$  &   0.3     & 0.6          \\\hline
 % Pressure thresholds converge with time& {\tt PBA\_static} & $1.17\times10^5 $Pa & $1.17\times10^5 - 500L$ Pa          \\\hline
