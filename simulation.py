@@ -21,9 +21,10 @@ def F_drag(L,Ldot, pd):
     #return everDrag
 
     #  increase drag at end of tubing (max eversion length)
-    Psteadystate = pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
-    F_limit = (L/pd['Lmax'])**7 * Psteadystate
-    return max(everDrag, min(Psteadystate, F_limit))
+    Fsteadystate = pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
+    F_limit = (L/pd['Lmax'])**7 * Fsteadystate
+    #return max(everDrag, min(Fsteadystate, F_limit))
+    return max(everDrag,  F_limit)
 
 def Tau_brake(Tc, th_dot, pd):
     # eliminate braking torque near zero velocity
@@ -167,18 +168,19 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         Lc = max(0, pd['rReel']*theta - L)
         lc.append(Lc)
 
-        #tubing mass
+        #tubing mass depends on length
         Mt =  (L+0.3) *  pd['et_MPM']
         #Bt = 10000.0     # N/m/sec  crumple damping
         #Mt_epsilon = 100 * pd['rReelpd']*pd['et_MPM']
 
         #Lc = 0
         if   state == GROWING and Lc > 0: # CRUMPLE zone active
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / Mt
+            # note pulled tubing accelerates at Lddot/2
+            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / (Mt/2)
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'], th_dot,pd)/pd['J']     # damping out overspin
 
         elif state == GROWING and Lc <=  0.01:  # no crumple: TAUGHT
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt + (pd['J']/pd['rReel']**2) )
+            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt/2 + (pd['J']/pd['rReel']**2) )
             th_ddot = Lddot/pd['rReel']   # kinematic relation
 
         elif state == STUCK:

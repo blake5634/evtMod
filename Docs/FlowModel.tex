@@ -156,7 +156,7 @@ The goals of this simulation are:
 
 In any simulation study caution must be exercised when there are a large number of free parameters
 as there may be several combinations of parameters or manifolds in the parameter space which
-may fit any dataset.   In Section \ref{xxxxx}, below, we review the overall parameter set and
+may fit any dataset.   In Section \ref{Sec:Params}, below, we review the overall parameter set and
 classify the parameters into known, independently measureable parameters vs free parameters.
 
 
@@ -173,13 +173,13 @@ The dynamic model of an eversion drive system includes;
   \]
   \item A ``crumple zone" in which eversion material can accumulate
   between the reel and the everting tube. The length of material in
-  the crumple zone is $L_c$.
+  the crumple zone is $L_c >= 0$.
   \item Eversion happens when the eversion force (pressure $\times$ face area of the tube) exceeds any retarding forces.
   \item Forces which can oppose eversion include,
   \begin{itemize}
-    \item drag forces inertial forces required to pull the tubing material
+    \item drag forces and inertial forces required to pull the tubing material
     inside the deployed tube,
-    \item reel inertia and reel friction resulting from unspooling material,
+    \item reel inertia and reel friction resulting from unspooling material (only when $L_c = 0$).
   \end{itemize}
 \end{itemize}
 
@@ -216,10 +216,14 @@ radii exploiting new ET
 fabrication methods such as laser welding or CNC heat sealing.
 
 \begin{figure}[h]\centering
-\includegraphics[width=.475\textwidth]{Photo_OneCompartment.png}
-\includegraphics[width=.475\textwidth]{Figure_TwoCompartment.png}
+% \includegraphics[width=.475\textwidth]{Figure_OneCompartment.png}
+% \includegraphics[width=.475\textwidth]{Figure_TwoCompartment.png}
+\includegraphics[height=1.5in]{Figure_OneCompartment.png}
+\includegraphics[height=1.5in]{Figure_TwoCompartment.png}
 \caption{Two model structures applied to eversion experiments of
-Fig. \ref{Fig:experData} }\label{Fig:TwoStructures}
+Fig. \ref{Fig:experData}.  One compartment model (Left) lumps the
+housing volume and tube volume together. Two compartment model (Right)
+introduces length-dependent resistance between the housing and tube, $RT(L)$, to split the pressure state, $P$ into two states, $P_{C1}, P_{C2}$.}\label{Fig:TwoStructures}
 \end{figure}
 
 
@@ -230,29 +234,48 @@ After setting initial conditions (see below), we model eversion dynamics by:
   \item Accounting for the mechanical advantage (everting material speed is $2\times\dot{L}$, Pressure applied to everting front develops 1/2 the everting force expected from $P\times A$.)
 
   \item Selecting the dynamic mode from the four combined states above.
-  GROWING and STUCK are selected by force thresholds applied to net
-  eversion force.    TAUGHT and SLACK are selected by checking length of
+  GROWING or STUCK state is selected by pressure thresholds (related to net
+  eversion force by $F=PA(L)$.
+  TAUGHT or SLACK state is selected by checking length of
   the crumple zone material.
 
   \item According to the dynamic mode, summing forces, equating to  zero, solving for tube and reel accelerations.
-  \item Eversion does not come to an instant halt. We  empirically model exponential decay of velocity as tube decelerates.
+
+  \item Eversion does not come to an instant halt. We  empirically model a short exponential decay of velocity as tube decelerates.
 \end{enumerate}
 
 \noindent
-Specifically:
+Specifically for the one-compartment model:
 
 \begin{equation}\label{eqOneCompartmentVol}
 V_t = V_{housing} - V_{contents} + L  A
 \end{equation}
-$V_t$ includes both the reel housing minus the volume of its contents,
-and the everted tube of length $L$ with cross sectional area $A$.
+$V_t$ includes both the reel housing volume (minus the volume of its contents)
+and the everted tube volume $Vet(L)$ with cross sectional area $A(L)$
+where
+\beq
+A(L) = \pi Ret(L)^2
+\eeq
+where $Ret(L)$ is initially a constant radius, but can also
+be a function describing a diameter profile manufactured into the
+everting tube. Alternatively, $Ret(L)$ can describe a constraining
+tube of radius $R_C(L)$ such that
+\beq
+R_C(L) <= Ret(L)
+\eeq
+When the radius is not constant, tube volume is computed by
+
+\beq
+Vet = \pi \int_0^L Ret(L)^2 dL
+\eeq
 
 From the ideal gas equation:
 \begin{equation}\label{eqOneCompartmentPress}
 P = \frac{N  RT}{ V_t}
 \end{equation}
+
 where $N$ is the molar mass of gas in the system, $R$ is the gas constant, and $T$ is the temperature
-in $^\circ$K, (which we assume is constant).
+in $^\circ$K.  We assume temperature is constant during eversion (isothermal boundary condition).
 
 \begin{figure}\centering
 \includegraphics[width=.75\textwidth]{Figure_9HhiI_hiTf_baseline.png}
@@ -271,24 +294,28 @@ Computing Forces:
 \eeq
 
 Coulomb friction is independent of velocity so does not get scaled by the $2\times$ mechanical advantage.
-
 Computing acceleration according to the dynamic state:
 
 GROWING and SLACK:
 
 \beq
-\ddot{L} = \frac{F_{ever} - F_D(L,\dot{L})-F_C}  {M_T}
+\ddot{L} = \frac{F_{ever} - F_D(FL,\dot{L})-F_C}  {M_T/2}
 \eeq
 \beq
 \dot{\theta} = \tau_{Coulomb}/J
 \eeq
+where $M_T$ is the mass of inside tubing, pulled at $1/2$ speed
+by the eversion process, and $J$ is the rotational inertia of
+the tubing reel inside the housing. We assume $J$ is constant
+(despite some material being unspooled) and that $M_T =
+L \cdot \mathrm{ET\_mass\_per\_mm} $
 
 GROWING and TAUGHT:
 
 %         Lddot = (1/Mt + (rReel\_SIu**2/J) ) * ( F_ever - Fdrag(L,Ldot) - Fcoulomb )
 %         th_ddot = Lddot/rReel\_SIu
 \beq
-\ddot{L} =(F_{ever} - F_D - F_C) /  (M_T + J/r^2)
+\ddot{L} =(F_{ever} - F_D - F_C) /  (M_T/2 + J/r^2)
 \eeq
 
 \beq
@@ -303,7 +330,7 @@ STUCK and (SLACK or TAUGHT):
 %         th_ddot = tau_coulomb/J
 
 \beq
-\ddot{L} = -1 * \mathrm(max)(0, \alpha * \dot{L})
+\ddot{L} = -1 * \mathrm{dmax}(0, \alpha * \dot{L})
 \eeq
 
 \beq
@@ -322,12 +349,19 @@ Converting airflow ($m^3/sec$) to rate of molar mass flow:
 \end{equation}
 
 Model velocity and length dependent eversion force which is resistance to pulling out eversion material:
+%     everDrag =   2 * (pd['Kdrag'] +  pd['K2drag'] * L) * Ldot
+
 \begin{equation}
-F_D(L,\dot{L} = 2 L  K_D  \dot{L}
+F_D(L,\dot{L}) = \mathrm{max} \left( 2  (  K_{D} + L  K_{2D} ) \dot{L} , F_{end} (L)  \right )
 \end{equation}
 
-Where the factor of two accounts for everting material going at twice tube growth rate, $\dot{L}$.
-
+Where the factor of two accounts for everting material going at twice tube growth rate, $\dot{L}$,
+and $F_{end}$ is a function to model the everting tube material running into its hard stop:
+% Fsteadystate = pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
+% F_limit = (L/pd['Lmax'])**7 * Fsteadystate
+\beq
+F_{end}(L) = (L / Lmax)^7  P_{source} \pi Ret(L)^2
+\eeq
 Update length of  crumpled material (if any)
 \beq
 L_C = \mathrm{max}(0,  r\theta - L)
@@ -376,9 +410,14 @@ Finally, we integrate the state variables:
   N &= N + \dot{N}  dt\\
 \end{aligned}
 \end{equation}
-
+\noindent
+and, if necessary ($Ret(L)$ is not constant),
+\beq
+Vet = Vet +  \pi Ret(L)^2  \; \dot(L)
+\eeq
 
 \subsection{Initial Conditions}
+For a typical simulation, the initial conditions are
 \begin{equation}
 \begin{aligned}
   P &= 1 \; \mathrm{atmosphere}\\
@@ -391,8 +430,14 @@ Finally, we integrate the state variables:
 \end{aligned}
 \end{equation}
 
-\subsection{Parameters}
-The model parameters are classified in Table \ref{Tab:paramClass}
+\subsection{Parameters}\label{Sec:Params}
+The model parameters are classified in Table \ref{Tab:paramClass}.
+The first 10 parameters are independently measured or otherwise known.  For example,
+atmospheric pressure (Patmosphere) and room temperature (T) are known constants.
+Reel parameters rReel, J, Tau\_coulomb, and Vhousing\_m3 are known from CAD files
+and independently confirmed by measurements\cite{Lewis2024XX}.
+The maximum tubing length, Lmax, is obviously known (about 0.6m), but was modified by matching the end length
+between experiment and simulations.
 
 \begin{table}
 \begin{tabular}{l|l|l|l|l|l}
@@ -422,9 +467,8 @@ Threshold Taper & Free     &  640---3800  &  $Pa/m$      & Change in PBA w/ leng
 % Pressure rise too slow  & $V_{housing}$   &  $0.5\times10^{-3}$ m$^3$   & $0.05\times10^{-3} $ m$^3$   \\\hline
 % Peak Velocity too high  & $J$             &  $5.10\times10^4$  kg/m$^2$     & 10.2$\times10^4$  kg/m$^2$ \\\hline
 \end{tabular}
-\caption{Parameters used and their sources and values. }
-\end{table}\label{Tab:paramClass}
-
+\caption{Parameters used and their sources and values. }\label{Tab:paramClass}
+\end{table}
 \vspace{0.175in}
 
 The modified parameter set is given in Section \ref{modParams} below.  Asterisks (*) denote iteratively changed parameters.
