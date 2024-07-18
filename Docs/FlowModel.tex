@@ -216,12 +216,14 @@ radii exploiting new ET
 fabrication methods such as laser welding or CNC heat sealing.
 
 \begin{figure}[h]\centering
+\includegraphics[width=0.9\textwidth]{Fig_OneAndTwoCompartment.png}
 % \includegraphics[width=.475\textwidth]{Figure_OneCompartment.png}
 % \includegraphics[width=.475\textwidth]{Figure_TwoCompartment.png}
-\includegraphics[height=1.5in]{Figure_OneCompartment.png}
-\includegraphics[height=1.5in]{Figure_TwoCompartment.png}
+% \includegraphics[height=1.5in]{Figure_OneCompartment.png}
+% \includegraphics[height=1.5in]{Figure_TwoCompartment.png}
 \caption{Two model structures applied to eversion experiments of
-Fig. \ref{Fig:experData}.  One compartment model (Left) lumps the
+Fig. \ref{Fig:experData} expressed as simple electric circuits.
+One compartment model (Left) lumps the
 housing volume and tube volume together. Two compartment model (Right)
 introduces length-dependent resistance between the housing and tube, $RT(L)$, to split the pressure state, $P$ into two states, $P_{C1}, P_{C2}$.}\label{Fig:TwoStructures}
 \end{figure}
@@ -302,10 +304,10 @@ Computing Forces:
   F_{c} = \tau_{Coulomb} / r
 \eeq
 
-Coulomb friction is independent of velocity so does not get scaled by the $2\times$ mechanical advantage.
-Computing acceleration according to the dynamic state:
+Coulomb friction is independent of velocity so does not get scaled by the
+$2\times$ mechanical advantage.
 
-\item Computing Acceleration in the four states.
+\item Computing acceleration according to the four dynamic states:
 
 GROWING and SLACK:
 
@@ -400,20 +402,22 @@ which updates the state based on current pressure:
     \end{cases}
 \end{equation}
 
+%
+%
+% We are currently investigating changing this switching model to one based on thresholding
+% net eversion force rather than tip surface pressure:
+% \begin{equation}
+%     \mathtt{state1} =
+%     \begin{cases}
+%       \mathrm{GROWING},   &  F_{ever} > F2 \\
+%       \mathrm{unchanged}, &  F1 <= F_{ever} <= F2 \\
+%       \mathrm{STUCK},     &  F_{ever} < F1
+%     \end{cases}
+% \end{equation}
 
 
-We are currently investigating changing this switching model to one based on thresholding
-net eversion force rather than tip surface pressure:
-\begin{equation}
-    \mathtt{state1} =
-    \begin{cases}
-      \mathrm{GROWING},   &  F_{ever} > F2 \\
-      \mathrm{unchanged}, &  F1 <= F_{ever} <= F2 \\
-      \mathrm{STUCK},     &  F_{ever} < F1
-    \end{cases}
-\end{equation}
-
-In either case above, we update the crumple state as
+We update the crumple state depending on the length of the crumple
+zone ($L_C$) as
 \begin{equation}
     \mathtt{state2} =
     \begin{cases}
@@ -460,10 +464,14 @@ For a typical simulation, the initial conditions are
 \subsection{Parameters}\label{Sec:Params}
 The model parameters are classified in Table \ref{Tab:paramClass}.
 The first 10 parameters are independently measured or otherwise known.  For example,
-atmospheric pressure (Patmosphere) and room temperature (T) are known constants.
+atmospheric pressure (Patmosphere) and room temperature (T) are known or
+measured constants.
 Reel parameters rReel, J, Tau\_coulomb, and Vhousing\_m3 are known from CAD files
 and independently confirmed by measurements\cite{Lewis2024XX}.
-The maximum tubing length, Lmax, is obviously known (about 0.6m), but was modified by matching the end length
+Inertia, J, and coulomb friction were set to three different levels during
+experimentation, ``low", "medium," and "high" as indicated in Table \ref{Tab:paramClass}.
+The maximum tubing length, Lmax, is known at fabrication time (about 0.6m).
+Sometimes it was modified within a narrow range  by matching the end length
 between experiment and simulations.
 
 \begin{table}
@@ -497,17 +505,68 @@ Thresh. Taper & Free     &  640---3800  &  $Pa/m$      & Change in thresholds w/
 \end{tabular}
 \caption{Parameters used and their sources and values. }\label{Tab:paramClass}
 \end{table}
-\vspace{0.175in}
+% \vspace{0.175in}
+%
+% The modified parameter set is given in Section \ref{modParams} below.  Asterisks (*) denote iteratively changed parameters.
+%
+% Simulation with the modified parameters (Figure \ref{Fig:ModifParResults}) improve the model fit to data by
+%     1) Shrinking loops on the pressure flow plot (upper left) are similar
+%   to shrinking loops in experimental pressure-velocity plot'
+%     2) Convergence of the eversion thresholds (center left) causes the shrinking loops above,
+%     3) Peak velocities better match peaks of fig. 9, and match the pattern of the highest velocity
+%   appearing near the center of travel.
+%     4) With the modified parmeters there are about 2 bursts per second, similar to the experimental rate.
 
-The modified parameter set is given in Section \ref{modParams} below.  Asterisks (*) denote iteratively changed parameters.
 
-Simulation with the modified parameters (Figure \ref{Fig:ModifParResults}) improve the model fit to data by
-    1) Shrinking loops on the pressure flow plot (upper left) are similar
-  to shrinking loops in experimental pressure-velocity plot'
-    2) Convergence of the eversion thresholds (center left) causes the shrinking loops above,
-    3) Peak velocities better match peaks of fig. 9, and match the pattern of the highest velocity
-  appearing near the center of travel.
-    4) With the modified parmeters there are about 2 bursts per second, similar to the experimental rate.
+\section{Parameter Estimation from Data}
+
+We used the following process  to fit parameters to an eversion data
+record where the record consists of the following data as a function of time:
+
+\begin{itemize}
+    \item Pressure in the tube storage chamber ($Pa$)
+    \item Air flow from source into tube storage chamber ($m^3/sec$)
+    \item Length of the everted tube ($m$)
+    \item Velocity of eversion (derived) ($m/sec$)
+\end{itemize}
+
+
+% These can be plotted multiple ways such as in Fig \ref{Fig:baselineResults} for example.
+
+Simuation outputs can be plotted over the data to facilitate comparison.
+
+We can then use the following procedure to iteratively tune some of the  model  parameters to match a
+particular experimental run.   Other parameters such as the tube reel radius, inertia, and braking
+friction are readily measured independently \cite{Andy Papers}  and not fit to the eversion experiments.
+
+\begin{enumerate}
+    \item  Adjust load line pressure intercept.
+
+    {\bf Data Focus: } Pressure/Flow curves (upper left):\\
+    {\bf Procedure: } Adjust Psource\_SIu to move the load line and sim trajectory (they should overlap)
+    up and down.  Adjust Rsource\_SIu to adjust its slope (higher values slope down more).
+
+    \item Adjust stop-start thresholds.
+
+     {\bf Data Focus: } Pressure-Time curves (middle left):\\
+    {\bf Procedure: } Adjust PBA\_static up or down to match the pressure peaks in experiment (green dashed).
+    Adjust PHalt\_dyn  up or down to match the pressure valleys.
+
+    \item Adjust threshold taper.
+
+     {\bf Data Focus: } Pressure-Time curves (middle left):\\
+    {\bf Procedure: } Adjust Threshold Taper up or down to speed or slow down convergence of the thresholds.
+
+    \item Adjust Friction or drag
+
+     {\bf Data Focus: } Length-Time curves (middle right):\\
+    {\bf Procedure: } Adjust the viscus drag constant of tubing (K\_drag) up or down to match the overall slope
+    of the data trace.
+    Adjust max tubing length (Lmax) to match stopping point of data.
+
+    \item Experiment with other parameters or go back and repeat the procedure.
+
+\end{enumerate}
 
 
 
@@ -559,54 +618,6 @@ Simulation with the modified parameters (Figure \ref{Fig:ModifParResults}) impro
       PHalt_dyn      1.1167E+05  Pascals
 
 \end{verbatim}
-
-\section{Parameter Estimation from Data}
-
-The following process can be used to fit parameters to an eversion data record where the record consists of
-the following data as a function of time:
-
-\begin{itemize}
-    \item Pressure in the tube storage chamber (Pa)
-    \item Air flow from source into tube storage chamber ($m^3/sec$)
-    \item Length of everting tube relative to chamber opening (m)
-    \item Velocity of eversion (derived) ($m/sec$)
-\end{itemize}
-
-These can be plotted multiple ways such as in Fig \ref{Fig:baselineResults} for example.
-
-We can then use the following procedure to iteratively tune some of the  model  parameters to match a
-particular experimental run.   Other parameters such as the tube reel radius, inertia, and braking
-friction are readily measured independently \cite{Andy Papers}  and not fit to the eversion experiments.
-
-\begin{enumerate}
-    \item  Adjust load line pressure intercept.
-
-    {\bf Data Focus: } Pressure/Flow curves (upper left):\\
-    {\bf Procedure: } Adjust Psource\_SIu to move the load line and sim trajectory (they should overlap)
-    up and down.  Adjust Rsource\_SIu to adjust its slope (higher values slope down more).
-
-    \item Adjust stop-start thresholds.
-
-     {\bf Data Focus: } Pressure-Time curves (middle left):\\
-    {\bf Procedure: } Adjust PBA\_static up or down to match the pressure peaks in experiment (green dashed).
-    Adjust PHalt\_dyn  up or down to match the pressure valleys.
-
-    \item Adjust threshold taper.
-
-     {\bf Data Focus: } Pressure-Time curves (middle left):\\
-    {\bf Procedure: } Adjust Threshold Taper up or down to speed or slow down convergence of the thresholds.
-
-    \item Adjust Friction or drag
-
-     {\bf Data Focus: } Length-Time curves (middle right):\\
-    {\bf Procedure: } Adjust the viscus drag constant of tubing (K\_drag) up or down to match the overall slope
-    of the data trace.
-    Adjust max tubing length (Lmax) to match stopping point of data.
-
-    \item Experiment with other parameters or go back and repeat the procedure.
-
-\end{enumerate}
-
 
 \section{Model Refinements}
 
