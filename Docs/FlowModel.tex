@@ -284,12 +284,12 @@ P = \frac{N  RT}{ V_t}
 
 where $N$ is the molar mass of gas in the system, $R$ is the gas constant, and $T$ is the temperature
 in $^\circ$K.  We assume temperature is constant during eversion (isothermal boundary condition).
-
-\begin{figure}\centering
-\includegraphics[width=.75\textwidth]{Figure_9HhiI_hiTf_baseline.png}
-\caption{Simulation Run with approximate qualitative match.  (See Lewis, Fig 9, hiI, hiTf)}
-\label{Fig:baselineResults}
-\end{figure}
+%
+% \begin{figure}\centering
+% \includegraphics[width=.75\textwidth]{Figure_9HhiI_hiTf_baseline.png}
+% \caption{Simulation Run with approximate qualitative match.  (See Lewis, Fig 9, hiI, hiTf)}
+% \label{Fig:baselineResults}
+% \end{figure}
 
 
 \item
@@ -569,55 +569,117 @@ friction are readily measured independently \cite{Andy Papers}  and not fit to t
 \end{enumerate}
 
 
+%
+%
+% \begin{figure}\centering
+% \includegraphics[width=.75\textwidth]{Figure_9HhiI_hiTf_tweakedParams.png}
+% \caption{Improved qualitative match with modified parameters.  (See Lewis, Fig 9, hiI, hiTf)}
+% \label{Fig:ModifParResults}
+% \end{figure}
+
+
+
+
+%
+%   New simulation while going back to one-compartment
+%
 
 \begin{figure}\centering
-\includegraphics[width=.75\textwidth]{Figure_9HhiI_hiTf_tweakedParams.png}
-\caption{Improved qualitative match with modified parameters.  (See Lewis, Fig 9, hiI, hiTf)}
-\label{Fig:ModifParResults}
+\includegraphics[width=.75\textwidth]{Set6wInitialParams.png}
+\caption{Comparison of one experimental run with a simulation using
+a set of initial parameter values (Table \ref{Tab:IntialParams}}
+\label{Fig:InitialSimCompare}
 \end{figure}
+
+
+\begin{verbatim}
+DataFile              None        text
+ET_RofL_mode          constant    text
+ET_radius             1.2500E-02  m
+J                     5.6400E-04  kg/m2
+K2drag                1.0000E+01  Nm
+Kdrag                 8.0000E+00  N / m2 / sec
+LLine_SIu             1.0000E-08  m3/sec / Pascal
+Lmax                  6.0000E-01  m
+PBA_static            1.1511E+05  Pascals
+PHalt_dyn             1.0994E+05  Pascals
+Patmosphere           1.0132E+05  Pascals
+Psource_SIu           1.2201E+05  Pascals
+RT                    2.4560E+03  ??
+Rsource_SIu           1.0000E+08  Pa/m3/sec
+T                     2.9540E+02  K
+Tau_coulomb           6.9400E-02  Nm
+Threshold Taper       3.2319E+03  Pa /m
+Vhousing_m3           1.4616E-03  m3
+dF1dL                 3.6364E+00  N/m??
+dt                    2.5000E-03  sec
+et_MPM                1.0000E-01  kg/m
+rReel                 1.0900E-02  m
+radius_modes
+      ['constant', 'box', 'ramp', 'constrict']      text list
+th_dot_minCoulomb     5.0000E-02  rad/sec
+\end{verbatim}
+
+Table 2: Initial parameter values for the simulation before parameter tuning (Figure
+\ref{Fig:InitialSimCompare}
+
+Following the procedure in Section \ref{Sec:paramFitting}, we made the following
+changes:
+
+\begin{enumerate}
+    \item Reduce source pressure to match the load line to the predominant Pressure-Flow slope.
+    \item  Adjust pressure thresholds for ``Break-Away" and ``Halting" and
+    drag coefficients to match the
+    bursty motion of the experimental data.
+    \item  Adjust source pressure, drag parameters, and threshold taper to
+    increase matching.
+\end{enumerate}
+
+
+\begin{figure}\centering
+\includegraphics[width=.75\textwidth]{Set6wFinalParms.png}
+\caption{The same simulation and data with manually tuned parameter values (Table \ref{Tab:FinalParams}}
+\label{Fig:InitialSimCompare}
+\end{figure}
+
+
+\begin{verbatim}
+DataFile              None        text
+ET_RofL_mode          constant    text
+ET_radius             1.2500E-02  m
+J                     5.6400E-04  kg/m2
+K2drag              * 5.0000E-01  Nm
+Kdrag               * 1.0000E+00  N / m2 / sec
+LLine_SIu             1.0000E-08  m3/sec / Pascal
+Lmax                * 6.5000E-01  m
+PBA_static          * 1.1200E+05  Pascals
+PHalt_dyn           * 1.1050E+05  Pascals
+Patmosphere           1.0132E+05  Pascals
+Psource_SIu         * 1.1850E+05  Pascals
+RT                    2.4560E+03  ??
+Rsource_SIu           1.0000E+08  Pa/m3/sec
+T                     2.9540E+02  K
+Tau_coulomb           6.9400E-02  Nm
+Threshold Taper     * 3.5000E+02  Pa /m
+Vhousing_m3           1.4616E-03  m3
+dF1dL                 3.6364E+00  N/m??
+dt                    2.5000E-03  sec
+et_MPM                1.0000E-01  kg/m
+rReel                 1.0900E-02  m
+radius_modes
+      ['constant', 'box', 'ramp', 'constrict']      text list
+th_dot_minCoulomb     5.0000E-02  rad/sec
+\end{verbatim}
+Table 3. Final  parameter values after parameter tuning on the
+same data set (Figure \ref{Fig:FinalSimCompare}.
+
+
+
+
 
 \clearpage
 
-\section{Baseline Parameter Values}\label{baselineParms}
-\begin{verbatim}
 
-      moles_per_m3   4.4623E+01  moles / m3
-      Psource\_SIu    1.2066E+05  Pascals
-      LLine\_SIu      1.0000E-08  m3/sec / Pascal
-      Rsource\_SIu    1.0000E+08  Pa/m3/sec
-      Vhousing_m3    1.4616E-03  m3
-      Kdrag          3.0000E-01  N / m2 / sec
-      area_m2        4.9087E-04  m2
-      Pintercept     1.2066E+05  Pascals
-      Fintercept     2.0684E-04  m3/sec
-      Vintercept     4.2137E-01  m/sec
-      PBA_static     1.1721E+05  Pascals
-      PHalt_dyn      1.1032E+05  Pascals
-      Patmosphere    1.0132E+05  Pascals
-
-\end{verbatim}
-
-
-\section{Modified Parameter Values}\label{modParams}
-\begin{verbatim}
-
-      moles_per_m3   4.4623E+01  moles / m3 of Air
-      Patmosphere    1.0132E+05  Pascals
-      Psource\_SIu    1.2201E+05  Pascals
-      LLine\_SIu      1.0000E-08  m3/sec / Pascal
-      Rsource\_SIu    1.0000E+08  Pa/m3/sec
-      J            * 1.0200E-03  kg/m2
-      Vhousing_m3  * 1.4616E-04  m3
-      Kdrag        * 1.2000E+00  N / m2 / sec
-      area_m2        4.9087E-04  m2
-      Pintercept     1.2201E+05  Pascals
-      Fintercept     2.0684E-04  m3/sec
-      Vintercept     4.2138E-01  m/sec
-      Threshold Taper *   3.5714E+03  Pa /m
-      PBA_static     1.1856E+05  Pascals
-      PHalt_dyn      1.1167E+05  Pascals
-
-\end{verbatim}
 
 \section{Model Refinements}
 
