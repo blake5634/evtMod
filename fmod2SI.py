@@ -252,6 +252,7 @@ axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+print('\n\n Trying to set [0,0] Y lims: ', PltPrMIN, PltPrMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
 ax = plt.gca()
@@ -364,8 +365,8 @@ if PLOT_TYPE == 'OVERLAY':
     dtsim = pd['dt']
     print('dt Sim:', dtsim, 'dt Exp:', dtexp)
 
-
-    et.print_param_table2(pd,pd_orig, pu)  # print with change markers
+    # obsolete:  changes are made outside of runtime and thus undetectable.
+    #et.print_param_table2(pd,pd_orig, pu)  # print with change markers
 
 if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot it.
     et.plot_tube_shape(pd)

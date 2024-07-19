@@ -135,7 +135,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # else:
         #     fT = 0.0000002  # HACK
         #
-        fT = (PC1-PC2)/et.ResET(L,pd)
+        #fT = (PC1-PC2)/et.ResET(L,pd)
+        rtube = pd['Rsource_SIu'] * pd['ET_Res_ratio']
+        fT = (PC1-PC2)/rtube
         fint = fsource - fT
 
         # 2Compartment:
