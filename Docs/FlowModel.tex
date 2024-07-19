@@ -535,9 +535,10 @@ record where the record consists of the following data as a function of time:
 
 Simuation outputs can be plotted over the data to facilitate comparison.
 
-We can then use the following procedure to iteratively tune some of the  model  parameters to match a
-particular experimental run.   Other parameters such as the tube reel radius, inertia, and braking
-friction are readily measured independently \cite{Andy Papers}  and not fit to the eversion experiments.
+We can then use the following procedure to iteratively tune  the free model  parameters to match a
+particular experimental run.
+% Other parameters such as the tube reel radius, inertia, and braking
+% friction are readily measured independently \cite{Andy Papers}  and not fit to the eversion experiments.
 
 \begin{enumerate}
     \item  Adjust load line pressure intercept.
@@ -569,62 +570,39 @@ friction are readily measured independently \cite{Andy Papers}  and not fit to t
 \end{enumerate}
 
 
-%
-%
-% \begin{figure}\centering
-% \includegraphics[width=.75\textwidth]{Figure_9HhiI_hiTf_tweakedParams.png}
-% \caption{Improved qualitative match with modified parameters.  (See Lewis, Fig 9, hiI, hiTf)}
-% \label{Fig:ModifParResults}
-% \end{figure}
-
-
 
 
 %
-%   New simulation while going back to one-compartment
+%   17-Jul: New simulation while going back to one-compartment
+%
+%    Compared "initialParameters" and tuned them for dataset 6:
+%                             hi-inertia, hi_fric, tube-2 trial22
 %
 
 \begin{figure}\centering
 \includegraphics[width=.75\textwidth]{Set6wInitialParams.png}
-\caption{Comparison of one experimental run with a simulation using
-a set of initial parameter values (Table \ref{Tab:IntialParams}}
+\caption{Comparison of one experimental run (green dashed line)
+with a simulation (solid blue line)
+using an initial set of parameter values (Table \ref{Tab:InitialParams}).}
 \label{Fig:InitialSimCompare}
 \end{figure}
 
 
-\begin{verbatim}
-DataFile              None        text
-ET_RofL_mode          constant    text
-ET_radius             1.2500E-02  m
-J                     5.6400E-04  kg/m2
-K2drag                1.0000E+01  Nm
-Kdrag                 8.0000E+00  N / m2 / sec
-LLine_SIu             1.0000E-08  m3/sec / Pascal
-Lmax                  6.0000E-01  m
-PBA_static            1.1511E+05  Pascals
-PHalt_dyn             1.0994E+05  Pascals
-Patmosphere           1.0132E+05  Pascals
-Psource_SIu           1.2201E+05  Pascals
-RT                    2.4560E+03  ??
-Rsource_SIu           1.0000E+08  Pa/m3/sec
-T                     2.9540E+02  K
-Tau_coulomb           6.9400E-02  Nm
-Threshold Taper       3.2319E+03  Pa /m
-Vhousing_m3           1.4616E-03  m3
-dF1dL                 3.6364E+00  N/m??
-dt                    2.5000E-03  sec
-et_MPM                1.0000E-01  kg/m
-rReel                 1.0900E-02  m
-radius_modes
-      ['constant', 'box', 'ramp', 'constrict']      text list
-th_dot_minCoulomb     5.0000E-02  rad/sec
-\end{verbatim}
+We modeled one experiment (hi inertia, hi friction, tube-2, trial-2)
+simulating the model with
+an initial set of parameters (Table \ref{Tab:InitialParams}).
 
-Table 2: Initial parameter values for the simulation before parameter tuning (Figure
-\ref{Fig:InitialSimCompare}
+A number of features in the experimental data are absent from the simulation
+output
+including: load line between pressure and flow are misaligned by an offset and
+a slight slope difference (Figure \ref{Fig:InitialSimCompare}, upper left),
+Pressure changes smoothly over time in the simulation without oscillations
+evident in the experimental data (middle left), and tube length grows smoothly
+in the simulation compared with discontinuous growth in the data (middle right,
+lower right).
 
-Following the procedure in Section \ref{Sec:paramFitting}, we made the following
-changes:
+Using the above procedure, we made the following changes to improve match
+between simulation and experiment:
 
 \begin{enumerate}
     \item Reduce source pressure to match the load line to the predominant Pressure-Flow slope.
@@ -639,87 +617,123 @@ changes:
 \begin{figure}\centering
 \includegraphics[width=.75\textwidth]{Set6wFinalParms.png}
 \caption{The same simulation and data with manually tuned parameter values (Table \ref{Tab:FinalParams}}
-\label{Fig:InitialSimCompare}
+\label{Fig:FinalSimCompare}
 \end{figure}
 
-
-\begin{verbatim}
-DataFile              None        text
-ET_RofL_mode          constant    text
-ET_radius             1.2500E-02  m
-J                     5.6400E-04  kg/m2
-K2drag              * 5.0000E-01  Nm
-Kdrag               * 1.0000E+00  N / m2 / sec
-LLine_SIu             1.0000E-08  m3/sec / Pascal
-Lmax                * 6.5000E-01  m
-PBA_static          * 1.1200E+05  Pascals
-PHalt_dyn           * 1.1050E+05  Pascals
-Patmosphere           1.0132E+05  Pascals
-Psource_SIu         * 1.1850E+05  Pascals
-RT                    2.4560E+03  ??
-Rsource_SIu           1.0000E+08  Pa/m3/sec
-T                     2.9540E+02  K
-Tau_coulomb           6.9400E-02  Nm
-Threshold Taper     * 3.5000E+02  Pa /m
-Vhousing_m3           1.4616E-03  m3
-dF1dL                 3.6364E+00  N/m??
-dt                    2.5000E-03  sec
-et_MPM                1.0000E-01  kg/m
-rReel                 1.0900E-02  m
-radius_modes
-      ['constant', 'box', 'ramp', 'constrict']      text list
-th_dot_minCoulomb     5.0000E-02  rad/sec
-\end{verbatim}
-Table 3. Final  parameter values after parameter tuning on the
-same data set (Figure \ref{Fig:FinalSimCompare}.
-
+\begin{table}[h]
+\centering
+\begin{tabular}{l|l|l}
+Parameter     &  Value   & Units \\ \hline
+ET\_RofL\_mode  &  constant & text \\
+ET\_radius  &  1.2500E-02 & m \\
+J  &  5.6400E-04 & kg/m2 \\
+K2drag  &  1.0000E+01 & Nm \\
+Kdrag  &  8.0000E+00 & N/m2/sec \\
+LLine\_SIu  &  1.0000E-08 & m3/sec/Pascal \\
+Lmax  &  6.0000E-01 & m \\
+PBA\_static  &  1.1511E+05 & Pascals \\
+PHalt\_dyn  &  1.0994E+05 & Pascals \\
+Patmosphere  &  1.0132E+05 & Pascals \\
+Psource\_SIu  &  1.2201E+05 & Pascals \\
+RT  &  2.4560E+03 & ?? \\
+Rsource\_SIu  &  1.0000E+08 & Pa/m3/sec \\
+T  &  2.9540E+02 & K \\
+Tau\_coulomb  &  6.9400E-02 & Nm \\
+Threshold  Taper & 3.2319E+03 & Pa/m \\
+Vhousing\_m3  &  1.4616E-03 & m3 \\
+dt  &  2.5000E-03 & sec \\
+et\_MPM  &  1.0000E-01 & kg/m \\
+rReel  &  1.0900E-02 & m \\
+% th\_dot\_minCoulomb   &  5.0000E-02  & rad/sec\\
+\end{tabular}
+\caption{Initial parameter values for the simulation before parameter tuning (Figure
+\ref{Fig:InitialSimCompare}}\label{Tab:InitialParams}
+\end{table}
 
 
+After modifications to some parameters (Table \ref{Tab:FinalParams}),
+the simulation shows better match to the pressure-flow load line, pressure
+oscillations during growth, and bursty length changes during growth.
 
+Some remaining differences include: slower rate of change of pressure
+with time after the initial pressure rise (during eversion) and
+lack of looping cycles visible in the upper left of the pressure-flow
+plot.  Indeed from the one-compartment model structure (Figure \ref{Fig_OneAndTwoCompartment}) it is clear that the simulation is
+constrained to the diagonal load line.
+
+\begin{table}\centering
+\begin{tabular}{l|l|l}
+Parameter    &     Value    &   Units \\ \hline
+ET\_RofL\_mode  &  constant & text \\
+ET\_radius  &  1.2500E-02 & m \\
+J  &  5.6400E-04 & kg/m2 \\
+K2drag*  &  5.0000E-01 & Nm \\
+Kdrag*  &  1.0000E+00 & N/m2/sec \\
+LLine\_SIu  &  1.0000E-08 & m3/sec/Pascal \\
+Lmax*  &  6.5000E-01 & m \\
+PBA\_static*  &  1.1200E+05 & Pascals \\
+PHalt\_dyn*  &  1.1050E+05 & Pascals \\
+Patmosphere  &  1.0132E+05 & Pascals \\
+Psource\_SIu*  &  1.1850E+05 & Pascals \\
+RT  &  2.4560E+03 & ?? \\
+Rsource\_SIu  &  1.0000E+08 & Pa/m3/sec \\
+T  &  2.9540E+02 & K \\
+Tau\_coulomb  &  6.9400E-02 & Nm \\
+Threshold Taper* & 3.5000E+02  &  Pa/m \\
+Vhousing\_m3  &  1.4616E-03 & m3 \\
+dF1dL  &  3.6364E+00 & N/m?? \\
+dt  &  2.5000E-03 & sec \\
+et\_MPM  &  1.0000E-01 & kg/m \\
+rReel  &  1.0900E-02 & m \\
+\end{tabular}
+\caption{Final  parameter values after parameter tuning on the
+same data set (Figure \ref{Fig:FinalSimCompare}). '*' indicates parameter was
+modified to improve fit.}\label{Tab:FinalParams}
+\end{table}
 
 \clearpage
 
 
-
 \section{Model Refinements}
-
-\subsection{Varying tube profile}
-
-While most ET research uses tubing of constant diameter, the effective diameter of an ET can vary with
-length in two main ways.   First, the tube can be fabricated with variable diameter by thermal welding of two sheets.
-Second, tubing of constant diameter may be everted into a tubular space of changing diameters.
-While the mechanics of eversion will in general be different in these two cases, we will initially ignore that difference
-and make tube diameter a function of eversion distance $L$, $V(L)$.
-
-Tube profiles
-
-Simulations
 
 
 \subsection{Multiple compartment model}
-So far, pressure and flow dynamics have considered the tubing supply chamber and the everted tubing to be a single compartment
-for computation of volume (Eqn \ref{eqOneCompartmentVol}) and pressure (Eqn \ref{eqOneCompartmentPress}) yielding a single
-flow (Eqn \ref{eqOneCompartmentflow}).
+% So far, pressure and flow dynamics have considered the tubing supply chamber and the everted tubing to be a single compartment
+% for computation of volume (Eqn \ref{eqOneCompartmentVol}) and pressure (Eqn \ref{eqOneCompartmentPress}) yielding a single
+% flow (Eqn \ref{eqOneCompartmentflow}).
 
-In some experimental data [...details...]  we noted loops in the pressure-flow plane in which a growing ET deviated
+The results of the one-compartment model illustrate a limitation that its
+pressure-flow behavior is limited to a straight line.
+% We introduced a two-compartment
+% model to account for airflow dynamics in supplying flow to the tube from the
+% housing as it
+% everts and possible differences between the tube-tip pressure and the housing
+% pressure.
+We noted loops in the pressure-flow plane (Figure \ref{Fig:FinalSimCompare},
+upper-left)
+in which a growing ET deviated
 significantly from the source load line.   This indicates that air pressure does not instantaneously equilibrate
 along the ET, but instead takes time to flow from the tubing compartment down to new volume at the growing tip.
-A lumped parameter model of this flow can be formed of two compartments, one is the reel housing from
-which the tube is everted, and the second is
-the tubing.   A flow resistance, $R_T(L)$, connects the two chambers and this resistance increases with length.
+A lumped parameter model of this flow can be formed of two compartments: one
+compartment is the reel housing from
+which the tube is everted, and the second compartment is
+the tubing.   A flow resistance, $R_T(L)$, connects the two chambers and this resistance increases with length.  Initially we assume that the
+flow resistance between compartments is a fixed ratio (ET\_Res\_ratio) of the
+source resistance (Rsource\_SIu).  Length dependence of the resistance will
+be introduced later if needed.
 The tubing volume increases with length (as it did in Eqn \ref{eqOneCompartmentVol}).
+Such a model is shown in Figure \ref{Fig:OneAndTwodTwoCompartment} (Right).
+% Such a model is shown in Figure \ref{Fig:TwoCompartment}.
+%
+% \begin{figure}[h]\centering
+% % \includegraphics[width=.5\textwidth]{Photo_TwoCompartment.png}
+% \includegraphics[width=.5\textwidth]{Figure_TwoCompartment.png}
+% \caption{Two compartment, lumped parameter model. }
+% \label{Fig:TwoCompartment}
+% \end{figure}
 
-Such a model is shown in Figure \ref{Fig:TwoCompartment}.
-
-
-\begin{figure}[h]\centering
-% \includegraphics[width=.5\textwidth]{Photo_TwoCompartment.png}
-\includegraphics[width=.5\textwidth]{Figure_TwoCompartment.png}
-\caption{Two compartment, lumped parameter model. }
-\label{Fig:TwoCompartment}
-\end{figure}
-
-We need to expand our model state variables as follows:
+Two add the second compartment, representing the everting tube volume and associated
+flow, we need to expand our model state variables as follows:
 
 \beq
 \begin{aligned}
@@ -730,9 +744,9 @@ P              &\to \{ P_{C1}, P_{C2} \}
 \end{aligned}
 \eeq where
 $N_1$ and $N_2$ are the molar quantity of air in the housing and tube respectively,
-$f_i$ are the respective flows indicated in Figure \ref{Fig:TwoCompartment},
-and
-$P_{C1}$ and $P_{C2}$ are the pressures in the housing and tube respectivly.
+$f_i$ are the respective flows indicated in Figure \ref{Fig:OneAndTwoCompartment}
+(Right), and
+$P_{C1}$ and $P_{C2}$ are the pressures in the housing and tube respectively.
 
 
 
@@ -740,11 +754,11 @@ We then have new equations to replace or expand Equations \ref{eqOneCompartmentP
 as follows:
 
 \beq
-\dot{N_1} = f_{source}-f_{int}-f_T
+\dot{N_1} = ( f_{source}-f_{int}-f_T ) \cdot \mathrm{moles\_per\_m3}
 \eeq
 
 \beq
-\dot{N_2} =  f_T
+\dot{N_2} =   f_T \cdot \mathrm{moles\_per\_m3}
 \eeq
 
 \beq
@@ -783,6 +797,26 @@ the ET was approximated by a ratio of Rsource\_SIu (typically 0.1).
 Results from Tube 1, Trial 2 (hi inertia, hi friction) are given in Figure \ref{Fig:2Comp}.
 Notably, the simulated tube pressure deviates below the source loadline during the start-stop
 oscillations similar to the experimental data.
+
+
+
+
+\subsection{Varying tube profile}
+
+While most ET research uses tubing of constant diameter, the effective diameter of an ET can vary with
+length in two main ways.   First, the tube can be fabricated with variable diameter by thermal welding of two sheets.
+Second, tubing of constant diameter may be everted into a tubular space of changing diameters.
+While the mechanics of eversion will in general be different in these two cases, we will initially ignore that difference
+and make tube diameter a function of eversion distance $L$, $V(L)$.
+
+Tube profiles
+
+Simulations
+
+
+
+
+
 %  Use name of bibliography files without .bib extension
 \bibliography{flowMOdel}
 \end{document}
