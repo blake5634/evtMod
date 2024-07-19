@@ -211,7 +211,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         pstt.append(Pth1)
         pbat.append(Pth2)
 
-        # if used in Force break mode
+        ## if used in Force break mode
         F1 = 18  + pd['dF1dL'] * L * 0.5 # Newtons
         F2 = 26  - pd['dF1dL'] * L * 0.5
 
