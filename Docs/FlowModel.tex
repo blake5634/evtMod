@@ -616,7 +616,7 @@ between simulation and experiment:
 
 \begin{figure}\centering
 \includegraphics[width=.75\textwidth]{Set6wFinalParms.png}
-\caption{The same simulation and data with manually tuned parameter values (Table \ref{Tab:FinalParams}}
+\caption{The same simulation and data (See Lewis, Fig 9, hiI, hiTf) with manually tuned parameter values (Table \ref{Tab:FinalParams}}
 \label{Fig:FinalSimCompare}
 \end{figure}
 
@@ -784,21 +784,44 @@ f_{int} = f_{source} - f_T
 \section{Results of Two Compartment Model}
 
 \begin{figure}[h]\centering
-\includegraphics[width=.75\textwidth]{2CompSimulationSet8.png}
-\caption{Two compartment model compared with simulation (See Lewis, Fig 9, hiI, hiTf)}
-\label{Fig:2Comp}
+\includegraphics[width=.75\textwidth]{2CompSimulationSet6.png}
+\caption{Two compartment model compared with same data as Figure \ref{}.
+Two compartment model allows simulation to deviate from the diagonal load line (orange trace,
+Upper Left).}
+\label{Fig:2CompS6}
 \end{figure}
 
 
-The data sets were simulated with the two-compartment version of the model.  Volume of the ET was
-a function of length, $L$.  Flow resistance between reel housing (compartment 1) and
-the ET was approximated by a ratio of Rsource\_SIu (typically 0.1).
+The same data set as in Figure \ref{Fig:FinalSimCompare} were simulated with the two-compartment version of the model (Figure \ref{Fig:2CompS6}).
+% Volume of the ET was a function of length, $L$.
+Flow resistance between reel housing (compartment 1) and
+the ET was approximated by a ratio of Rsource\_SIu.
+Parameter set is given in Table \ref{Tab:TwoCompFitParams}.
 
-Results from Tube 1, Trial 2 (hi inertia, hi friction) are given in Figure \ref{Fig:2Comp}.
+
+\begin{table}\centering
+\begin{tabular}{l|l|l}
+\end{tabular}
+\caption{Parameter values for the two-compartment model fit (Figure \ref{Fig:TwoCompSimCompare}).
+}\label{Tab:FinalParams}
+\end{table}
+
+
+
+Results from Tube 1, Trial 2 (hi inertia, hi friction) are given in Figure \ref{Fig:2CompS6}.
 Notably, the simulated tube pressure deviates below the source loadline during the start-stop
 oscillations similar to the experimental data.
 
+\clearpage
 
+
+\subsection{Additional Two-Compartment Fits}
+
+\begin{figure}[h]\centering
+\includegraphics[width=.75\textwidth]{2CompSimulationSet8.png}
+\caption{Two compartment model compared with simulation (See Lewis, Fig 9, hiI, hiTf)}
+\label{Fig:2CompS8}
+\end{figure}
 
 
 \subsection{Varying tube profile}

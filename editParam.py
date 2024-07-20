@@ -10,8 +10,8 @@ import glob, os
 #
 #    Configure here
 #
-par = 'Vhousing_m3'
-newval = 0.001256
+par = 'et_MPM'
+newval = 0.0032
 SIMULATE = False
 #
 #######################################################
@@ -35,6 +35,7 @@ SIMULATE = False
     #"moles_per_m3": 1.0 / 0.02241,
     #"Pa_per_PSI": 6894.76,
     #"atmos_Pa": 14.5 * 6894.76,
+    #"et_MPM"  : 0.0032 : kg/m
     #"m3_per_Liter": 1.0 / 1000.0  # m3
 #}
 
