@@ -5,6 +5,7 @@ import simulation as sim
 import et_lib as et
 from et_lib import error
 import sys
+import glob
 
 # Unit Conversions
 uc = {
@@ -44,7 +45,7 @@ defaultUnitsName = 'units_'+defaultParamName
 
 args = sys.argv
 
-# load parameter file
+# load parameter file(s)
 
 if len(args) == 1:
     paramFileName = defaultParamName
@@ -111,25 +112,34 @@ T= 295.4  # 72F in deg K
 
 #   Get data file to compare
 #
+
+df_hashes = [
+    "15e42423",   # these are the data file hashes if needed.
+    "891a0abc",
+    "52f8bea7",
+    "e50137ee",
+    "eb610645",
+    "c4f507b1",
+    "4bf58872",
+    "0ddc3bfa",
+    "5d0f0862",
+    "fc284fa7"
+]
+
 if PLOT_TYPE == 'OVERLAY':
     files, mdfiles = et.get_files()
     for i,fn in enumerate(files):
         print(f'{i:5}', fn)
 
-    print('Simulating Dataset: ', pd['DataFile'])
-    fn = dataDirName + '/' + pd['DataFile']
 
-    inp = input('Select file by number: (-1 to use parameter DataFile)')
-    try:
-        n = int(inp)
-    except:
-        n = -1
+    # DataFile parameter now is just an 8char hash code
 
-    if n >= 0:
-        if (n>=len(files) or len(files) <0):
-            print('illegal file name index')
-            quit()
-        fn = files[n]   # includes datadir/
+    dataFileName = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
+
+    print('Simulating Dataset: ', dataFileName)
+    fn =  dataFileName[0]  # should be just one!!
+
+    print('Opening data file: ', fn)
 
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
@@ -140,22 +150,6 @@ pd['J'] = J
 pd['Tau_coulomb'] = Tau_coulomb
 pu['Tau_coulomb'] = 'Nm'
 
-
-###########################################################
-##
-##  Parameter hacks needed to match results (Fig 3)
-##
-##   TESTING  HACK
-
-
-#pd['Rsource_SIu'] *= 1.25
-
-#pd['Vhousing_m3'] *= 0.5
-
-##Kdrag *= 2
-##pd['Kdrag'] = Kdrag
-
-#pd['J'] *= 4
 
 #########################################################################################33
 
@@ -314,8 +308,8 @@ if PLOT_TYPE == 'OVERLAY':
 
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
 
-    #print('opening: ',fn)
-    #x=input('       ... OK?? <cr>')
+    print('OVERLAY plot: opening: ',fn)
+    x=input('       ... OK?? <cr>')
 
     ed = et.get_data_from_AL_csv(fn)
     ed = et.convert_units(ed,uc)

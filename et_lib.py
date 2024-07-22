@@ -141,7 +141,7 @@ def get_param_files():
     print ('get_param_files: ', dirfiles)
     return dirfiles
 
-def get_files():
+def get_files():   # load the data files
     dataDirNames = ['dataAndyMay24']
     #  Collect existing data files for overplotting
     files = []

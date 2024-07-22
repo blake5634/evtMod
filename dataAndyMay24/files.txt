@@ -1,0 +1,9 @@
+mv eversion_flow-hi-inr_hi-fric_tube-1_trial-4.csv eversion_15e42423-hi-inr_hi-fric_tube-1_trial-4.csv
+mv eversion_flow-hi-inr_lo-fric_tube-1_trial-1.csv eversion_891a0abc-hi-inr_lo-fric_tube-1_trial-1.csv
+mv eversion_flow-hi-inr_lo-fric_tube-1_trial-2.csv eversion_52f8bea7-hi-inr_lo-fric_tube-1_trial-2.csv
+mv eversion_flow-hi-inr_lo-fric_tube-1_trial-3.csv eversion_e50137ee-hi-inr_lo-fric_tube-1_trial-3.csv
+mv eversion_flow-hi-inr_hi-fric_tube-2_trial-1.csv eversion_eb610645-hi-inr_hi-fric_tube-2_trial-1.csv
+mv eversion_flow-hi-inr_hi-fric_tube-2_trial-2.csv eversion_c4f507b1-hi-inr_hi-fric_tube-2_trial-2.csv
+mv eversion_flow-hi-inr_hi-fric_tube-3_trial-1.csv eversion_4bf58872-hi-inr_hi-fric_tube-3_trial-1.csv
+mv eversion_flow-hi-inr_hi-fric_tube-3_trial-2.csv eversion_0ddc3bfa-hi-inr_hi-fric_tube-3_trial-2.csv
+mv eversion_flow-hi-inr_hi-fric_tube-3_trial-3.csv eversion_5d0f0862-hi-inr_hi-fric_tube-3_trial-3.csv
