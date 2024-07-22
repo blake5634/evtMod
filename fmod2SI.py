@@ -196,10 +196,14 @@ if FPLOT:
     ax.set_ylim(-1,5)
 
 REYNOLDSPLOT = True
-if REYNOLDSPLOT:
-    Re = []
+                   # https://en.wikipedia.org/wiki/Reynolds_number
+if REYNOLDSPLOT:   # https://en.wikipedia.org/wiki/Density_of_air
+    Re = []    # store Reynolds number
+    Rspec = 8.12446  #Joules/K/mol
+    M = 0.0289652    #kg/mol of air
     for i,t in enumerate(time):
-        rho = 1.19   # kg/m3
+        pressAbs = pc1[i]  # Pa
+        rho = pressAbs*M / (pd['RT'])
         V = ldot[i]  # m/sec
         L = pd['ET_radius'] * 2.0
         mu = 1.81E-05   #Pa sec
