@@ -195,7 +195,24 @@ if FPLOT:
     ax.set_xlim(PltTMIN, PltTMAX)
     ax.set_ylim(-1,5)
 
-
+REYNOLDSPLOT = True
+if REYNOLDSPLOT:
+    Re = []
+    for i,t in enumerate(time):
+        rho = 1.19   # kg/m3
+        V = ldot[i]  # m/sec
+        L = pd['ET_radius'] * 2.0
+        mu = 1.81E-05   #Pa sec
+        Re.append(rho*V*L/mu)
+    fig = plt.figure()
+    fig.suptitle(fn.split('/')[-1] + ' Reynolds #\n    ' + paramFileName)
+    ax = fig.gca()
+    plt.plot(time, Re)
+    ax = plt.gca()
+    ax.set_xlim(PltTMIN, PltTMAX)
+    ax.set_ylim(0,3000)
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Reynolds Number')
 
 # Create simulation output figure with subplots
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
