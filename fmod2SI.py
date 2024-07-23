@@ -134,10 +134,15 @@ if PLOT_TYPE == 'OVERLAY':
 
     # DataFile parameter now is just an 8char hash code
 
-    dataFileName = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
+    dataFileNames = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
+    if len(dataFileNames) < 1:
+        et_error('Overlay plot: file not found: ', pd['DataFile'])
+    if len(dataFileNames) > 1:
+        et_error('Multiple files found: ', pd['DataFile'], dataFileNames)
 
-    print('Simulating Dataset: ', dataFileName)
-    fn =  dataFileName[0]  # should be just one!!
+    print('Simulating Dataset: ', dataFileNames[0])
+
+    fn =  dataFileNames[0]  # should be just one!!
 
     print('Opening data file: ', fn)
 

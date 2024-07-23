@@ -194,9 +194,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 3.5
         #  thresholds seem to grow closer together with eversion
         # lower threshold (Halting)
-        Pth1 = pd['PHalt_dyn'] # + pd['Threshold Taper'] * L
+        Pth1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
         # upper threshold (break-away)
-        Pth2 = pd['PBA_static'] #- pd['Threshold Taper'] * L
+        Pth2 = pd['PBA_static'] - pd['Threshold Taper'] * L
 
         PdTol = 0.0075
         midpoint = (pd['PBA_static'] + pd['PHalt_dyn'])/2.0
