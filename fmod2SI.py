@@ -308,8 +308,8 @@ if PLOT_TYPE == 'OVERLAY':
 
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
 
-    print('OVERLAY plot: opening: ',fn)
-    x=input('       ... OK?? <cr>')
+    #print('OVERLAY plot: opening: ',fn)
+    #x=input('       ... OK?? <cr>')
 
     ed = et.get_data_from_AL_csv(fn)
     ed = et.convert_units(ed,uc)
