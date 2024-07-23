@@ -114,8 +114,8 @@ T= 295.4  # 72F in deg K
 #
 
 df_hashes = [
-    "15e42423",   # these are the data file hashes if needed.
-    "891a0abc",
+    "15g42423",   # these are the data file hashes if needed.
+    "891a0abc",   # note: these hashes cannot look like floats or ints!!!
     "52f8bea7",
     "e50137ee",
     "eb610645",

@@ -577,6 +577,8 @@ def loadDict(folder, fname):
             d[k.strip()] = float(v)
         except:
             d[k.strip()] = v.strip()
+        if '.' not in v: # detect hash that looks like float:  123e4567
+            d[k.strip()] = v.strip()  # keep it as string
     return d
 
 def print_param_table(pd,pu):
