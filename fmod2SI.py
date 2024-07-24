@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib import ticker
 import simulation as sim
 import et_lib as et
 from et_lib import error
@@ -131,6 +132,8 @@ if PLOT_TYPE == 'OVERLAY':
     for i,fn in enumerate(files):
         print(f'{i:5}', fn)
 
+    print('Simulating Dataset: ', pd['DataFile'])
+    fn = dataDirName + '/' + pd['DataFile']
 
     # DataFile parameter now is just an 8char hash code
 
@@ -173,10 +176,32 @@ state = STUCK
 (time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
+#
+#    Load plotting parameters
+#
+###################################################
+fnpr = 'plottingRanges.txt'
+fpp = open(fnpr,'r')
+prd = {}  #plotting range dict
+for line in fpp:
+    par, n1, n2 = line.split(':')
+    prd[par.strip()] = (float(n1), float(n2))
+print(prd)
 
 FPLOT = False
-PltTMIN = t1
-PltTMAX = t2
+PltTMIN  = prd['Time'][0]
+PltTMAX  = prd['Time'][1]
+PltPrMIN = prd['Pressure'][0]
+PltPrMAX = prd['Pressure'][1]
+print('Pressure lims: ', PltPrMIN, PltPrMAX)
+PltFlMIN = prd['Flow'][0]
+PltFlMAX = prd['Flow'][1]
+PltLeMIN = prd['Length'][0]
+PltLeMAX = prd['Length'][1]
+PltSpMIN = prd['Speed'][0]
+PltSpMAX = prd['Speed'][1]
+PltVoMIN = prd['Volume'][0]
+PltVoMAX = prd['Volume'][1]
 
 if FPLOT:
     # Create force plot
@@ -259,10 +284,14 @@ axs[0,0].plot(f,pc1,f,pc2)
 axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
-axs[0,0].set_xlim(0,0.0003)
+axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+print('\n\n Trying to set [0,0] Y lims: ', PltPrMIN, PltPrMAX)
+axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
-plt.xticks([0.0001, 0.0002, 0.0003])
-axs[0,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
+ax = plt.gca()
+xpressticks = ticker.MaxNLocator(3)
+ax.xaxis.set_major_locator(xpressticks)
+#plt.xticks([0.0001, 0.0002, 0.0003])
 
 # Plot 2   # PRESSURE
 axs[1,0].plot(time, pc1)
@@ -271,8 +300,7 @@ axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
-pplotmax = (pd['Psource_SIu']-pd['Patmosphere'])*1.1 + pd['Patmosphere']
-axs[1,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
+axs[1,0].set_ylim(PltPrMIN, PltPrMAX)
 #  plot the eversion thresholds (function of L)
 axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
 axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
@@ -283,27 +311,27 @@ axs[2,0].legend(['Vhousing', 'Vtube'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
-#axs[2,0].set_ylim( 0.0012, 0.0022 )
+axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
 
 axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
 axs[0,1].set_ylabel('Flow (m3/sec)')
 axs[0,1].legend(['Source Flow', 'Tube Flow'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
-axs[0,1].set_ylim(      0, 0.00020 )
+axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
 axs[1,1].plot(time, l, time, lc)
 axs[1,1].set_xlabel('Time (sec)')
 axs[1,1].set_ylabel('Length (m)')
 axs[1,1].legend(['Tube Length', 'Crumple Length'])
 axs[1,1].set_xlim(PltTMIN, PltTMAX)
-axs[1,1].set_ylim(      0, 0.600 )
+axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
 
 axs[2,1].plot(time, ldot)
 axs[2,1].set_xlabel('Time (sec)')
 axs[2,1].set_ylabel('Tube Velocity (m/sec)')
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
-axs[2,1].set_ylim(      0, 0.5 )
+axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
 
 
 
@@ -313,7 +341,7 @@ if PLOT_TYPE == 'OVERLAY':
 
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
 
-    #print('OVERLAY plot: opening: ',fn)
+    #print('opening: ',fn)
     #x=input('       ... OK?? <cr>')
 
     ed = et.get_data_from_AL_csv(fn)
