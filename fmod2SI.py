@@ -5,6 +5,7 @@ import simulation as sim
 import et_lib as et
 from et_lib import error
 import sys
+import glob
 
 # Unit Conversions
 uc = {
@@ -44,7 +45,7 @@ defaultUnitsName = 'units_'+defaultParamName
 
 args = sys.argv
 
-# load parameter file
+# load parameter file(s)
 
 if len(args) == 1:
     paramFileName = defaultParamName
@@ -111,25 +112,39 @@ T= 295.4  # 72F in deg K
 
 #   Get data file to compare
 #
+
+df_hashes = [
+    "15g42423",   # these are the data file hashes if needed.
+    "891a0abc",   # note: these hashes cannot look like floats or ints!!!
+    "52f8bea7",
+    "e50137ee",
+    "eb610645",
+    "c4f507b1",
+    "4bf58872",
+    "0ddc3bfa",
+    "5d0f0862",
+    "fc284fa7"
+]
+
 if PLOT_TYPE == 'OVERLAY':
     files, mdfiles = et.get_files()
     for i,fn in enumerate(files):
         print(f'{i:5}', fn)
 
-    print('Simulating Dataset: ', pd['DataFile'])
-    fn = dataDirName + '/' + pd['DataFile']
 
-    inp = input('Select file by number: (-1 to use parameter DataFile)')
-    try:
-        n = int(inp)
-    except:
-        n = -1
+    # DataFile parameter now is just an 8char hash code
 
-    if n >= 0:
-        if (n>=len(files) or len(files) <0):
-            print('illegal file name index')
-            quit()
-        fn = files[n]   # includes datadir/
+    dataFileNames = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
+    if len(dataFileNames) < 1:
+        et_error('Overlay plot: file not found: ', pd['DataFile'])
+    if len(dataFileNames) > 1:
+        et_error('Multiple files found: ', pd['DataFile'], dataFileNames)
+
+    print('Simulating Dataset: ', dataFileNames[0])
+
+    fn =  dataFileNames[0]  # should be just one!!
+
+    print('Opening data file: ', fn)
 
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
@@ -140,22 +155,6 @@ pd['J'] = J
 pd['Tau_coulomb'] = Tau_coulomb
 pu['Tau_coulomb'] = 'Nm'
 
-
-###########################################################
-##
-##  Parameter hacks needed to match results (Fig 3)
-##
-##   TESTING  HACK
-
-
-#pd['Rsource_SIu'] *= 1.25
-
-#pd['Vhousing_m3'] *= 0.5
-
-##Kdrag *= 2
-##pd['Kdrag'] = Kdrag
-
-#pd['J'] *= 4
 
 #########################################################################################33
 
@@ -217,7 +216,28 @@ if FPLOT:
     ax.set_xlim(PltTMIN, PltTMAX)
     ax.set_ylim(-1,5)
 
-
+REYNOLDSPLOT = True
+                   # https://en.wikipedia.org/wiki/Reynolds_number
+if REYNOLDSPLOT:   # https://en.wikipedia.org/wiki/Density_of_air
+    Re = []    # store Reynolds number
+    Rspec = 8.12446  #Joules/K/mol
+    M = 0.0289652    #kg/mol of air
+    for i,t in enumerate(time):
+        pressAbs = pc1[i]  # Pa
+        rho = pressAbs*M / (pd['RT'])
+        V = ldot[i]  # m/sec
+        L = pd['ET_radius'] * 2.0
+        mu = 1.81E-05   #Pa sec
+        Re.append(rho*V*L/mu)
+    fig = plt.figure()
+    fig.suptitle(fn.split('/')[-1] + ' Reynolds #\n    ' + paramFileName)
+    ax = fig.gca()
+    plt.plot(time, Re)
+    ax = plt.gca()
+    ax.set_xlim(PltTMIN, PltTMAX)
+    ax.set_ylim(0,3000)
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Reynolds Number')
 
 # Create simulation output figure with subplots
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
@@ -316,7 +336,7 @@ if PLOT_TYPE == 'OVERLAY':
 
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
 
-    #print('opening: ',fn)
+    #print('OVERLAY plot: opening: ',fn)
     #x=input('       ... OK?? <cr>')
 
     ed = et.get_data_from_AL_csv(fn)
