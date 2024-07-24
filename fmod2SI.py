@@ -137,9 +137,9 @@ if PLOT_TYPE == 'OVERLAY':
 
     dataFileNames = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
     if len(dataFileNames) < 1:
-        et.error('Overlay plot: file not found: ', pd['DataFile'])
+        et.error('Overlay plot: file not found: ' + pd['DataFile'])
     if len(dataFileNames) > 1:
-        et.error('Multiple files found: ', pd['DataFile'], dataFileNames)
+        et.error('Multiple files found: ' + pd['DataFile'] + dataFileNames)
 
     print('Simulating Dataset: ', dataFileNames[0])
 
