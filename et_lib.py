@@ -587,7 +587,7 @@ def print_param_table(pd,pu):
         if type(val) == type(['x','y']):  # list param
             print(f'{k:18} \n    {pd[k]}      {pu[k]:15}')
         elif type(val) == type('x'):
-            print(f'{k:18}  {pd[k]:10}  {pu[k]:15})')  # string params
+            print(f'{k:18}  {pd[k]:10}  {pu[k]:15}')  # string params
         else: #  ints and floats
             print(f'{k:18}  {pd[k]:8.4E}  {pu[k]:15}')
 
