@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 import et_lib as et
 import glob, os
 
@@ -69,16 +70,42 @@ for datadir in dataDirNames:
         filenameroots = []
         if len(tfiles) ==0:
             cto.error('No brl_data files found')
-        for f in files:
+        for f in tfiles:
             #print('found: ',f)
+            if '.zip' in f:
+                next
             if '.csv' in f :
                 filenameroots.append(str(f).replace('.csv',''))
+                files.append(f)
             if  '_meta.json' in f:
                 filenameroots.append(str(f).replace('_meta.json',''))
         # dict.fromkeys better than set because preserves order (thanks google)
         filenameroots = list(dict.fromkeys(filenameroots)) # elim dupes
-        files += tfiles
+        #files += tfiles
         fnRoots += filenameroots
+
+#print('file set:  ', files)
+###################################################
+#
+#   Select Files
+#
+###################################################
+print('Discovered Data Files: ')
+for i,fn in enumerate(files):
+    fn2 = fn.split('/')[1]
+    print(f'{i:3}  {fn2}')
+
+sel = str(input('Select file numbers (-1) for all: '))
+nums = sel.split()
+if len(nums)<1:
+    nums = [-1]
+fset=[] # place to collect user-selected filenames
+if int(nums[0]) < 0:
+    fset = range(len(files))
+else:
+    for n in nums:
+        fset.append(int(n))
+
 
 ###################################################
 #
@@ -111,7 +138,9 @@ PltVoMAX = prd['Volume'][1]
 # Create a figure with subplots
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
 
-for i,fn in enumerate(files):
+for i,fnum in enumerate(fset):
+    fn = files[int(fnum)]
+
     #print(f'{i:5}', fn)
 
     #fn = dataDirName + '/' + fn
@@ -142,7 +171,9 @@ for i,fn in enumerate(files):
     axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 
     plt.sca(axs[0,0])
-    plt.xticks([0.0001, 0.0002, 0.0003])
+    ax = plt.gca()
+    xpressticks = ticker.MaxNLocator(3)
+    ax.xaxis.set_major_locator(xpressticks)
 
     axs[1,0].plot(ed['time'], ed['P'])  # Experimental Data
     axs[1,0].set_xlabel('Time (sec)')

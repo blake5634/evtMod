@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib import ticker
 import simulation as sim
 import et_lib as et
 from et_lib import error
@@ -8,24 +9,24 @@ import sys
 import glob
 
 # Unit Conversions
-uc = {
-    "sec_per_min": 60,
-    "kPa_per_Pa": 0.001,
-    "Pa_per_kPa": 1.0 / 0.001,
-    "min_per_sec": 1 / 60,
-    "Gal_per_Liter": 0.2642,
-    "Liter_per_Gal": 3.7854,
-    "Liter_per_m3": 1000.0,
-    "Liter_per_mm3": 1000.0 / 1000**3,
-    "Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
-    "mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
-    "MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-    "m3_per_mole": 0.02241,  # m3/mol of Air
-    "moles_per_m3": 1.0 / 0.02241,
-    "Pa_per_PSI": 6894.76,
-    "atmos_Pa": 14.5 * 6894.76,
-    "m3_per_Liter": 1.0 / 1000.0  # m3
-}
+#uc = {
+    #"sec_per_min": 60,
+    #"kPa_per_Pa": 0.001,
+    #"Pa_per_kPa": 1.0 / 0.001,
+    #"min_per_sec": 1 / 60,
+    #"Gal_per_Liter": 0.2642,
+    #"Liter_per_Gal": 3.7854,
+    #"Liter_per_m3": 1000.0,
+    #"Liter_per_mm3": 1000.0 / 1000**3,
+    #"Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
+    #"mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
+    #"MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
+    #"m3_per_mole": 0.02241,  # m3/mol of Air
+    #"moles_per_m3": 1.0 / 0.02241,
+    #"Pa_per_PSI": 6894.76,
+    #"atmos_Pa": 14.5 * 6894.76,
+    #"m3_per_Liter": 1.0 / 1000.0  # m3
+#}
 
 
 paramDir = 'evtParams/'
@@ -136,15 +137,16 @@ if PLOT_TYPE == 'OVERLAY':
 
     dataFileNames = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
     if len(dataFileNames) < 1:
-        et_error('Overlay plot: file not found: ', pd['DataFile'])
+        et.error('Overlay plot: file not found: ', pd['DataFile'])
     if len(dataFileNames) > 1:
-        et_error('Multiple files found: ', pd['DataFile'], dataFileNames)
+        et.error('Multiple files found: ', pd['DataFile'], dataFileNames)
 
     print('Simulating Dataset: ', dataFileNames[0])
 
     fn =  dataFileNames[0]  # should be just one!!
 
     print('Opening data file: ', fn)
+
 
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
@@ -282,9 +284,13 @@ axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+print('\n\n Trying to set [0,0] Y lims: ', PltPrMIN, PltPrMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
-plt.xticks([0.0001, 0.0002, 0.0003])
+ax = plt.gca()
+xpressticks = ticker.MaxNLocator(3)
+ax.xaxis.set_major_locator(xpressticks)
+#plt.xticks([0.0001, 0.0002, 0.0003])
 
 #plt.sca(axs[0,0])
 # Plot 2   # PRESSURE
@@ -294,7 +300,6 @@ axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
-pplotmax = (pd['Psource_SIu']-pd['Patmosphere'])*1.1 + pd['Patmosphere']
 axs[1,0].set_ylim(PltPrMIN, PltPrMAX)
 #  plot the eversion thresholds (function of L)
 axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
@@ -392,8 +397,8 @@ if PLOT_TYPE == 'OVERLAY':
     dtsim = pd['dt']
     print('dt Sim:', dtsim, 'dt Exp:', dtexp)
 
-
-    et.print_param_table2(pd,pd_orig, pu)  # print with change markers
+    # obsolete:  changes are made outside of runtime and thus undetectable.
+    #et.print_param_table2(pd,pd_orig, pu)  # print with change markers
 
 if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot it.
     et.plot_tube_shape(pd)

@@ -14,9 +14,13 @@ def avg_dict_list(dl):
     # caution: assumes all d's have same keys
     for d in dl:
         for k in d.keys():
-            avgD[k] += d[k]
+            if type(d[k]) == type(5.7):
+                avgD[k] += d[k]
+            else:
+                avgD[k] = None
     for k in d.keys():
-        avgD[k] /= len(dl)
+        if avgD[k] is not None:
+            avgD[k] /= len(dl)
     return avgD
 
 def compare_param_list_avgs(pdl1, pdl2,nscale):
@@ -55,9 +59,12 @@ def compare_param_dicts(pd1, pd2, nscale):
     changes = {}
     #pd1 and pd2 are param dicts
     for pk in pd1.keys():
-        diff= [ pdiff(pd1[pk],pd2[pk],nscale) ]
-        #print('comparing param dicts: ', pd1[pk], pd2[pk], pdiff(pd1[pk],pd2[pk],nscale))
-        changes[pk] = change_str(diff,nscale)
+        try:
+            diff= [ pdiff(pd1[pk],pd2[pk],nscale) ]
+            #print('comparing param dicts: ', pd1[pk], pd2[pk], pdiff(pd1[pk],pd2[pk],nscale))
+            changes[pk] = change_str(diff,nscale)
+        except:
+            changes[pk] = 'None'
     return changes
 
 
@@ -215,7 +222,7 @@ def analyze_params():
     avgTrial1 = avg_dict_list(T1parms)
     avgTrial2 = avg_dict_list(T3parms)
 
-    pchanges = compare_params(avgTria1, avgTrial2)
+    pchanges = compare_param_dicts(avgTrial1, avgTrial2,20)
     print_params_by_group(avgTrial1, pg, p2=avgTrial2, pch=pchanges, tstr='\n    Compare Avg Trial 1 to Avg trial 2')
 
 

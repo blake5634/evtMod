@@ -89,6 +89,34 @@ ed = et.convert_units(ed,uc)
 # HACK
 ed['flow'] *= 10.0
 
+
+###################################################
+#
+#    Load plotting parameters
+#
+###################################################
+fnpr = 'plottingRanges.txt'
+fpp = open(fnpr,'r')
+prd = {}  #plotting range dict
+for line in fpp:
+    par, n1, n2 = line.split(':')
+    prd[par.strip()] = (float(n1), float(n2))
+print(prd)
+
+FPLOT = False
+PltTMIN  = prd['Time'][0]
+PltTMAX  = prd['Time'][1]
+PltPrMIN = prd['Pressure'][0]
+PltPrMAX = prd['Pressure'][1]
+PltFlMIN = prd['Flow'][0]
+PltFlMAX = prd['Flow'][1]
+PltLeMIN = prd['Length'][0]
+PltLeMAX = prd['Length'][1]
+PltSpMIN = prd['Speed'][0]
+PltSpMAX = prd['Speed'][1]
+PltVoMIN = prd['Volume'][0]
+PltVoMAX = prd['Volume'][1]
+
 #########################################################################
 #
 #   Plot all the subplots
@@ -103,6 +131,8 @@ PltTMAX = 8.0
 
 x = ed['flow']
 y = ed['P']
+time = ed['time']
+
     #HW= 0.00001
     #HL= 0.0001
 Interval = 25
@@ -112,7 +142,9 @@ axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(0,0.0003)
 plt.sca(axs[0,0])
 plt.xticks([0.0001, 0.0002, 0.0003])
-axs[0,0].set_ylim(pd['Patmosphere'], pd['Psource_SIu'])
+
+axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
+axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 
 # Plot 2   # PRESSURE
 axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data
@@ -120,37 +152,44 @@ axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # E
 #axs[1,0].plot(time, pc2)
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
-axs[1,0].set_xlim(PltTMIN, PltTMAX)
+
 
 # Plot 3
-#axs[2,0].plot(time, vol1, time, vol2 )
+axs[2,0].plot(time, ed['vol1'], time, ed['vol2'] )
 axs[2,0].legend(['Vhousing', 'Vtube'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
+
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
-#axs[2,0].set_ylim( 0.0012, 0.0022 )
+axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
+
 
 axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[1])  # Experimental Data
 #axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
 axs[0,1].set_ylabel('Flow (m3/sec)')
 axs[0,1].legend(['Source Flow', 'Tube Flow'])
+
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
-axs[0,1].set_ylim(      0, 0.00020 )
+axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
 axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[1])  # Experimental Data
 #axs[1,1].plot(time, l, time, lc)
 axs[1,1].set_xlabel('Time (sec)')
 axs[1,1].set_ylabel('Length (m)')
+
 axs[1,1].set_xlim(PltTMIN, PltTMAX)
-axs[1,1].set_ylim(      0, 0.600 )
+axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
+
 
 axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
 #axs[2,1].plot(time, ldot)
 axs[2,1].set_xlabel('Time (sec)')
 axs[2,1].set_ylabel('Tube Velocity (m/sec)')
+
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
-axs[2,1].set_ylim(      0, 0.5 )
+axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
+
 
 
 
