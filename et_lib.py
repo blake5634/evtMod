@@ -164,7 +164,7 @@ def get_files():   # load the data files
 
             files += dirfiles
             mdfiles += dirmdfiles
-    print ('get_files: ', files)
+    #print ('get_files: ', files)
     return files, mdfiles
 
 #
@@ -595,21 +595,21 @@ def print_param_table(pd,pu):
 
 def print_param_table2(pd,pdo,pu):  # highlight changes in params due to hacks
     print('\n Parameter Table ')
-    for k in sorted(pd.keys()):
+    for k in sorted(pdo.keys()):
         flg = ' '
-        try:
-            if pd[k] != pdo[k]:
-                flg = '*'  # flag the changes
-        except:
-            pass
 
-        #print('        --- ',k,pd[k])
+        print('        --- ',k,pd[k],pdo[k])
         val = pd[k]
         if type(val) == type(['x','y']):  # list param
-            print(f'{k:18} \n    {flg} {pd[k]}      {pu[k]}')
+            print(f'{k:18} \n      {pd[k]}      {pu[k]}')
         elif type(val) == type('x'):
+            if pd[k] != pdo[k]:
+                flg = '*'
             print(f'{k:18}  {flg} {pd[k]:10}  {pu[k]}')  # string params
         else: #  ints and floats
+            tol = pdo[k] * 0.01
+            if abs(pd[k] - pdo[k]) > tol :
+                flg = '*'  # flag the changes
             print(f'{k:18}  {flg} {pd[k]:8.4E}  {pu[k]}')
 
     print('')
@@ -619,7 +619,15 @@ def print_param_table2(pd,pdo,pu):  # highlight changes in params due to hacks
 if __name__=='__main__':
 
     if True:    # doing testing
+        d1 = {'P1': 10.000,  'P2': 'teststring', 'P3': 50.0}
+        d2 = {'P1': 10.001,  'P2': 'teststring2', 'P3': 55.0}
+        ud = {'P1': 'kg'   , 'P2': 'text'     , 'P3': 'm'}
 
+        print('Testing print_param_table2:')
+        print_param_table2(d2,d1, ud)
+
+
+    if False:    # older tests
         ###  Test loss functions in et_lib
 
         dt = 0.005  # sec
