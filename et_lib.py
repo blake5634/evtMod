@@ -188,7 +188,51 @@ def get_inr_fric_from_name(fn):
         print('  Fric: LO')
     return I, F
 
-#  read data from Andy Lewis' data files
+#  read data from Andy Lewis' 23-Jul flow eversion data files
+def get_data_AL_flowTest(fn):
+    #read data
+    header = [
+    'time_sec', 'tof_pos_mm_1', 'tof_pos_mm_2', 'tof_pos_mm_3',
+    'reel_radians_1', 'reel_radians_2', 'reel_radians_3',
+    'reel_lin_mm_1', 'reel_lin_mm_2', 'reel_lin_mm_3',
+    'press_psi_1', 'press_psi_2', 'press_psi_3',
+    'flow_lpm_1', 'flow_lpm_2', 'flow_lpm_3',
+    'fric_level', 'inertia_level', 'hash'
+    ]
+
+    hd = {}
+    for i in range(len(header)):
+        hd[header[i]] = i  # get an index for each header str
+
+    # read entire CSV into an array - neat (ignores header too).
+    data = np.genfromtxt(fn, delimiter=',')
+
+    #fill ed[] dictionary
+    # experiment data
+    ed = {}
+    idxflow = hd['flow_ana']
+    idxpress = hd['pressure']
+    idxL = hd['reel_pos']
+
+    # time index = 0
+    ed['time'] = data[:,0]       # col 0
+    #ed['dtexp'] = data[2,0]-data[1,0] # delta t
+    d2 = data[:,0][:-1]
+    ed['dtexp'] = np.mean(data[1:,0]-d2) # average dt
+    ed['flow'] = data[:,idxflow]
+    ed['P'] = data[:,idxpress]
+    ed['L'] = data[:,idxL]
+
+    # thanks ChatGPT!
+    ed['Ldot'] = np.gradient(data[:,idxL], ed['dtexp'])
+
+
+    #  ed['f'] = flow data
+    #  ed['time'] = time axis
+    #   etc.
+    return ed
+
+#  read data from Andy Lewis' May 2024 data files
 def get_data_from_AL_csv(fn):
     #read data
     header = [

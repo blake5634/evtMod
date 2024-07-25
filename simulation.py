@@ -123,7 +123,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         PC1 = N1*pd['RT'] / pd['Vhousing_m3']
         PC2 = N2*pd['RT'] / et.Vet.et_vol
 
-        # Eq 2.5
+        # Eq 2.5   HACK to fit saturation
+        #fsource = min(0.000332, (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu'])
         fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
         # if True:
         #     if PC2>=PC1:
@@ -133,7 +134,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #         fT = (PC1-PC2)/et.ResET(L,pd)
         #         #fT = (PC1-PC2)/pd['Rsource_SIu']
         # else:
-        #     fT = 0.0000002  # HACK
+        #     fT = 0.0000002
         #
         #fT = (PC1-PC2)/et.ResET(L,pd)
         rtube = pd['Rsource_SIu'] * pd['ET_Res_ratio']
@@ -141,7 +142,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         fint = fsource - fT
 
         # 2Compartment:
+
         N1dot = fint * uc['moles_per_m3']
+        #N1dot = min(fint, 0.000332)* uc['moles_per_m3']
         N2dot = fT   * uc['moles_per_m3']
 
         #print(f'{t:6.4f}  Ptube: {PC2}  Phouse: {PC1} etVol: {et.Vet.et_vol:5.2E}')
