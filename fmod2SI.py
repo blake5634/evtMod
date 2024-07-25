@@ -79,7 +79,7 @@ else:
 uc = et.loadUnitConv(paramDir, unitsConvfilename)
 print('loaded unit conversions')
 
-dataDirNames = ['dataAndyMay24', 'dataFlowTests23Jul/flowEversion']
+dataDirNames = ['dataAndyMay24', 'dataFlowTests23Jul/flowEversion/processed_data']
 
 #
 #   What to plot
@@ -241,7 +241,6 @@ if REYNOLDSPLOT:   # https://en.wikipedia.org/wiki/Density_of_air
         Re.append(rho*V*L/mu)
     fig = plt.figure()
     fig.suptitle(fn.split('/')[-1] + ' Reynolds #\n    ' + paramFileName)
-    ax = fig.gca()
     plt.plot(time, Re)
     ax = plt.gca()
     ax.set_xlim(PltTMIN, PltTMAX)
@@ -280,9 +279,7 @@ y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
-#plot_curve_with_arrows2(fet, p, axs[0,0], 50,color=clrs[0])
-# plot simulation trajectory
-#et.plot_curve_with_arrows2(f, pc1, axs[0,0], 500, color=clrs[0]) # housing pres.
+
 
 # plot ideal load line
 axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
@@ -354,39 +351,28 @@ if PLOT_TYPE == 'OVERLAY':
     if paramFileNo < 10:
         ed = et.get_data_from_AL_csv(fn)
     elif paramFileNo > 9 and paramFileNo < 13:
-        ed = et.get_data_AL_flowTest(fn)
+        ed = et.get_data_from_AL_csv(fn)
 
     else:
         et.error("I don't know how to read from data file: ",fn)
 
+    #if paramFileNo < 10:
     ed = et.convert_units(ed,uc)
-    #ed['time'] = data[:,0]
-    #ed['flow'] = data[:,idxflow]
-    #ed['P'] = data[:,idxpress]
-    #ed['L'] = data[:,idxL]
 
     # HACK
     if paramFileNo < 10:  # correct old flow bug
+    #if True:  # correct old flow bug
         ed['flow'] *= 10.0
+    else:
+        pass
 
-    # phase plot with arrows
-
-
-
-    HW= 0.00001
-    HL= 0.0001
     Interval = 25
-
     x = ed['flow']
     y = ed['P']
 
-    Plt_ranges = [0, 0.001, pd['Patmosphere'], pd['Psource_SIu'] ]
-
-    #plt.figure()
-    #ax = plt.gca()
-    ax = axs[0,0]
-    #plot_curve_with_arrows(xdata, ydata, Interval, ax, arrow_scale=1.0 )
     et.plot_curve_with_arrows2(x, y, ax, Interval,color=clrs[1])
+
+
 
     axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data
 

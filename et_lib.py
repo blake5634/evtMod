@@ -192,18 +192,17 @@ def get_inr_fric_from_name(fn):
 def get_data_AL_flowTest(fn):
     #read data
     header = [
-      "cpu_time",
-      "arduino_time",
-      "reel_pos",
-      "ToF_raw",
-      "flow_ana",
-      "pressure",
-      "sync response",
-      "sync button"      ]
+    'time_sec', 'tof_pos_mm_1', 'tof_pos_mm_2', 'tof_pos_mm_3',
+    'reel_radians_1', 'reel_radians_2', 'reel_radians_3',
+    'reel_lin_mm_1', 'reel_lin_mm_2', 'reel_lin_mm_3',
+    'press_psi_1', 'press_psi_2', 'press_psi_3',
+    'flow_lpm_1', 'flow_lpm_2', 'flow_lpm_3',
+    'fric_level', 'inertia_level', 'hash'
+    ]
 
     hd = {}
     for i in range(len(header)):
-        hd[header[i]] = i
+        hd[header[i]] = i  # get an index for each header str
 
     # read entire CSV into an array - neat (ignores header too).
     data = np.genfromtxt(fn, delimiter=',')
@@ -216,16 +215,16 @@ def get_data_AL_flowTest(fn):
     idxL = hd['reel_pos']
 
     # time index = 0
-    ed['time'] = data[1:,0]       # col 0, skip header
+    ed['time'] = data[:,0]       # col 0
     #ed['dtexp'] = data[2,0]-data[1,0] # delta t
-    d2 = data[1:,0][:-1]
-    ed['dtexp'] = np.mean(data[2:,0]-d2) # average dt
-    ed['flow'] = data[1:,idxflow]
-    ed['P'] = data[1:,idxpress]
-    ed['L'] = data[1:,idxL]
+    d2 = data[:,0][:-1]
+    ed['dtexp'] = np.mean(data[1:,0]-d2) # average dt
+    ed['flow'] = data[:,idxflow]
+    ed['P'] = data[:,idxpress]
+    ed['L'] = data[:,idxL]
 
     # thanks ChatGPT!
-    ed['Ldot'] = np.gradient(data[1:,idxL], ed['dtexp'])
+    ed['Ldot'] = np.gradient(data[:,idxL], ed['dtexp'])
 
 
     #  ed['f'] = flow data
