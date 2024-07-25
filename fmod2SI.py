@@ -7,6 +7,7 @@ import et_lib as et
 from et_lib import error
 import sys
 import glob
+import re
 
 # Unit Conversions
 uc = {
@@ -56,11 +57,13 @@ if len(args) == 1:
     pu = et.loadPUnits(paramDir, 'units_'+defaultParamName)
 
 else:
-    paramFileNo = args[1]
-    paramFileName = 'Set'+paramFileNo+'Params.txt'
-    if paramFileNo not in '012345678':
+    paramFileNoStr = args[1]
+    paramFileName = 'Set'+paramFileNoStr+'Params.txt'
+    if not bool(re.fullmatch(r"\d+", paramFileNoStr)):
         print('unknown param file: ',paramFileName, '  ...  quitting')
         quit()
+    paramFileNo = int(paramFileNoStr)
+
     print('loading ',paramFileName)
     pd = et.loadParams(paramDir, paramFileName)
 
@@ -76,7 +79,7 @@ else:
 uc = et.loadUnitConv(paramDir, unitsConvfilename)
 print('loaded unit conversions')
 
-dataDirName = 'dataAndyMay24'
+dataDirNames = ['dataAndyMay24', 'dataFlowTests23Jul/flowEversion']
 
 #
 #   What to plot
@@ -128,20 +131,23 @@ df_hashes = [
 ]
 
 if PLOT_TYPE == 'OVERLAY':
-    files, mdfiles = et.get_files()
-    for i,fn in enumerate(files):
-        print(f'{i:5}', fn)
+    #files, mdfiles = et.get_files()
+    #for i,fn in enumerate(files):
+        #print(f'{i:5}', fn)
 
     print('Simulating Dataset: ', pd['DataFile'])
-    fn = dataDirName + '/' + pd['DataFile']
+    #fn = dataDirName + '/' + pd['DataFile']
 
+    dataFileNames = []
     # DataFile parameter now is just an 8char hash code
+    for ddn in dataDirNames:
+        dataFileNames += glob.glob(ddn + '/' + '*' + pd['DataFile'] + '*.csv')
 
-    dataFileNames = glob.glob(dataDirName + '/' + '*' + pd['DataFile'] + '*')
+
     if len(dataFileNames) < 1:
-        et_error('Overlay plot: file not found: ', pd['DataFile'])
+        et.error('Overlay plot: file not found: '+ pd['DataFile'])
     if len(dataFileNames) > 1:
-        et_error('Multiple files found: ', pd['DataFile'], dataFileNames)
+        et.error('Multiple files found: ' + pd['DataFile'] + str(dataFileNames))
 
     print('Simulating Dataset: ', dataFileNames[0])
 
@@ -149,14 +155,15 @@ if PLOT_TYPE == 'OVERLAY':
 
     print('Opening data file: ', fn)
 
+#  new: get these only from param file
 # get inertia and friction from data file name
 Ji, Fric_i = et.get_inr_fric_from_name(fn)
 J = 1.0E-4*[ 4.67, 5.10, 5.64][Ji]
 Tau_coulomb = [0.0029, 0.0174, 0.0694][Fric_i]
 
-pd['J'] = J
-pd['Tau_coulomb'] = Tau_coulomb
-pu['Tau_coulomb'] = 'Nm'
+#pd['J'] = J
+#pd['Tau_coulomb'] = Tau_coulomb
+#pu['Tau_coulomb'] = 'Nm'
 
 
 #########################################################################################33
@@ -219,7 +226,7 @@ if FPLOT:
     ax.set_xlim(PltTMIN, PltTMAX)
     ax.set_ylim(-1,5)
 
-REYNOLDSPLOT = True
+REYNOLDSPLOT = False
                    # https://en.wikipedia.org/wiki/Reynolds_number
 if REYNOLDSPLOT:   # https://en.wikipedia.org/wiki/Density_of_air
     Re = []    # store Reynolds number
@@ -344,17 +351,23 @@ if PLOT_TYPE == 'OVERLAY':
     #print('opening: ',fn)
     #x=input('       ... OK?? <cr>')
 
-    ed = et.get_data_from_AL_csv(fn)
+    if paramFileNo < 10:
+        ed = et.get_data_from_AL_csv(fn)
+    elif paramFileNo > 9 and paramFileNo < 13:
+        ed = et.get_data_AL_flowTest(fn)
+
+    else:
+        et.error("I don't know how to read from data file: ",fn)
+
     ed = et.convert_units(ed,uc)
-
-
     #ed['time'] = data[:,0]
     #ed['flow'] = data[:,idxflow]
     #ed['P'] = data[:,idxpress]
     #ed['L'] = data[:,idxL]
 
     # HACK
-    ed['flow'] *= 10.0
+    if paramFileNo < 10:  # correct old flow bug
+        ed['flow'] *= 10.0
 
     # phase plot with arrows
 

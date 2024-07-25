@@ -188,7 +188,52 @@ def get_inr_fric_from_name(fn):
         print('  Fric: LO')
     return I, F
 
-#  read data from Andy Lewis' data files
+#  read data from Andy Lewis' 23-Jul flow eversion data files
+def get_data_AL_flowTest(fn):
+    #read data
+    header = [
+      "cpu_time",
+      "arduino_time",
+      "reel_pos",
+      "ToF_raw",
+      "flow_ana",
+      "pressure",
+      "sync response",
+      "sync button"      ]
+
+    hd = {}
+    for i in range(len(header)):
+        hd[header[i]] = i
+
+    # read entire CSV into an array - neat (ignores header too).
+    data = np.genfromtxt(fn, delimiter=',')
+
+    #fill ed[] dictionary
+    # experiment data
+    ed = {}
+    idxflow = hd['flow_ana']
+    idxpress = hd['pressure']
+    idxL = hd['reel_pos']
+
+    # time index = 0
+    ed['time'] = data[1:,0]       # col 0, skip header
+    #ed['dtexp'] = data[2,0]-data[1,0] # delta t
+    d2 = data[1:,0][:-1]
+    ed['dtexp'] = np.mean(data[2:,0]-d2) # average dt
+    ed['flow'] = data[1:,idxflow]
+    ed['P'] = data[1:,idxpress]
+    ed['L'] = data[1:,idxL]
+
+    # thanks ChatGPT!
+    ed['Ldot'] = np.gradient(data[1:,idxL], ed['dtexp'])
+
+
+    #  ed['f'] = flow data
+    #  ed['time'] = time axis
+    #   etc.
+    return ed
+
+#  read data from Andy Lewis' May 2024 data files
 def get_data_from_AL_csv(fn):
     #read data
     header = [
