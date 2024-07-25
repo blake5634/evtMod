@@ -79,7 +79,9 @@ else:
 uc = et.loadUnitConv(paramDir, unitsConvfilename)
 print('loaded unit conversions')
 
-dataDirNames = ['dataAndyMay24', 'dataFlowTests23Jul/flowEversion/processed_data']
+dataDirNames = ['dataAndyMay24',
+                'dataFlowTests23Jul/flowEversion/processed_data',
+                'dataFlowTests23Jul/flowFixedVol/processed_data']
 
 #
 #   What to plot
@@ -200,9 +202,16 @@ PltTMIN  = prd['Time'][0]
 PltTMAX  = prd['Time'][1]
 PltPrMIN = prd['Pressure'][0]
 PltPrMAX = prd['Pressure'][1]
+#
+# TEMP HACK
+#PltPrMAX = 140000  #Pa
 print('Pressure lims: ', PltPrMIN, PltPrMAX)
 PltFlMIN = prd['Flow'][0]
 PltFlMAX = prd['Flow'][1]
+#
+#  HACK
+#PltFlMAX = 25 * uc['m3_per_Liter']/uc['sec_per_min']
+print('  Flow Max: ', PltFlMAX)
 PltLeMIN = prd['Length'][0]
 PltLeMAX = prd['Length'][1]
 PltSpMIN = prd['Speed'][0]
@@ -348,13 +357,10 @@ if PLOT_TYPE == 'OVERLAY':
     #print('opening: ',fn)
     #x=input('       ... OK?? <cr>')
 
-    if paramFileNo < 10:
+    try:
         ed = et.get_data_from_AL_csv(fn)
-    elif paramFileNo > 9 and paramFileNo < 13:
-        ed = et.get_data_from_AL_csv(fn)
-
-    else:
-        et.error("I don't know how to read from data file: ",fn)
+    except:
+        et.error("I don't know how to read from data file: "+fn)
 
     #if paramFileNo < 10:
     ed = et.convert_units(ed,uc)
