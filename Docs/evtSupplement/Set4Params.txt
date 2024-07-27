@@ -1,0 +1,25 @@
+DataFile            : 4bf58872
+ET_Res_per_m    : 1.2000E-04
+ET_Res_ratio    : .175
+ET_RofL_mode    : constant
+ET_radius       : 1.2500E-02
+J               : 5.6400E-04
+K2drag          : 1.
+Kdrag           : 3.
+LLine_SIu       : 1.0000E-08
+Lmax            : 8.0000E-01
+PBA_static      : 1.16E+05
+PHalt_dyn       : 1.08E+05
+Patmosphere     : 1.0132E+05
+Psource_SIu     : 1.45E+05
+RT              : 2.4560E+03
+Rsource_SIu     : 1.35E+08
+T               : 2.9540E+02
+Tau_coulomb     : 69.4E-03
+Threshold Taper : 100
+Vhousing_m3     : 1.2560E-03
+dF1dL           : 3.6364E+00
+dt              : 5.0000E-04
+et_MPM          : 3.2000E-03
+rReel           : 1.0900E-02
+th_dot_minCoulomb: 5.0000E-02
