@@ -181,7 +181,7 @@ state = STUCK
 
 #return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
 
-(time,l,lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+(time,state_seq, l, lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
 #
@@ -309,6 +309,7 @@ ax.xaxis.set_major_locator(xpressticks)
 # Plot 2   # PRESSURE
 axs[1,0].plot(time, pc1)
 axs[1,0].plot(time, pc2)
+
 axs[1,0].legend(['Phousing', 'Ptube' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
@@ -346,7 +347,17 @@ axs[2,1].set_ylabel('Tube Velocity (m/sec)')
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
 axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
 
-
+fig2,axs2 = plt.subplots(1)
+axs2.plot(time, state_seq)
+axs2.set_xlim(PltTMIN, PltTMAX)
+axs2.set_ylim(0, 3.5)
+#ax = plt.gca()
+stateTicks = ticker.MaxNLocator(4)
+axs2.yaxis.set_major_locator(stateTicks)
+axs2.set_ylabel('Combined State (0-3)')
+axs2.set_xlabel('Time (sec)')
+fig2.suptitle('     Eversion State Sequence\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
+fig2.tight_layout()
 
 if PLOT_TYPE == 'OVERLAY':
 
@@ -387,7 +398,7 @@ if PLOT_TYPE == 'OVERLAY':
     axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
 
     # Adjust layout
-    plt.tight_layout()
+    fig.tight_layout()
 
     if False:
         print('Pressure Simulation Losses: ')

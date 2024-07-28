@@ -11,6 +11,9 @@ PRESSURE_TEST = 2
 GROWING = 1
 STUCK = 0
 
+TAUT = 3
+SLACK = 4
+
 
 
 # some force / torque physics
@@ -22,7 +25,7 @@ def F_drag(L,Ldot, pd):
 
     #  increase drag at end of tubing (max eversion length)
     #     i.e. when the tubing runs out and is stuck to reel.
-    Fsteadystate = pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
+    Fsteadystate = 0.5 *  pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
     F_limit = (L/pd['Lmax'])**7 * Fsteadystate  # a very steep increase
     #return max(everDrag, min(Fsteadystate, F_limit))
     return max(everDrag,  F_limit)
@@ -57,6 +60,17 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     ldot = []   # velocity (m/sec)
     pstt = []     # stuck threshold
     pbat = []    # break away thresh
+    state_seq = []  # sequence of states
+
+    def stateSymbol(state, tsk):
+        if state==GROWING and tsk==TAUT:
+            return 0
+        if state==GROWING and tsk==SLACK:
+            return 1
+        if state==STUCK and tsk==TAUT:
+            return 2
+        if state==STUCK and tsk==SLACK:
+            return 3
 
     F_e = []   # eversion force   (upper case F = force)
     F_c = []   # coulomb force
@@ -179,18 +193,27 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #Bt = 10000.0     # N/m/sec  crumple damping
         #Mt_epsilon = 100 * pd['rReelpd']*pd['et_MPM']
 
-        #Lc = 0
-        if   state == GROWING and Lc > 0: # CRUMPLE zone active
+        Lmin = 0.005
+
+             # COMB STATE 1
+        if   state == GROWING and Lc > Lmin: # CRUMPLE zone active
+            state2= SLACK  # stateseq == 1
             # note pulled tubing accelerates at Lddot/2
             Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / (Mt*2)
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'], th_dot,pd)/pd['J']     # damping out overspin
 
-        elif state == GROWING and Lc <=  0.01:  # no crumple: TAUT
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt*2 + (2*pd['J']/pd['rReel']**2) )
+             # COMB STATE 0
+        elif state == GROWING and Lc <= Lmin:  # no crumple: TAUT
+            state2 = TAUT  # stateseq == 0
+            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt*2 + (2*pd['J']/(pd['rReel']**2)) )
             # corrected 28-Jul: (2x)
             th_ddot = 2*Lddot/pd['rReel']   # kinematic relation
 
         elif state == STUCK:
+            if Lc > Lmin:
+                state2 = SLACK  # stateseq == 3
+            else:
+                state2 = TAUT   # stateseq == 2
             # smooth slow down
             alpha = 100000 * pd['dt']  # empirical fit
             Lddot =   -1 * max(0, alpha * Ldot)
@@ -240,8 +263,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         l.append(L)                      # tube length
         ldot.append(Ldot)                # tube eversion velocity
         f.append(fsource)                # flow from source
-
-        #ft.append(Ldot * np.pi*et.Ret(L,pd)**2)  #flow out into the tube
+        state_seq.append(stateSymbol(state,state2))  # record state as 0-3 int
 
         # 2Compartment
         ft.append(fT)                    # tubing airflow
@@ -262,4 +284,4 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         N2     += N2dot   * dt
         et.Vet(L,pd)             #integrate et volume
 
-    return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results
+    return (tdata,state_seq, l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results
