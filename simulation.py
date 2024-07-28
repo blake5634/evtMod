@@ -187,7 +187,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         elif state == GROWING and Lc <=  0.01:  # no crumple: TAUT
             Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt*2 + (2*pd['J']/pd['rReel']**2) )
-            th_ddot = Lddot/pd['rReel']   # kinematic relation
+            # corrected 28-Jul: (2x)
+            th_ddot = 2*Lddot/pd['rReel']   # kinematic relation
 
         elif state == STUCK:
             # smooth slow down
