@@ -1,22 +1,22 @@
-DataFile            : 15g42423
+DataFile            : eb610645
 ET_Res_per_m        : 1.2000000E-04
-ET_Res_ratio        : 3.0000000E-01
+ET_Res_ratio        : 4.0000000E-01
 ET_RofL_mode        : constant
 ET_radius           : 1.2500000E-02
 J                   : 5.6400000E-04
 K2drag              : 0.0000000E+00
-Kdrag               : 2.0E+00
+Kdrag               : 2.6000000E+00
 LLine_SIu           : 1.0000000E-08
 Lmax                : 8.0000000E-01
-PBA_static          : 1.135000E+05
-PHalt_dyn           : 1.107000E+05
+PBA_static          : 1.1850000E+05
+PHalt_dyn           : 1.1230E+05
 Patmosphere         : 1.0132000E+05
-Psource_SIu         : 1.1760000E+05
+Psource_SIu         : 1.2000000E+05
 RT                  : 2.4560000E+03
-Rsource_SIu         : 7.7500000E+07
+Rsource_SIu         : 1.0489000E+08
 T                   : 2.9540000E+02
-Tau_coulomb         : 6.9400000E-02
-Threshold Taper     : 0.0000000E+00
+Tau_coulomb         : 2.9000000E-03
+Threshold Taper     : 0E+03
 Vhousing_m3         : 1.2560000E-03
 dF1dL               : 3.6364000E+00
 dt                  : 5.0000000E-04

@@ -15,21 +15,22 @@ STUCK = 0
 
 # some force / torque physics
 def F_drag(L,Ldot, pd):
-    #return Kdrag * v + K2drag / max(L, 0.100)
-    # 2 comes from eversion kinematics
-    everDrag =   2 * (pd['Kdrag'] +  pd['K2drag'] * L) * Ldot
-    #return everDrag
+    # 2Ldot comes from eversion kinematics
+    everDrag =    (pd['Kdrag'] +  pd['K2drag'] * L) * 2 * Ldot
+    #
+    #   28-Jul:   K2drag seems to have little effect: set to 0 in params?
 
     #  increase drag at end of tubing (max eversion length)
+    #     i.e. when the tubing runs out and is stuck to reel.
     Fsteadystate = pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
-    F_limit = (L/pd['Lmax'])**7 * Fsteadystate
+    F_limit = (L/pd['Lmax'])**7 * Fsteadystate  # a very steep increase
     #return max(everDrag, min(Fsteadystate, F_limit))
     return max(everDrag,  F_limit)
 
 def Tau_brake(Tc, th_dot, pd):
     # eliminate braking torque near zero velocity
     if abs(th_dot) < pd['th_dot_minCoulomb']:
-        return Tc  # HACK!  Disable this feature
+        return Tc  # Disable deadzone feature
     else:
         return Tc
 
@@ -174,23 +175,23 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         lc.append(Lc)
 
         #tubing mass depends on length
-        Mt =  (L+0.3) *  pd['et_MPM']
+        Mt =  (L+0.1) *  pd['et_MPM']
         #Bt = 10000.0     # N/m/sec  crumple damping
         #Mt_epsilon = 100 * pd['rReelpd']*pd['et_MPM']
 
         #Lc = 0
         if   state == GROWING and Lc > 0: # CRUMPLE zone active
             # note pulled tubing accelerates at Lddot/2
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / (Mt/2)
+            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / (Mt*2)
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'], th_dot,pd)/pd['J']     # damping out overspin
 
-        elif state == GROWING and Lc <=  0.01:  # no crumple: TAUGHT
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt/2 + (pd['J']/pd['rReel']**2) )
+        elif state == GROWING and Lc <=  0.01:  # no crumple: TAUT
+            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt*2 + (2*pd['J']/pd['rReel']**2) )
             th_ddot = Lddot/pd['rReel']   # kinematic relation
 
         elif state == STUCK:
             # smooth slow down
-            alpha = 20 / pd['dt']  # empirical fit
+            alpha = 100000 * pd['dt']  # empirical fit
             Lddot =   -1 * max(0, alpha * Ldot)
 
             th_ddot = -1 * Tau_brake(pd['Tau_coulomb'],th_dot,pd)/pd['J']

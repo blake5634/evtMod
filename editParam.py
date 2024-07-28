@@ -10,8 +10,15 @@ import glob, os
 #
 #    Configure here
 #
-par = 'et_MPM'
-newval = 0.0032
+freeParams = ['K2drag', 'Kdrag', 'PBA_static', 'PHalt_dyn', 'Psource_SIu', 'Rsource_SIu', 'Threshold Taper']
+
+#pars = freeParams
+#newvals = [8.7556E-1,  2.0389, 1.1432E5, 1.0791E5, 1.2761E5,
+           #1.0489E8, 3.1858E3 ]
+
+pars = ['K2drag']
+newvals = [0.0]
+
 SIMULATE = False
 #
 #######################################################
@@ -116,12 +123,13 @@ if SIMULATE:
 for index in fset:
     print('Param set: ', files[index])
     pd = et.loadDict('', files[index])
-    print('    Loaded')
-    print(f'    changing {par} from {pd[par]:12} to {newval}')
+    for i,par in enumerate(pars):
+        print(f'    changing {par} from {pd[par]:12} to {newvals[i]}')
+        if not SIMULATE:
+            pd[par] = newvals[i]
     if not SIMULATE:
-        pd[par] = newval
         et.saveParams(files[index],pd)
-    print('    Saved')
+    print(files[index], ' ...   Saved')
 
 if SIMULATE:
     print(' ... end of SIMULATION ...')
