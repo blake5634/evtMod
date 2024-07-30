@@ -18,7 +18,7 @@ def ResET(L,pd):
     return rhack
 
  # volume of ET
-tubeLinit = 0.0025
+tubeLinit = 0.0025  #nominal initial tube len (for non 0 tube vol)
 def Vet(L,pd):
      # LP =  previous L value
     if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
@@ -563,7 +563,7 @@ def setup_params():
 
 
     # simulation details
-    pd['dt'] = tubeLinit5
+    pd['dt'] = 5.0E-5
     pu['dt'] = 'sec'
 
 
