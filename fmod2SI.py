@@ -179,9 +179,7 @@ t2 = 8.0
 state = STUCK
 
 
-#return (tdata,l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol, F_e, F_c, F_d, F_j)  # return the simulation results
-
-(time,state_seq, l, lc,ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
+(time, th, thdot, state_seq, l, lc, ldot, f, ft, pc1,pc2, pbat, pstt, vol1, vol2, F_e,F_c,F_d,F_j) = sim.simulate(pd,uc,t1,t2)
 
 ###################################################
 #
@@ -347,6 +345,12 @@ axs[2,1].set_ylabel('Tube Velocity (m/sec)')
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
 axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
 
+
+#
+#   Special plots for state jumps diagnosis
+#
+
+# state seqence
 fig2,axs2 = plt.subplots(1)
 axs2.plot(time, state_seq)
 axs2.set_xlim(PltTMIN, PltTMAX)
@@ -358,6 +362,36 @@ axs2.set_ylabel('Combined State (0-3)')
 axs2.set_xlabel('Time (sec)')
 fig2.suptitle('     Eversion State Sequence\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
 fig2.tight_layout()
+
+# reel state
+dL =  (np.array(th)*pd['rReel'] - np.array(l)) # mm for plotting
+for i,d in enumerate(dL):
+    dL[i] = max(0.0, d)
+fig3,axs3 = plt.subplots(1)
+#axs3.plot(time, th, time, thdot, time, dL)
+axs3.plot( th,   thdot )
+#axs3.plot(time, dL)
+#axs3.plot(time, lc)
+axs3.legend(['th', 'thdot'])
+#axs3.legend(['dL', 'Lc'])
+#axs3.set_xlim(PltTMIN, PltTMAX)
+#axs3.set_xlim(-40,50)
+#axs3.set_ylim(-50,50)
+#ax = plt.gca()
+stateTicks = ticker.MaxNLocator(4)
+axs3.yaxis.set_major_locator(stateTicks)
+#axs3.set_ylabel('theta, thetaDot (rad)')
+axs3.set_ylabel('thdot')
+#axs3.set_ylabel('r*theta - L (m)')
+#axs3.set_xlabel('Time (sec)')
+axs3.set_xlabel('theta (rad)')
+#axs3.set_xlabel('time (sec)')
+axs3.grid()
+fig3.suptitle('   Reel Phase Plot\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
+#fig3.suptitle('     Reel behavior\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
+fig3.tight_layout()
+
+#######
 
 if PLOT_TYPE == 'OVERLAY':
 

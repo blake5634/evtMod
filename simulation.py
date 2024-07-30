@@ -25,18 +25,10 @@ def F_drag(L,Ldot, pd):
 
     #  increase drag at end of tubing (max eversion length)
     #     i.e. when the tubing runs out and is stuck to reel.
+    #     0.5*F comes from eversion kinematics
     Fsteadystate = 0.5 *  pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
     F_limit = (L/pd['Lmax'])**7 * Fsteadystate  # a very steep increase
-    #return max(everDrag, min(Fsteadystate, F_limit))
     return max(everDrag,  F_limit)
-
-def Tau_brake(Tc, th_dot, pd):
-    # eliminate braking torque near zero velocity
-    if abs(th_dot) < pd['th_dot_minCoulomb']:
-        return Tc  # Disable deadzone feature
-    else:
-        return Tc
-
 
 ####################################################################
 #
@@ -61,6 +53,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     pstt = []     # stuck threshold
     pbat = []    # break away thresh
     state_seq = []  # sequence of states
+    th = []     # reel pos
+    thdot = []  # reel speed
 
     def stateSymbol(state, tsk):
         if state==GROWING and tsk==TAUT:
@@ -100,8 +94,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     #
 
     # Starting STATE
-    state = STUCK
-    #state = PRESSURE_TEST
+    state = STUCK   # growing vs stuck
+    state2 = TAUT   # spool crumple (SLACK) or TAUT
 
     # state var initial values (initial conditions)
     PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
@@ -115,7 +109,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     #x = input('pause: (cr)')
     fint = 0
     fT = 0
-    L = et.tubeLinit       # ET length (m)
+    L = et.tubeLinit       # ET nominal non-zero init length (m)
     Lc = 0  #  length of tube crumpled in the housing
     Ldot  = 0
     Lddot = 0
@@ -170,7 +164,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #breakpoint()
 
         # Eq 5.1
-        Fcoulomb = Tau_brake(pd['Tau_coulomb'], th_dot, pd)
+        # this is coulomb fric due to reel brake (TAUT state only)
+        Fcoulomb = pd['Tau_coulomb'] / pd['rReel']
         F_c.append(Fcoulomb)
 
         #
@@ -180,48 +175,59 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         F_j.append(-Lddot*pd['J']/pd['rReel']**2)
 
         # F_ever
-        # 2Compartment
-        F_ever = max(0, 0.5 * (PC2-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # C2 pres. applied to tip
+        F_ever = max(0, 0.5 * (PC2-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # 1/2 pres. applied to tip
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
-        Lc = max(0, pd['rReel']*theta - L)
+        Lc = pd['rReel']*theta - 2*L
+        Lc = max(0.0, Lc)  # can't go negative
+        #print('.... testing: r*theta, Lc, L: ',pd['rReel']*theta, Lc, 2*L)
         lc.append(Lc)
 
         #tubing mass depends on length
         Mt =  (L+0.1) *  pd['et_MPM']
-        #Bt = 10000.0     # N/m/sec  crumple damping
-        #Mt_epsilon = 100 * pd['rReelpd']*pd['et_MPM']
 
-        Lmin = 0.005
+        LCmin = 0.001
 
              # COMB STATE 1
-        if   state == GROWING and Lc > Lmin: # CRUMPLE zone active
-            state2= SLACK  # stateseq == 1
-            # note pulled tubing accelerates at Lddot/2
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb) / (Mt*2)
-            th_ddot = -1 * Tau_brake(pd['Tau_coulomb'], th_dot,pd)/pd['J']     # damping out overspin
+        #if  state == GROWING and Lc >= LCmin: # CRUMPLE zone active
+        if  state == GROWING and state2==SLACK: # CRUMPLE zone active
+            #state2= SLACK  # stateseq == 1
+            # note pulled tubing accelerates at 2*Lddot
+            #   no Fcoulomb in TAUT state (29-Jul)
+            Lddot = (F_ever - F_drag(L,Ldot,pd)) / (Mt*2)
+            th_ddot = -1 * pd['Tau_coulomb']/pd['J']   # damping out overspin
 
              # COMB STATE 0
-        elif state == GROWING and Lc <= Lmin:  # no crumple: TAUT
-            state2 = TAUT  # stateseq == 0
-            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (Mt*2 + (2*pd['J']/(pd['rReel']**2)) )
+        #elif state == GROWING and Lc < LCmin:  # no crumple: TAUT
+        elif state == GROWING and state2==TAUT:  # no crumple: TAUT
+            #state2 = TAUT  # stateseq == 0
+            #if t>1.0:
+                #breakpoint()
+            Ldot = max(0.0,Ldot)  # enforce that L only grows
+
+            Lddot = (F_ever - F_drag(L,Ldot,pd) - Fcoulomb ) / (2*(Mt + (pd['J']/(pd['rReel']**2))))
+
             # corrected 28-Jul: (2x)
             th_ddot = 2*Lddot/pd['rReel']   # kinematic relation
 
-        elif state == STUCK:
-            if Lc > Lmin:
+        elif state == STUCK:  # can only change state2 in STUCK
+            if Lc > LCmin:
                 state2 = SLACK  # stateseq == 3
             else:
                 state2 = TAUT   # stateseq == 2
             # smooth slow down
             alpha = 100000 * pd['dt']  # empirical fit
             Lddot =   -1 * max(0, alpha * Ldot)
-
-            th_ddot = -1 * Tau_brake(pd['Tau_coulomb'],th_dot,pd)/pd['J']
+            if abs (th_dot) > 0.0005:
+                th_ddot = -1 * pd['Tau_coulomb'] / pd['J']
+            else:
+                th_ddot = 0.0
 
         else:
             error('Invalid State: '+state)
+
+        prevState2 = state2
 
         # Eq 3.5
         #  thresholds seem to grow closer together with eversion
@@ -238,6 +244,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         if CONVERGED:
             Pth1 = (1.0-0.5*PdTol) * midpoint
             Pth2 = (1.0+0.5*PdTol) * midpoint
+
+        ###  HACK disable Threshold Taper Completely
+        Pth1 = pd['PHalt_dyn']
+        Pth2 = pd['PBA_static']
+
         pstt.append(Pth1)
         pbat.append(Pth2)
 
@@ -263,10 +274,10 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         l.append(L)                      # tube length
         ldot.append(Ldot)                # tube eversion velocity
         f.append(fsource)                # flow from source
-        state_seq.append(stateSymbol(state,state2))  # record state as 0-3 int
-
-        # 2Compartment
         ft.append(fT)                    # tubing airflow
+        state_seq.append(stateSymbol(state,state2))  # record state as 0-3 int
+        th.append(theta)
+        thdot.append(th_dot)
         # Pressure
         Phous.append(PC1)                # Housing pressure Pa
         Ptube.append(PC2)                # Tubing Pressure
@@ -278,10 +289,12 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         Ldot   =  max(0,Ldot)    # Ldot can never go negative
         L      += Ldot    * dt
         th_dot += th_ddot * dt
+        th_dot =  max(0,th_dot)  # th_dot can never go neg.
         theta  += th_dot  * dt
+
         # 2Compartment state integration
         N1     += N1dot   * dt
         N2     += N2dot   * dt
         et.Vet(L,pd)             #integrate et volume
 
-    return (tdata,state_seq, l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results
+    return (tdata,th, thdot, state_seq, l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results
