@@ -36,8 +36,13 @@ def F_drag(L,Ldot, pd):
 
 def simulate(pd,uc,tmin=0,tmax=8.0):
     error_count = 0
-
-
+    # normally we are doing two compartment
+    ONECOMPARTMENT = False
+    try:
+        if pd['Compartments'] == 1:
+            ONECOMPARTMENT = True
+    except:
+        pass
     # declare data storage
     #2Compartment
     Phous = []      # Housing Pressure (Pa)
@@ -99,22 +104,23 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
     # state var initial values (initial conditions)
     PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
-    PC2 = PC1
+    PC2 = PC1    # we will use PC2 only in two-compartment
     #
     et.Vet(0.0,pd)  # initialize everting tube computation (L param not used)
     N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
-    N2 = PC2*et.Vet.et_vol / pd['RT']
-    #print(f'Initial Cond:  PC1: {PC1}, PC2: {PC2}')
-    #print(f'Initial Cond:  N1: {N1},   N2: {N2}')
-    #x = input('pause: (cr)')
+    N2 = PC2*et.Vet.et_vol / pd['RT']  # for two comp.
     fint = 0
     fT = 0
     L = et.tubeLinit       # ET nominal non-zero init length (m)
     Lc = 0  #  length of tube crumpled in the housing
     Ldot  = 0
     Lddot = 0
-    N1 = PC1*pd['Vhousing_m3']/pd['RT']
-    N2 = PC2* et.Vet.et_vol/pd['RT']
+    if ONECOMPARTMENT:
+        N1 = PC1*pd['Vhousing_m3']/pd['RT']
+        N2 = 0  # not used
+    else:
+        N1 = PC1*pd['Vhousing_m3']/pd['RT']
+        N2 = PC2* et.Vet.et_vol/pd['RT']
     N1dot = 0
     N2dot = 0
     theta = 0
@@ -129,39 +135,23 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # Solve Pressures
         #2Compartment
-        PC1 = N1*pd['RT'] / pd['Vhousing_m3']
-        PC2 = N2*pd['RT'] / et.Vet.et_vol
+        if ONECOMPARTMENT:
+            PC1 = N1 * pd['RT'] / (pd['Vhousing_m3'] + et.Vet.et_vol)
+            PC2 = 0
+        else:
+            PC1 = N1*pd['RT'] / pd['Vhousing_m3']
+            PC2 = N2*pd['RT'] / et.Vet.et_vol
 
-        # Eq 2.5   HACK to fit saturation
-        #fsource = min(0.000332, (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu'])
         fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
-        # if True:
-        #     if PC2>=PC1:
-        #     #if False:
-        #         fT = et.Vet.et_vol * Ldot # Ldot = constant 0.05e.g.
-        #     else:
-        #         fT = (PC1-PC2)/et.ResET(L,pd)
-        #         #fT = (PC1-PC2)/pd['Rsource_SIu']
-        # else:
-        #     fT = 0.0000002
-        #
-        #fT = (PC1-PC2)/et.ResET(L,pd)
-        rtube = pd['Rsource_SIu'] * pd['ET_Res_ratio']
-        fT = (PC1-PC2)/rtube
-        fint = fsource - fT
-
-        # 2Compartment:
-
-        N1dot = fint * uc['moles_per_m3']
-        #N1dot = min(fint, 0.000332)* uc['moles_per_m3']
-        N2dot = fT   * uc['moles_per_m3']
-
-        #print(f'{t:6.4f}  Ptube: {PC2}  Phouse: {PC1} etVol: {et.Vet.et_vol:5.2E}')
-        #print(f"        tube flow: {(PC1-PC2)/et.ResET(L,pd):10.5f}, source flow: { (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']:10.5f}")
-        #print(f'        N2dot: {N2dot:10.5f}      N1dot: {N1dot:10.5f}')
-        #print(f'           N2: {N2:10.5f}         N1: {N1:10.5f}')
-
-        #breakpoint()
+        if not ONECOMPARTMENT:
+            rtube = pd['Rsource_SIu'] * pd['ET_Res_ratio']
+            fT = (PC1-PC2)/rtube
+            fint = fsource - fT
+            N1dot = fint * uc['moles_per_m3']
+            N2dot = fT   * uc['moles_per_m3']
+        else:
+            N1dot = fsource * uc['moles_per_m3']
+            N2dot = 0.0  # not used
 
         # Eq 5.1
         # this is coulomb fric due to reel brake (TAUT state only)
@@ -175,7 +165,12 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         F_j.append(-Lddot*pd['J']/pd['rReel']**2)
 
         # F_ever
-        F_ever = max(0, 0.5 * (PC2-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # 1/2 pres. applied to tip
+        if ONECOMPARTMENT:
+            drivepress = PC1
+        else:
+            drivepress = PC2
+        F_ever = max(0, 0.5 * (drivepress-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # 1/2 pres. applied to tip
+
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
@@ -260,9 +255,9 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 4
 
         if PRESSURE_BREAK:
-            if PC2 > Pth2:       # use tube (PC2) OR housing (PC1) pressure(!)
+            if drivepress > Pth2:       # drivepress istube (PC2) OR housing (PC1) pressure(!)
                 state = GROWING
-            if PC2 < Pth1:
+            if drivepress < Pth1:
                 state = STUCK
         else:                 # switch states based on ET Force instead of pressure
             if F_ever > F2:
@@ -279,7 +274,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         th.append(theta)
         thdot.append(th_dot)
         # Pressure
-        Phous.append(PC1)                # Housing pressure Pa
+        Phous.append(PC1)                # Housing pressure Pa (or 1comp pressure)
         Ptube.append(PC2)                # Tubing Pressure
         vol1.append(pd['Vhousing_m3'])   # right now housing vol is constant(!)
         vol2.append(et.Vet.et_vol)       # query the Etube volume
