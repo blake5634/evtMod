@@ -9,31 +9,20 @@ import sys
 import glob
 import re
 
-# Unit Conversions
-#uc = {
-    #"sec_per_min": 60,
-    #"kPa_per_Pa": 0.001,
-    #"Pa_per_kPa": 1.0 / 0.001,
-    #"min_per_sec": 1 / 60,
-    #"Gal_per_Liter": 0.2642,
-    #"Liter_per_Gal": 3.7854,
-    #"Liter_per_m3": 1000.0,
-    #"Liter_per_mm3": 1000.0 / 1000**3,
-    #"Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
-    #"mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
-    #"MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-    #"m3_per_mole": 0.02241,  # m3/mol of Air
-    #"moles_per_m3": 1.0 / 0.02241,
-    #"Pa_per_PSI": 6894.76,
-    #"atmos_Pa": 14.5 * 6894.76,
-    #"m3_per_Liter": 1.0 / 1000.0  # m3
-#}
 
+args = sys.argv
+cl = ' '.join(args)
+if len(args) == 3:  #  >fmod2SI   nn  [1Comp]   nn=fileNo  '1Comp' for non-default one comp model
+    if args[2] != '1Comp':
+        et.error(f'fmod2SI: unknown command line arg: \n     >{cl}')
+    paramDir = 'evtParams/1Comp/'
+else:
+    paramDir = 'evtParams/2Comp/'   # default is 2Compartment model
 
-paramDir = 'evtParams/'
 unitsConvfilename = 'unitConv.txt'
 defaultParamName = 'InitialParams.txt'
 defaultUnitsName = 'units_'+defaultParamName
+defaultUnitsDir = 'evtParams/'
 
 ##set up first version of params and units files
 ## just run these once (then comment out)
@@ -44,12 +33,10 @@ defaultUnitsName = 'units_'+defaultParamName
 #et.saveParams(defaultParamName,pd)
 #et.savePUnits(defaultUnitsName,pu)     # same keys as parameter file
 
-
-args = sys.argv
-
 # load parameter file(s)
 
 if len(args) == 1:
+    paramDir = 'evtParams/'   # default is 2Compartment model
     paramFileName = defaultParamName
     print('Usage: fmod2SI <parameterfile>')
     print('   loading nominal default parameters from: ' + defaultParamName)
@@ -58,7 +45,7 @@ if len(args) == 1:
 
 else:
     paramFileNoStr = args[1]
-    paramFileName = 'Set'+paramFileNoStr+'Params.txt'
+    paramFileName = 'Set'+paramFileNoStr+'Params.txt'  # look up SetxxParams.txt
     if not bool(re.fullmatch(r"\d+", paramFileNoStr)):
         print('unknown param file: ',paramFileName, '  ...  quitting')
         quit()
@@ -73,10 +60,10 @@ else:
         # units change only when a new param is added so give option for one
         #   default units file.
         print('loading default parameter units from: ' + paramDir + defaultUnitsName)
-        pu = et.loadPUnits(paramDir, defaultUnitsName)
+        pu = et.loadPUnits(defaultUnitsDir, defaultUnitsName)
 
-# load unit conversions
-uc = et.loadUnitConv(paramDir, unitsConvfilename)
+# load unit conversions and phys constants (they never change!)
+uc = et.loadUnitConv(defaultUnitsDir, unitsConvfilename)
 print('loaded unit conversions')
 
 dataDirNames = ['dataAndyMay24',
@@ -167,11 +154,6 @@ Tau_coulomb = [0.0029, 0.0174, 0.0694][Fric_i]
 #pu['Tau_coulomb'] = 'Nm'
 
 
-#########################################################################################33
-
-# print and save orig baseline params
-et.print_param_table(pd,pu)  #default params (
-pd_orig = et.loadParams(paramDir, defaultParamName)
 
 ##################################################  Run Simulation
 t1 = 0.0
