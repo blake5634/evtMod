@@ -39,7 +39,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     # normally we are doing two compartment
     ONECOMPARTMENT = False
     try:
-        if pd['Compartments'] == 1:
+        if pd['Compartments'] < 2:
             ONECOMPARTMENT = True
     except:
         pass
@@ -107,8 +107,6 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     PC2 = PC1    # we will use PC2 only in two-compartment
     #
     et.Vet(0.0,pd)  # initialize everting tube computation (L param not used)
-    N1 = PC1*pd['Vhousing_m3']/pd['RT']    #   N = PV/(RT), ideal gas law
-    N2 = PC2*et.Vet.et_vol / pd['RT']  # for two comp.
     fint = 0
     fT = 0
     L = et.tubeLinit       # ET nominal non-zero init length (m)
@@ -116,7 +114,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     Ldot  = 0
     Lddot = 0
     if ONECOMPARTMENT:
-        N1 = PC1*pd['Vhousing_m3']/pd['RT']
+        N1 = PC1*(pd['Vhousing_m3']+et.Vet.et_vol)/pd['RT']
         N2 = 0  # not used
     else:
         N1 = PC1*pd['Vhousing_m3']/pd['RT']
@@ -142,27 +140,31 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             PC1 = N1*pd['RT'] / pd['Vhousing_m3']
             PC2 = N2*pd['RT'] / et.Vet.et_vol
 
+        # source flow
         fsource = (pd['Psource_SIu'] - PC1)/pd['Rsource_SIu']
+        # other flows for 2comp
         if not ONECOMPARTMENT:
+            # Two Comp
             rtube = pd['Rsource_SIu'] * pd['ET_Res_ratio']
+            #rtube = et.ResET(L,pd)
             fT = (PC1-PC2)/rtube
             fint = fsource - fT
             N1dot = fint * uc['moles_per_m3']
             N2dot = fT   * uc['moles_per_m3']
-        else:
+        else:  # ONE Comp.
             N1dot = fsource * uc['moles_per_m3']
             N2dot = 0.0  # not used
 
         # Eq 5.1
         # this is coulomb fric due to reel brake (TAUT state only)
         Fcoulomb = pd['Tau_coulomb'] / pd['rReel']
-        F_c.append(Fcoulomb)
+        F_c.append(Fcoulomb) # not scaled because constant w.r.t. |vel|
 
         #
         # F_dr
         F_dr = F_drag(L,Ldot,pd)     # material speed is 2x Ldot
         F_d.append(-F_drag(L,Ldot,pd))
-        F_j.append(-Lddot*pd['J']/pd['rReel']**2)
+        F_j.append(-2*Lddot*pd['J']/pd['rReel']**2)
 
         # F_ever
         if ONECOMPARTMENT:
@@ -174,7 +176,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         F_e.append(F_ever)   # eversion force
 
         #  Crumple length
-        Lc = pd['rReel']*theta - 2*L
+        Lc = pd['rReel']*theta - 2*L  # reel supplies double length for et's
         Lc = max(0.0, Lc)  # can't go negative
         #print('.... testing: r*theta, Lc, L: ',pd['rReel']*theta, Lc, 2*L)
         lc.append(Lc)
@@ -255,7 +257,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # Eq 4
 
         if PRESSURE_BREAK:
-            if drivepress > Pth2:       # drivepress istube (PC2) OR housing (PC1) pressure(!)
+            # drivepress is tube (PC2) OR housing (PC1) pressure(!)
+            if drivepress > Pth2:
                 state = GROWING
             if drivepress < Pth1:
                 state = STUCK
@@ -290,6 +293,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # 2Compartment state integration
         N1     += N1dot   * dt
         N2     += N2dot   * dt
+
         et.Vet(L,pd)             #integrate et volume
 
     return (tdata,th, thdot, state_seq, l,lc,ldot,f, ft, Phous, Ptube, pbat, pstt, vol1, vol2, F_e, F_c, F_d, F_j)  # return the simulation results

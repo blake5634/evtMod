@@ -31,6 +31,7 @@ def Vet(L,pd):
         Vet.et_vol +=   Vet.et_dVol_dL * Vet.dL
         Vet.LP = L
         return Vet.et_vol
+
 # initialize 'static' variable (func attribs)
 # flag for initial condition setting
 Vet.LP= -1    # flag for init. cond. setting
@@ -591,10 +592,16 @@ def saveDict(fname, d):
     return
 
 def loadParams(dir, fname):
+    di = loadDict(dir,fname)
+    try:
+        if di['Compartments'] not in [1,2]:
+            error('loadParms: n compartments is not 1 or 2')
+    except:
+        pass
     if len(dir) > 0:
-        return loadDict(dir, fname)
+        return di
     else:
-        return loadDict('', fname)
+        return di
 
 def loadPUnits(dir, fname):
     return loadDict(dir,fname)

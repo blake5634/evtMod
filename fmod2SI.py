@@ -36,7 +36,7 @@ defaultUnitsDir = 'evtParams/'
 # load parameter file(s)
 
 if len(args) == 1:
-    paramDir = 'evtParams/'   # default is 2Compartment model
+    paramDir = 'evtParams/'   # this is only generic with no data (keep??) default is 2Compartment model
     paramFileName = defaultParamName
     print('Usage: fmod2SI <parameterfile>')
     print('   loading nominal default parameters from: ' + defaultParamName)
@@ -69,6 +69,15 @@ print('loaded unit conversions')
 dataDirNames = ['dataAndyMay24',
                 'dataFlowTests23Jul/flowEversion/processed_data',
                 'dataFlowTests23Jul/flowFixedVol/processed_data']
+
+# generate string for plot headings etc.
+try:
+    if pd['Compartments'] == 1:
+        compModName = 'ONE Compartment'
+    else:
+        compModName = 'TWO Compartment'
+except:
+    compModName = 'Two Compartment'
 
 #
 #   What to plot
@@ -144,10 +153,10 @@ if PLOT_TYPE == 'OVERLAY':
 
     print('Opening data file: ', fn)
 
-# get inertia and friction from data file name
-Ji, Fric_i = et.get_inr_fric_from_name(fn)
-J = 1.0E-4*[ 4.67, 5.10, 5.64][Ji]
-Tau_coulomb = [0.0029, 0.0174, 0.0694][Fric_i]
+## get inertia and friction from data file name
+#Ji, Fric_i = et.get_inr_fric_from_name(fn)
+#J = 1.0E-4*[ 4.67, 5.10, 5.64][Ji]
+#Tau_coulomb = [0.0029, 0.0174, 0.0694][Fric_i]
 
 #pd['J'] = J
 #pd['Tau_coulomb'] = Tau_coulomb
@@ -201,7 +210,8 @@ PltVoMAX = prd['Volume'][1]
 if FPLOT:
     # Create force plot
     fig = plt.figure()
-    fig.suptitle(fn.split('/')[-1] + ' ' + paramFileName)
+    #fig.suptitle(fn.split('/')[-1] + ' ' + paramFileName)
+    fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
 
     ax = fig.gca()
     plt.plot(time, F_e)
@@ -228,7 +238,7 @@ if REYNOLDSPLOT:   # https://en.wikipedia.org/wiki/Density_of_air
         mu = 1.81E-05   #Pa sec
         Re.append(rho*V*L/mu)
     fig = plt.figure()
-    fig.suptitle(fn.split('/')[-1] + ' Reynolds #\n    ' + paramFileName)
+    fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
     plt.plot(time, Re)
     ax = plt.gca()
     ax.set_xlim(PltTMIN, PltTMAX)
@@ -342,7 +352,8 @@ stateTicks = ticker.MaxNLocator(4)
 axs2.yaxis.set_major_locator(stateTicks)
 axs2.set_ylabel('Combined State (0-3)')
 axs2.set_xlabel('Time (sec)')
-fig2.suptitle('     Eversion State Sequence\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
+fig2.suptitle('     Eversion State Sequence\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
+
 fig2.tight_layout()
 
 # reel state
@@ -369,17 +380,17 @@ axs3.set_ylabel('thdot')
 axs3.set_xlabel('theta (rad)')
 #axs3.set_xlabel('time (sec)')
 axs3.grid()
-fig3.suptitle('   Reel Phase Plot\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
+fig3.suptitle('   Reel Phase Plot\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
 #fig3.suptitle('     Reel behavior\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
 fig3.tight_layout()
 
 #######
 
 if PLOT_TYPE == 'OVERLAY':
+    # filename, fn, is chosen above prior to sim
 
-    # fn is chosen above prior to sim
-
-    fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName)
+    # data/simulation plot heading title super title
+    fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
 
     #print('opening: ',fn)
     #x=input('       ... OK?? <cr>')
@@ -437,4 +448,7 @@ if PLOT_TYPE == 'OVERLAY':
 if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot it.
     et.plot_tube_shape(pd)
 
+print(f'\n\n           {paramFileName} was simulated by {compModName} model. \n')
+
 plt.show()
+
