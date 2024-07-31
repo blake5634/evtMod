@@ -232,7 +232,39 @@ if __name__ == '__main__':
     #test = True
 
     if not test:
-        analyze_params()
+
+        args = sys.argv
+        if len(args) == 3: # compare two param sets
+            set1 = int(args[1])
+            set2 = int(args[2])
+        else:
+            analyze_params()
+            quit()
+
+        paramDir = 'evtParams/'
+        paramDirL2 = 'evtParams/1Comp/'
+        paramGFile = 'ParamGroups.txt'   # conceptual groupings of parms
+
+        pg = et.loadDict(paramDir, paramGFile)
+        pu = et.loadPUnits(paramDir, 'units_InitialParams.txt')
+
+        #files, mdfiles = et.get_files()
+        #print('Parameter File Analysis')
+        pfiles = list(glob.glob(paramDirL2 + "Set*.txt"))
+        pfiles.sort() # Set0, Set1, ...
+        print('Pfiles:',pfiles)
+        for pf in pfiles:
+            print('testing: ',pf)
+            if f'Set{str(set1)}Params.txt' in pf:
+                file1 = pf
+            if f'Set{str(set2)}Params.txt' in pf:
+                file2 = pf
+        pd1 = et.loadParams('', file1)
+        pd2 = et.loadParams('', file2)
+
+        pchanges = compare_param_dicts(pd1,pd2,18)
+
+        print_params_by_group(pd1, pg, pu, pg2=pd2, pch=pchanges, tstr=f'\n {file1} to {file2} ')
 
 
     else:
