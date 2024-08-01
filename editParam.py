@@ -16,8 +16,11 @@ freeParams = ['K2drag', 'Kdrag', 'PBA_static', 'PHalt_dyn', 'Psource_SIu', 'Rsou
 #newvals = [8.7556E-1,  2.0389, 1.1432E5, 1.0791E5, 1.2761E5,
            #1.0489E8, 3.1858E3 ]
 
-pars = ['K2drag']
-newvals = [0.0]
+pars = ['Compartments']
+newvals = [2]
+
+#paramDirList = ['evtParams/1Comp/']#, 'evtParams/2Comp/']
+paramDirList = [ 'evtParams/2Comp/']
 
 SIMULATE = False
 #
@@ -25,29 +28,8 @@ SIMULATE = False
 
 
 
-## Unit Conversions
-#uc = {
-    #"sec_per_min": 60,
-    #"kPa_per_Pa": 0.001,
-    #"Pa_per_kPa": 1.0 / 0.001,
-    #"min_per_sec": 1 / 60,
-    #"Gal_per_Liter": 0.2642,
-    #"Liter_per_Gal": 3.7854,
-    #"Liter_per_m3": 1000.0,
-    #"Liter_per_mm3": 1000.0 / 1000**3,
-    #"Gal_per_mm3": (1000.0 / 1000**3) * 0.2642,
-    #"mm3_per_Gal": 1.0 / ((1000.0 / 1000**3) * 0.2642),
-    #"MM3perLiter": 1.0 / (1000.0 / 1000**3), # Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-    #"m3_per_mole": 0.02241,  # m3/mol of Air
-    #"moles_per_m3": 1.0 / 0.02241,
-    #"Pa_per_PSI": 6894.76,
-    #"atmos_Pa": 14.5 * 6894.76,
-    #"et_MPM"  : 0.0032 : kg/m
-    #"m3_per_Liter": 1.0 / 1000.0  # m3
-#}
+paramDir = 'evtParams'
 
-
-paramDir = 'evtParams/'
 unitsConvfilename = 'unitConv.txt'
 defaultParamName = 'InitialParams.txt'
 defaultUnitsName = 'units_'+defaultParamName
@@ -78,10 +60,7 @@ m3_per_Liter =  1.0 / Liter_per_m3  # m3
 Patmosphere = 101325.0    # Pascals
 Psource_SIu = Patmosphere + 3.0 * Pa_per_PSI # pascals
 
-ParamDirNames = ['evtParams']
-
-#files = ['eversion_flow-hi-inr_hi-fric_tube-1_trial-2.csv', 'eversion_flow-hi-inr_lo-fric_tube-1_trial-1.csv', 'eversion_flow-hi-inr_lo-fric_tube-1_trial-2.csv', 'eversion_flow-hi-inr_lo-fric_tube-1_trial-3.csv', 'eversion_flow-hi-inr_hi-fric_tube-2_trial-1.csv', 'eversion_flow-hi-inr_hi-fric_tube-2_trial-2.csv', 'eversion_flow-hi-inr_hi-fric_tube-3_trial-1.csv', 'eversion_flow-hi-inr_hi-fric_tube-3_trial-2.csv', 'eversion_flow-hi-inr_hi-fric_tube-3_trial-3.csv',
-#]
+ParamDirNames = paramDirList
 
 files = []
 fnRoots = []
@@ -104,7 +83,8 @@ for parDir in ParamDirNames:
 ###################################################
 print('Discovered Data Files: ')
 for i,fn in enumerate(files):
-    fn2 = fn.split('/')[1]
+    #tmp = fn.split('/')
+    fn2 = fn
     print(f'{i:3}  {fn2}')
 
 sel = str(input('Select file numbers (-1) for all: '))
@@ -124,7 +104,11 @@ for index in fset:
     print('Param set: ', files[index])
     pd = et.loadDict('', files[index])
     for i,par in enumerate(pars):
-        print(f'    changing {par} from {pd[par]:12} to {newvals[i]}')
+        try:
+            print(f'    changing {par} from {pd[par]:12} to {newvals[i]}')
+        except:
+            print(f'    changing {par} from {"missing":12} to {newvals[i]}')
+
         if not SIMULATE:
             pd[par] = newvals[i]
     if not SIMULATE:
