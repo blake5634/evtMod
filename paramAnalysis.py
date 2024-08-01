@@ -92,14 +92,18 @@ def pdiff(a,b,nscale):
     return n
 
 
-def print_params_by_group(pg1, pGroupsD, pu, pg2=None, pch=None, tstr='\n      Parameter Table'):
+def print_params_by_group(pg1, pGroupsD, pu, fnames=None, pg2=None, pch=None, tstr='\n      Parameter Table'):
     print(tstr)
     pnames = pg1.keys()
     # sort param names by their group
-    pngs = []
+    pngs = []  # parameter group names
     for pn in pnames: # parameter names
         pngs.append(pGroupsD[pn])  # list of groups
+    # sort them by parameter type (group)
     parByGroup = sorted(zip(pnames, pngs), key= lambda x: x[1])
+
+    #if fnames:
+        #print(f'{fnames[0]}   {fnames[1]}')
     for k2 in parByGroup: # sorted 2xtuples
         k =    k2[0]
         val1 = pg1[k]
@@ -110,8 +114,9 @@ def print_params_by_group(pg1, pGroupsD, pu, pg2=None, pch=None, tstr='\n      P
                 print(f'{k:18} {pg1[k]:8.4E} {pu[k]:15} ')
             else:
                 print(f'{k:18} {pg1[k]:8.4E}-->{pg2[k]:8.4E} {pu[k]:15}   {pch[k]}')
-        else:
-            print(    f'{k:18} {pg1[k]:10} {pu[k]:15}  (string????)')
+
+        elif type(val1) == type(val2) and type(val1)==type('x'):
+            print(    f'{k:18} {pg1[k]:10}-->{pg2[k]:10} {pu[k]:15}')
 
     print('')
 
@@ -233,6 +238,9 @@ if __name__ == '__main__':
 
     if not test:
 
+
+        #
+        #    Compare two param files
         args = sys.argv
         if len(args) == 3: # compare two param sets
             set1 = int(args[1])
@@ -242,7 +250,7 @@ if __name__ == '__main__':
             quit()
 
         paramDir = 'evtParams/'
-        paramDirL2 = 'evtParams/1Comp/'
+        paramDirL2 = 'evtParams/2Comp/'
         paramGFile = 'ParamGroups.txt'   # conceptual groupings of parms
 
         pg = et.loadDict(paramDir, paramGFile)
@@ -264,7 +272,7 @@ if __name__ == '__main__':
 
         pchanges = compare_param_dicts(pd1,pd2,18)
 
-        print_params_by_group(pd1, pg, pu, pg2=pd2, pch=pchanges, tstr=f'\n {file1} to {file2} ')
+        print_params_by_group(pd1, pg, pu, fnames=[file1,file2], pg2=pd2, pch=pchanges, tstr=f'\n{file1} vs. {file2}')
 
 
     else:

@@ -153,16 +153,6 @@ if PLOT_TYPE == 'OVERLAY':
 
     print('Opening data file: ', fn)
 
-## get inertia and friction from data file name
-#Ji, Fric_i = et.get_inr_fric_from_name(fn)
-#J = 1.0E-4*[ 4.67, 5.10, 5.64][Ji]
-#Tau_coulomb = [0.0029, 0.0174, 0.0694][Fric_i]
-
-#pd['J'] = J
-#pd['Tau_coulomb'] = Tau_coulomb
-#pu['Tau_coulomb'] = 'Nm'
-
-
 
 ##################################################  Run Simulation
 t1 = 0.0
