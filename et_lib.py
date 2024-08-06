@@ -23,7 +23,7 @@ def Vet(L,pd):
      # LP =  previous L value
     if Vet.LP < 0:  # init condition flag (in loop 'cause need pd)
         Vet.LP = tubeLinit  # initial non-zero length
-        Vet.et_vol = Vet.LP * Ret(L,pd)**2 * np.pi
+        Vet.et_vol = Vet.LP * np.pi * Ret(L,pd)**2
         return
     else:
         Vet.dL =  max(0.0, L-Vet.LP)
@@ -35,6 +35,37 @@ def Vet(L,pd):
 # initialize 'static' variable (func attribs)
 # flag for initial condition setting
 Vet.LP= -1    # flag for init. cond. setting
+
+#
+#    Derive effective r_source based on constraint:
+#        r_source + r_tube = pd['R_source_SIU']
+#
+def constrainR(pd):
+    if pd['Compartments'] == 1:
+        ONECOMPARTMENT = True
+    else:
+        ONECOMPARTMENT = False
+
+    # 2Comp:
+    #   Resistance constraint:
+    #     r_source + r_tube = pd['R_source']
+
+    #if not ONECOMPARTMENT:
+        #r_source = pd['Rsource_SIu'] * (1.0-pd['ET_Res_ratio'])
+        #r_tube =   pd['ET_Res_ratio']*pd['Rsource_SIu']
+    #else: # two compartment
+        #r_source = pd['Rsource_SIu']
+        #r_tube = None
+
+    #  original scheme
+    if not ONECOMPARTMENT:
+        r_source = pd['Rsource_SIu']
+        r_tube =   pd['ET_Res_ratio']*pd['Rsource_SIu']
+    else: # two compartment
+        r_source = pd['Rsource_SIu']
+        r_tube = None
+
+    return r_source, r_tube
 
 #
 #    functions to support variable diameter with length ( V(L) )
@@ -623,6 +654,8 @@ def loadDict(folder, fname):
 
     d = {}
     for line in f:
+        if '#' in line:
+            line = line.split('#')[0]
         k,v = line.split(':')
         try:
             d[k.strip()] = float(v)

@@ -175,7 +175,6 @@ for line in fpp:
     prd[par.strip()] = (float(n1), float(n2))
 print(prd)
 
-FPLOT = False
 PltTMIN  = prd['Time'][0]
 PltTMAX  = prd['Time'][1]
 PltPrMIN = prd['Pressure'][0]
@@ -209,10 +208,20 @@ if FPLOT:
     plt.plot(time, F_d)
     plt.plot(time, F_j)
     plt.plot(time,lc)
-    plt.legend(['F_Eversion','F_Coulomb','F_Drag','F_Inertia','Crumple'])
+    plt.legend(['F_Eversion','F_Coulomb','F_Drag','F_NET','Crumple'])
     ax = plt.gca()
     ax.set_xlim(PltTMIN, PltTMAX)
-    ax.set_ylim(-1,5)
+    ax.set_ylim(-1,7)
+    ax.set_ylabel('|F|, (N)')
+
+    print('\nFmax/min Report: ')
+    names = ['Feversion','Fcoulomb','Fdrag','F_NET']
+    maxs = [max(F_e), max(F_c), max(F_d), max(F_j)]
+    mins = [min(F_e), min(F_c), min(F_d), min(F_j)]
+
+    for i,n in enumerate(names):
+        print(f'{n:15}   {mins[i]:10.2f}   {maxs[i]:10.2f} ')
+    print('')
 
 REYNOLDSPLOT = False
                    # https://en.wikipedia.org/wiki/Reynolds_number
@@ -257,27 +266,27 @@ if state==PRESSURE_TEST:
 clrs = ['b','g','r','c','m']
 #trajectory:
 
+# constrain the resitances (5-Aug-24)
+r_source, r_tube = et.constrainR(pd)
 
 # "ideal" loadline
 x1 = 0.0
 y1 = pd['Psource_SIu']
-#x2 = pd['Psource_SIu'] / pd['Rsource_SIu']
-x2 = (pd['Psource_SIu'] - pd['Patmosphere'])/pd['Rsource_SIu']
+x2 = (pd['Psource_SIu'] - pd['Patmosphere']) / r_source
 y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
 
 
-# plot ideal load line
+# plot ideal source load line
 axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
 # simluated housing and tube pressures
-axs[0,0].plot(f,pc1,f,pc2)
+axs[0,0].plot(f,pc1, ft, pc2)
 axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
-print('\n\n Trying to set [0,0] Y lims: ', PltPrMIN, PltPrMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
 ax = plt.gca()
