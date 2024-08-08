@@ -139,12 +139,21 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         # Solve Pressures
         #2Compartment
+
+        # Experimental: Comp1 = air tubing, Comp2 = housing+ET
+        #VC1 = 0.2*pd['Vhousing_m3'] # estimate tubing vol
+        #VC2 = (pd['Vhousing_m3'] + et.Vet.et_vol)
+        # original model
+
+        VC1 = pd['Vhousing_m3']  # fixed
+        VC2 = et.Vet.et_vol      # changes w/ length
+
         if ONECOMPARTMENT:
-            PC1 = N1 * pd['RT'] / (pd['Vhousing_m3'] + et.Vet.et_vol)
+            PC1 = N1 * pd['RT'] / (VC1 + VC2)
             PC2 = 0
         else:
-            PC1 = N1*pd['RT'] / pd['Vhousing_m3']
-            PC2 = N2*pd['RT'] / et.Vet.et_vol
+            PC1 = N1*pd['RT'] / VC1
+            PC2 = N2*pd['RT'] / VC2
 
         # source flow
         fsource = (pd['Psource_SIu'] - PC1) / r_source
@@ -158,6 +167,14 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         else:  # ONE Comp.
             N1dot = fsource * uc['moles_per_m3']
             N2dot = 0.0  # not used
+
+        #
+        #  Experimental: sensed pressure middle of Rsource
+        ##
+        #beta = 0.5
+        #Rs1 = beta*pd['Rsource_SIu']
+        #Rs2 = (1.0-beta)*pd['Rsource_SIu']
+        #Psens.append(pd['Psource_SIu'] - fsource*Rs1)
 
         # Eq 5.1
         # this is coulomb fric due to reel brake (TAUT state only)

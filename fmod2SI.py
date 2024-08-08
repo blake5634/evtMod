@@ -269,7 +269,7 @@ clrs = ['b','g','r','c','m']
 # constrain the resitances (5-Aug-24)
 r_source, r_tube = et.constrainR(pd)
 
-# "ideal" loadline
+# "ideal" loadline endpoints
 x1 = 0.0
 y1 = pd['Psource_SIu']
 x2 = (pd['Psource_SIu'] - pd['Patmosphere']) / r_source
@@ -279,19 +279,24 @@ y2 = pd['Patmosphere']
 #
 
 
-# plot ideal source load line
+#Presure- Flow phase plot
+
+# special "avg flow" to distribute 1st compartment(??)
+favg = 0.5*(np.array(f)+np.array(ft))
+
 axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
-# simluated housing and tube pressures
-axs[0,0].plot(f,pc1, ft, pc2)
-axs[0,0].legend(['Source Load Line',  'Phousing','Ptube'])
+# simulated housing and tube pressures
+#axs[0,0].plot(f, pc1, favg, pc2)
+axs[0,0].plot(f, pc1, f, pc2)
+axs[0,0].legend(['Source Load Line',  'Housing', 'Tube'])
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
 axs[0,0].set_ylim(PltPrMIN, PltPrMAX)
 plt.sca(axs[0,0])
-ax = plt.gca()
+ax00 = plt.gca()
 xpressticks = ticker.MaxNLocator(3)
-ax.xaxis.set_major_locator(xpressticks)
+ax00.xaxis.set_major_locator(xpressticks)
 #plt.xticks([0.0001, 0.0002, 0.0003])
 
 #plt.sca(axs[0,0])
@@ -409,12 +414,12 @@ if PLOT_TYPE == 'OVERLAY':
     else:
         pass
 
+    # add pressure to axs[0,0] subplot
     Interval = 25
     x = ed['flow']
     y = ed['P']
-
-    et.plot_curve_with_arrows2(x, y, ax, Interval,color=clrs[1])
-
+    et.plot_curve_with_arrows2(x, y, ax00, Interval,color=clrs[1])
+    ax00.legend(['Source Load Line',  'Housing', 'Tube', 'Experiment'])
 
 
     axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data
