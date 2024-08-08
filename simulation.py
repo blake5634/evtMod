@@ -113,12 +113,31 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     Lc = 0  #  length of tube crumpled in the housing
     Ldot  = 0
     Lddot = 0
+
+    try:
+        COMP1 = pd['COMP1']
+    except:
+        # define what is compartment 1 (also determines comp2)
+        #COMP1 = 'housing'       # comp2 = et vol
+        COMP1 = 'supply_tubing'  # comp2 = housing+et vol
+
+    print('\n Compartment 1 represents: ', COMP1, '\n')
+    pd['COMP1'] = COMP1  # store it.
+
+    VsupTube = 0.1*pd['Vhousing_m3']
     if ONECOMPARTMENT:
         N1 = PC1*(pd['Vhousing_m3']+et.Vet.et_vol)/pd['RT']
         N2 = 0  # not used
     else:
-        N1 = PC1*pd['Vhousing_m3']/pd['RT']
-        N2 = PC2* et.Vet.et_vol/pd['RT']
+        if COMP1 == 'housing':
+            N1 = PC1*pd['Vhousing_m3']/pd['RT']
+            N2 = PC2* et.Vet.et_vol/pd['RT']
+        elif COMP1 == 'supply_tubing':
+            N1 = PC1*VsupTube/pd['RT']
+            N2 = PC2*(pd['Vhousing_m3']+et.Vet.et_vol)/pd['RT']
+        else:
+            et.error('Illegal Compartment One def: ', COMP1)
+
     N1dot = 0
     N2dot = 0
     theta = 0
@@ -145,13 +164,19 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #VC2 = (pd['Vhousing_m3'] + et.Vet.et_vol)
         # original model
 
-        VC1 = pd['Vhousing_m3']  # fixed
-        VC2 = et.Vet.et_vol      # changes w/ length
+        if COMP1 == 'housing':
+            VC1 = pd['Vhousing_m3']  # fixed
+            VC2 = et.Vet.et_vol      # changes w/ length
+        elif COMP1 == 'supply_tubing':
+            VC1 = VsupTube           # defined in ICs above
+            VC2 = pd['Vhousing_m3'] + et.Vet.et_vol
+        else:
+            et.error('Illegal Compartment definition: ', COMP1)
 
         if ONECOMPARTMENT:
             PC1 = N1 * pd['RT'] / (VC1 + VC2)
             PC2 = 0
-        else:
+        else:  # Two compartment
             PC1 = N1*pd['RT'] / VC1
             PC2 = N2*pd['RT'] / VC2
 
@@ -254,7 +279,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         #  Crumple length
         Lc = pd['rReel']*theta - 2*L  # reel must supply 2x length
-        if Lc < -0.0050005:  # for some reason frequently close to -5mm
+        if Lc < -0.050005:  # for some reason frequently close to -5mm
             print('somethings wrong with Lc:', Lc)
         Lc = max(0.0, Lc)  # can't go negative
         lc.append(Lc)

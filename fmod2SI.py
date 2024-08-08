@@ -200,6 +200,7 @@ if FPLOT:
     # Create force plot
     fig = plt.figure()
     #fig.suptitle(fn.split('/')[-1] + ' ' + paramFileName)
+    compModName += ', '+ pd['COMP1']  # what is compartment 1?
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
 
     ax = fig.gca()
