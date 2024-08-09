@@ -1,0 +1,72 @@
+%% Default Latex document template
+%%
+%%  blake@rcs.ee.washington.edu
+
+\documentclass[letterpaper]{article}
+
+% Uncomment for bibliog.
+%\bibliographystyle{unsrt}
+
+\usepackage{graphicx}
+\usepackage{lineno}
+%\usepackage{fancyhdr}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%
+%  Set Up Margins
+\input{templates/pagedim.tex}
+
+%
+%        Font selection
+%
+%\renewcommand{\rmdefault}{ptm}             % Times
+%\renewcommand{\rmdefault}{phv}             % Helvetica
+%\renewcommand{\rmdefault}{pcr}             % Courier
+%\renewcommand{\rmdefault}{pbk}             % Bookman
+%\renewcommand{\rmdefault}{pag}             % Avant Garde
+%\renewcommand{\rmdefault}{ppl}             % Palatino
+%\renewcommand{\rmdefault}{pch}             % Charter
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%         Page format Mods HERE
+%
+%Mod's to page size for this document
+\addtolength\textwidth{0cm}
+\addtolength\oddsidemargin{0cm}
+\addtolength\headsep{0cm}
+\addtolength\textheight{0cm}
+%\linespread{0.894}   % 0.894 = 6 lines per inch, 1 = "single",  1.6 = "double"
+
+
+% Make table rows deeper
+%\renewcommand\arraystretch{2.0}% Vertical Row size, 1.0 is for standard spacing)
+\usepackage{setspace}
+
+\begin{document}
+
+% Apply double spacing to the entire document
+\doublespacing
+Scale:  10mm:   \rule{10mm}{1mm}\\
+\vspace{.25in}
+$P_{source} \quad P_1  \quad  J   \quad P_1  \quad P_2 $
+
+$R_{source} \quad R_{tube} $
+
+$r_{reel} \quad r_{tube} $
+
+$L \quad L \quad 2\dot{L}, 2\ddot{L}$
+
+$f_{source} \quad f_{int} \quad f_{tube} \quad M_T(L) \quad $
+
+$\theta, \dot{\theta}, \ddot{\theta} $
+
+
+$F_{coulomb} \quad F_{coul.} \quad \tau_{coulomb} \quad F_{drag} \quad L_c  $
+
+$V_{housing}\quad V_{et}(L) $
+
+
+\end{document}
+
