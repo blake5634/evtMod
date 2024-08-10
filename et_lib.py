@@ -37,8 +37,8 @@ def Vet(L,pd):
 Vet.LP= -1    # flag for init. cond. setting
 
 #
-#    Derive effective r_source based on constraint:
-#        r_source + r_tube = pd['R_source_SIU']
+#    Derive effective r_s2C1 based on constraint:
+#        r_s2C1 + r_C1_C2 = pd['R_source_SIU']
 #
 def constrainR(pd):
     if pd['Compartments'] == 1:
@@ -48,24 +48,18 @@ def constrainR(pd):
 
     # 2Comp:
     #   Resistance constraint:
-    #     r_source + r_tube = pd['R_source']
+    #     r_s2C1 + r_C1_C2 = pd['R_source']
 
-    #if not ONECOMPARTMENT:
-        #r_source = pd['Rsource_SIu'] * (1.0-pd['ET_Res_ratio'])
-        #r_tube =   pd['ET_Res_ratio']*pd['Rsource_SIu']
-    #else: # two compartment
-        #r_source = pd['Rsource_SIu']
-        #r_tube = None
 
     #  original scheme
     if not ONECOMPARTMENT:
-        r_source = pd['Rsource_SIu']
-        r_tube =   pd['ET_Res_ratio']*pd['Rsource_SIu']
+        r_s2C1 =         pd['ET_Res_ratio'] * pd['Rsource_SIu']
+        r_C1_C2 = (1.0 - pd['ET_Res_ratio'])* pd['Rsource_SIu']
     else: # two compartment
-        r_source = pd['Rsource_SIu']
-        r_tube = None
+        r_s2C1 = pd['Rsource_SIu']
+        r_C1_C2 = None
 
-    return r_source, r_tube
+    return r_s2C1, r_C1_C2
 
 #
 #    functions to support variable diameter with length ( V(L) )

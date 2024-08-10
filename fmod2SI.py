@@ -79,12 +79,17 @@ try:
 except:
     compModName = 'Two Compartment'
 
+compModName += ', '+ pd['COMP1']  # what is compartment 1?
+
 #
 #   What to plot
 #
 PLOT_TYPE = 'SIMULATION' # only simulation
 PLOT_TYPE = 'OVERLAY'   # includes experimental data
-FPLOT = True             # make a force plot as well
+FPLOT = False             # make a force plot as well
+REYNOLDSPLOT = False
+PHASEPLOT = False
+STATEPLOT = True
 
 # States
 PRESSURE_TEST = 2
@@ -196,11 +201,12 @@ PltSpMAX = prd['Speed'][1]
 PltVoMIN = prd['Volume'][0]
 PltVoMAX = prd['Volume'][1]
 
+
+
 if FPLOT:
     # Create force plot
     fig = plt.figure()
     #fig.suptitle(fn.split('/')[-1] + ' ' + paramFileName)
-    compModName += ', '+ pd['COMP1']  # what is compartment 1?
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
 
     ax = fig.gca()
@@ -224,7 +230,7 @@ if FPLOT:
         print(f'{n:15}   {mins[i]:10.2f}   {maxs[i]:10.2f} ')
     print('')
 
-REYNOLDSPLOT = False
+#REYNOLDSPLOT = False
                    # https://en.wikipedia.org/wiki/Reynolds_number
 if REYNOLDSPLOT:   # https://en.wikipedia.org/wiki/Density_of_air
     Re = []    # store Reynolds number
@@ -288,8 +294,12 @@ favg = 0.5*(np.array(f)+np.array(ft))
 axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
 # simulated housing and tube pressures
 #axs[0,0].plot(f, pc1, favg, pc2)
-axs[0,0].plot(f, pc1, f, pc2)
-axs[0,0].legend(['Source Load Line',  'Housing', 'Tube'])
+axs[0,0].plot(f, pc1, ft, pc2)
+if pd['COMP1'] == 'housing':
+    axs[0,0].legend(['Source Load Line',  'Housing', 'Ev. Tube'])
+if pd['COMP1'] == 'supply_tubing':
+    axs[0,0].legend(['Source Load Line',  'Supply Tubing', 'Housing + ET'])
+
 axs[0,0].set_xlabel('Flow (m3/sec)')
 axs[0,0].set_ylabel('Pressure (Pa)')
 axs[0,0].set_xlim(PltFlMIN, PltFlMAX)
@@ -305,7 +315,10 @@ ax00.xaxis.set_major_locator(xpressticks)
 axs[1,0].plot(time, pc1)
 axs[1,0].plot(time, pc2)
 
-axs[1,0].legend(['Phousing', 'Ptube' ])
+if pd['COMP1'] == 'housing':
+    axs[1,0].legend(['Phousing', 'Ptube' ])
+if pd['COMP1'] == 'supply_tubing':
+    axs[1,0].legend(['Supply Tubes', 'Housing + ET' ])
 axs[1,0].set_xlabel('Time (sec)')
 axs[1,0].set_ylabel('Pressure (Pa)')
 axs[1,0].set_xlim(PltTMIN, PltTMAX)
@@ -325,7 +338,7 @@ axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
 axs[0,1].plot(time, f, time, ft)
 axs[0,1].set_xlabel('Time (sec)')
 axs[0,1].set_ylabel('Flow (m3/sec)')
-axs[0,1].legend(['Source Flow', 'Tube Flow'])
+axs[0,1].legend(['Flow Source->C1', 'Flow C1->C2'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
 axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
@@ -347,47 +360,35 @@ axs[2,1].set_ylim(PltSpMIN, PltSpMAX)
 #   Special plots for state jumps diagnosis
 #
 
-# state seqence
-fig2,axs2 = plt.subplots(1)
-axs2.plot(time, state_seq)
-axs2.set_xlim(PltTMIN, PltTMAX)
-axs2.set_ylim(0, 3.5)
-#ax = plt.gca()
-stateTicks = ticker.MaxNLocator(4)
-axs2.yaxis.set_major_locator(stateTicks)
-axs2.set_ylabel('Combined State (0-3)')
-axs2.set_xlabel('Time (sec)')
-fig2.suptitle('     Eversion State Sequence\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
+if STATEPLOT:
+    # state seqence
+    fig2,axs2 = plt.subplots(1)
+    axs2.plot(time, state_seq)
+    axs2.set_xlim(PltTMIN, PltTMAX)
+    axs2.set_ylim(0, 3.5)
+    #ax = plt.gca()
+    stateTicks = ticker.MaxNLocator(4)
+    axs2.yaxis.set_major_locator(stateTicks)
+    axs2.set_ylabel('Combined State (0-3)')
+    axs2.set_xlabel('Time (sec)')
+    fig2.suptitle('     Eversion State Sequence\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
 
-fig2.tight_layout()
+    fig2.tight_layout()
 
-# reel state
-dL =  (np.array(th)*pd['rReel'] - np.array(l)) # mm for plotting
-for i,d in enumerate(dL):
-    dL[i] = max(0.0, d)
-fig3,axs3 = plt.subplots(1)
-#axs3.plot(time, th, time, thdot, time, dL)
-axs3.plot( th,   thdot )
-#axs3.plot(time, dL)
-#axs3.plot(time, lc)
-axs3.legend(['th', 'thdot'])
-#axs3.legend(['dL', 'Lc'])
-#axs3.set_xlim(PltTMIN, PltTMAX)
-#axs3.set_xlim(-40,50)
-#axs3.set_ylim(-50,50)
-#ax = plt.gca()
-stateTicks = ticker.MaxNLocator(4)
-axs3.yaxis.set_major_locator(stateTicks)
-#axs3.set_ylabel('theta, thetaDot (rad)')
-axs3.set_ylabel('thdot')
-#axs3.set_ylabel('r*theta - L (m)')
-#axs3.set_xlabel('Time (sec)')
-axs3.set_xlabel('theta (rad)')
-#axs3.set_xlabel('time (sec)')
-axs3.grid()
-fig3.suptitle('   Reel Phase Plot\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
-#fig3.suptitle('     Reel behavior\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName)
-fig3.tight_layout()
+if PHASEPLOT:   # plot reel phase space (theta vs thetadot)
+    dL =  (np.array(th)*pd['rReel'] - np.array(l)) # mm for plotting
+    for i,d in enumerate(dL):
+        dL[i] = max(0.0, d)
+    fig3,axs3 = plt.subplots(1)
+    axs3.plot( th,   thdot )
+    axs3.legend(['th', 'thdot'])
+    stateTicks = ticker.MaxNLocator(4)
+    axs3.yaxis.set_major_locator(stateTicks)
+    axs3.set_ylabel('thdot')
+    axs3.set_xlabel('theta (rad)')
+    axs3.grid()
+    fig3.suptitle('   Reel Phase Plot\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
+    fig3.tight_layout()
 
 #######
 
@@ -420,7 +421,10 @@ if PLOT_TYPE == 'OVERLAY':
     x = ed['flow']
     y = ed['P']
     et.plot_curve_with_arrows2(x, y, ax00, Interval,color=clrs[1])
-    ax00.legend(['Source Load Line',  'Housing', 'Tube', 'Experiment'])
+    if pd['COMP1'] == 'housing':
+        ax00.legend(['Source Load Line',  'Housing', 'Everting Tube', 'Experiment'])
+    if pd['COMP1'] == 'supply_tubing':
+        ax00.legend(['Source Load Line',  'Supply Tubing', 'Housing + ET', 'Experiment'])
 
 
     axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data

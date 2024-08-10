@@ -149,9 +149,10 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     #
     #  constrain flow resistances (experimental 5-Aug-24)
     #
-    r_source, r_tube = et.constrainR(pd)
-
+    r_source_C1, r_C1_C2 = et.constrainR(pd)
+    it = 0
     for t in time:
+        it +=1
         tdata.append(t)  # in case of error exit
         #breakpoint()
 
@@ -181,11 +182,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             PC2 = N2*pd['RT'] / VC2
 
         # source flow
-        fsource = (pd['Psource_SIu'] - PC1) / r_source
+        fsource = (pd['Psource_SIu'] - PC1) / r_source_C1
         # other flows for 2comp
         if not ONECOMPARTMENT:
             # Two Comp
-            fT = (PC1-PC2)/r_tube
+            fT = (PC1-PC2)/r_C1_C2
             fint = fsource - fT
             N1dot = fint * uc['moles_per_m3']
             N2dot = fT   * uc['moles_per_m3']
@@ -279,8 +280,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         #  Crumple length
         Lc = pd['rReel']*theta - 2*L  # reel must supply 2x length
-        if Lc < -0.050005:  # for some reason frequently close to -5mm
-            print('somethings wrong with Lc:', Lc)
+        if Lc < -0.050005 and it%500==0:  # for some reason frequently close to -5mm
+            print(f't:{t:5.3f} somethings wrong with Lc: {Lc:5.3f}')
         Lc = max(0.0, Lc)  # can't go negative
         lc.append(Lc)
 
@@ -302,6 +303,10 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             Lddot = (F_ever - F_dr - Fcoulomb ) / (2*(Mt + (pd['J']/(pd['rReel']**2) ) ) )
             # corrected 28-Jul: (2x)
             th_ddot = 2*Lddot/pd['rReel']   # kinematic relation
+            #
+            # further constrain theta
+            th_dot = 2*Ldot/pd['rReel']
+            theta = 2*L/pd['rReel']
 
              # COMB STATE 1
         elif  state == GROWING and state2==SLACK: # CRUMPLE zone active
@@ -348,9 +353,10 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         LdotMAX = 0.5  # m/sec
         #Ldot   =  min(Ldot, LdotMAX)  # or exceed a max
         L      += Ldot    * dt
-        th_dot += th_ddot * dt
-        th_dot =  max(0,th_dot)  # th_dot can never go neg.
-        theta  += th_dot  * dt
+        if state2 != TAUT:  # don't integrate when constrained
+            th_dot += th_ddot * dt
+            th_dot =  max(0,th_dot)  # th_dot can never go neg.
+            theta  += th_dot  * dt
 
         # 2Compartment state integration
         N1     += N1dot   * dt
