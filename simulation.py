@@ -192,16 +192,16 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # state trans conditions:
         LoPressure = drivepress < Pth1
         HiPressure = drivepress > Pth2
-        reelMoving = th_dot > pd['rReel']*2*Ldot
+        SlackGro = (th_dot - 2*Ldot/pd['rReel']) > epsilon
         noSlack =  Lc < epsilon
 
          # state transition rules:
         if   systemState == 0:           #  Growing and Taut
-            if LoPressure and not reelMoving:
+            if LoPressure and not SlackGro:
                 systemState = STUCK_TAUT
-            if LoPressure and reelMoving:
+            if LoPressure and SlackGro:
                 systemState = STUCK_SLACK
-            if reelMoving:
+            if SlackGro:
                 systemState = GROW_SLACK
 
         elif systemState == 1:            # Growing and Slack
@@ -213,11 +213,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
                 systemState = STUCK_SLACK
 
         elif systemState == 2:            # Stuck and Taut
-            if HiPressure and reelMoving:
+            if HiPressure and SlackGro:
                 systemState = GROW_SLACK
             if HiPressure:
                 systemState = GROW_TAUT
-            if reelMoving:
+            if SlackGro:
                 systemState = STUCK_SLACK
 
         elif systemState == 3:            # Stuck and Slack
