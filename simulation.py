@@ -61,16 +61,6 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     th = []     # reel pos
     thdot = []  # reel speed
 
-    def stateSymbol(state, tsk):
-        if state==GROWING and tsk==TAUT:
-            return 0
-        if state==GROWING and tsk==SLACK:
-            return 1
-        if state==STUCK and tsk==TAUT:
-            return 2
-        if state==STUCK and tsk==SLACK:
-            return 3
-
     F_e = []   # eversion force   (upper case F = force)
     F_c = []   # coulomb force
     F_d = []   # drag force
@@ -99,12 +89,15 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     #
 
     # Starting STATE
+    systemState = 2  # Stuck and Taut
     state = STUCK   # growing vs stuck
     state2 = TAUT   # spool crumple (SLACK) or TAUT
 
     # state var initial values (initial conditions)
     PC1 = pd['Patmosphere']  # 1 atmosphere in Pa
     PC2 = PC1    # we will use PC2 only in two-compartment
+    drivepress = pd['Patmosphere']  # drive pressure to everting tube face
+
     #
     et.Vet(0.0,pd)  # initialize everting tube computation (L param not used)
     fint = 0
@@ -154,8 +147,84 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
     for t in time:
         it +=1
         tdata.append(t)  # in case of error exit
-        #breakpoint()
 
+
+        ###########################
+        #
+        #  Compute force thresholds for break-away/stuck states
+        #
+        #  thresholds seem to grow closer together with eversion
+        # lower threshold (Halting)
+        Pth1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
+        # upper threshold (break-away)
+        Pth2 = pd['PBA_static'] - pd['Threshold Taper'] * L
+
+        PdTol = 0.0075  # minimum gap between Pth1 and Pth2
+                        # normalized to midpoint
+        midpoint = (pd['PBA_static'] + pd['PHalt_dyn'])/2.0
+        PdMax = PdTol * midpoint
+        if abs(Pth2-Pth1) < PdMax:  # prevent crossover (optional)
+            CONVERGED=True  # lock this state
+        if CONVERGED:
+            Pth1 = (1.0-0.5*PdTol) * midpoint
+            Pth2 = (1.0+0.5*PdTol) * midpoint
+
+        ####  Option: disable Threshold Taper Completely
+        #Pth1 = pd['PHalt_dyn']
+        #Pth2 = pd['PBA_static']
+
+        pstt.append(Pth1)   # store thresholds
+        pbat.append(Pth2)
+
+        #################################################################
+        #
+        #  state machine for stuck/growing, taut/slack
+        #
+
+        epsilon = 0.001
+
+        #  4x4 state transitions:
+        GROW_TAUT = 0
+        GROW_SLACK = 1
+        STUCK_TAUT = 2
+        STUCK_SLACK = 3
+
+        # state trans conditions:
+        LoPressure = drivepress < Pth1
+        HiPressure = drivepress > Pth2
+        reelMoving = th_dot > pd['rReel']*2*Ldot
+        noSlack =  Lc < epsilon
+
+         # state transition rules:
+        if   systemState == 0:           #  Growing and Taut
+            if LoPressure and not reelMoving:
+                systemState = STUCK_TAUT
+            if LoPressure and reelMoving:
+                systemState = STUCK_SLACK
+            if reelMoving:
+                systemState = GROW_SLACK
+
+        elif systemState == 1:            # Growing and Slack
+            if noSlack:
+                systemState = GROW_TAUT
+            if LoPressure and noSlack:
+                systemState = STUCK_TAUT
+            if LoPressure:
+                systemState = STUCK_SLACK
+
+        elif systemState == 2:            # Stuck and Taut
+            if HiPressure and reelMoving:
+                systemState = GROW_SLACK
+            if HiPressure:
+                systemState = GROW_TAUT
+            if reelMoving:
+                systemState = STUCK_SLACK
+
+        elif systemState == 3:            # Stuck and Slack
+            if HiPressure and noSlack:
+                systemState = GROW_TAUT
+            if HiPressure:
+                systemState = GROW_SLACK
 
         # Solve Pressures
         #2Compartment
@@ -203,7 +272,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #Psens.append(pd['Psource_SIu'] - fsource*Rs1)
 
         # Eq 5.1
-        # this is coulomb fric due to reel brake (TAUT state only)
+        # this is coulomb fric due to reel brake (TAUT states (0,2) only)
         Fcoulomb = pd['Tau_coulomb'] / pd['rReel']
         F_c.append(Fcoulomb) # not scaled because constant w.r.t. |vel|
 
@@ -229,54 +298,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #tubing mass depends on length
         Mt =  (L+0.4) *  pd['et_MPM']
 
-        #
-        #    Determine Stuck or Growing
-        #
 
-        PRESSURE_BREAK = True  # False = Force breakaway
-        # Eq 4
-
-        # Eq 3.5
-        #  thresholds seem to grow closer together with eversion
-        # lower threshold (Halting)
-        Pth1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
-        # upper threshold (break-away)
-        Pth2 = pd['PBA_static'] - pd['Threshold Taper'] * L
-
-        PdTol = 0.0075  # minimum gap between Pth1 and Pth2
-                        # normalized to midpoint
-        midpoint = (pd['PBA_static'] + pd['PHalt_dyn'])/2.0
-        PdMax = PdTol * midpoint
-        if abs(Pth2-Pth1) < PdMax:  # prevent crossover (optional)
-            CONVERGED=True  # lock this state
-        if CONVERGED:
-            Pth1 = (1.0-0.5*PdTol) * midpoint
-            Pth2 = (1.0+0.5*PdTol) * midpoint
-
-        ####  Option: disable Threshold Taper Completely
-        #Pth1 = pd['PHalt_dyn']
-        #Pth2 = pd['PBA_static']
-
-        pstt.append(Pth1)   # store thresholds
-        pbat.append(Pth2)
-
-        ## if used in Force break mode
-        F1 = 18  + pd['dF1dL'] * L * 0.5 # Newtons
-        F2 = 26  - pd['dF1dL'] * L * 0.5
-
-        if PRESSURE_BREAK:
-            # drivepress is tube (PC2) OR housing (PC1) pressure(!)
-            if drivepress > Pth2:
-                state = GROWING
-                # don't change state2 until slack is taken up
-            if drivepress < Pth1:
-                state = STUCK
-                #state2 = SLACK
-        else:                 # switch states based on ET Force instead of pressure
-            if F_ever > F2:
-                state = GROWING
-            if F_ever < F1:
-                state = STUCK
 
         #  Crumple length
         Lc = pd['rReel']*theta - 2*L  # reel must supply 2x length
@@ -285,20 +307,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         Lc = max(0.0, Lc)  # can't go negative
         lc.append(Lc)
 
-        LCmin = 0.001
-        if Lc > LCmin:
-            state2 = SLACK  # stateseq == 3
-        else:
-            state2 = TAUT   # stateseq == 2
-
         #
-        #     Compute accelerations via dynamic equations
+        #     Compute accelerations via dynamic equations depending on systemState
         #
-             # COMB STATE 0
-        if state == GROWING and state2==TAUT:  # no crumple: TAUT
-            #state2 = TAUT  # stateseq == 0
-            #if t>1.0:
-                #breakpoint()
+             # SYSTEM STATE: 0
+        if systemState == 0:  # (growing, taut) no crumple: TAUT
             Ldot = max(0.0,Ldot)  # enforce that L only grows
             Lddot = (F_ever - F_dr - Fcoulomb ) / (2*(Mt + (pd['J']/(pd['rReel']**2) ) ) )
             # corrected 28-Jul: (2x)
@@ -308,14 +321,15 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             th_dot = 2*Ldot/pd['rReel']
             theta = 2*L/pd['rReel']
 
-             # COMB STATE 1
-        elif  state == GROWING and state2==SLACK: # CRUMPLE zone active
+             # SYSTEM STATE: 1
+        elif  systemState == 1: # CRUMPLE zone active
             # note pulled tubing accelerates at 2*Lddot
             #   no Fcoulomb in TAUT state (29-Jul)
             Lddot = (F_ever - F_dr) / (Mt*2)
             th_ddot = -1 * pd['Tau_coulomb']/pd['J']   # damping out overspin
 
-        elif state == STUCK:
+            # SYSTEM STATE 2,3
+        elif systemState == 2 or systemState == 3:  # STUCK condition, Ldot = 0
             alpha = 100000 * pd['dt']  # empirical fit
             Lddot =   -1 * max(0, alpha * Ldot)
             #disable smooth slow down
@@ -329,16 +343,13 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         else:
             error('Invalid State: '+state)
 
-        prevState2 = state2
-
-
 
         # Record data
         l.append(L)                      # tube length
         ldot.append(Ldot)                # tube eversion velocity
         f.append(fsource)                # flow from source
         ft.append(fT)                    # tubing airflow
-        state_seq.append(stateSymbol(state,state2))  # record state as 0-3 int
+        state_seq.append(systemState)    # record state as 0-3 int
         th.append(theta)
         thdot.append(th_dot)
         # Pressure
