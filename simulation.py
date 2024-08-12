@@ -113,9 +113,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # define what is compartment 1 (also determines comp2)
         #COMP1 = 'housing'       # comp2 = et vol
         COMP1 = 'supply_tubing'  # comp2 = housing+et vol
-
-    print('\n Compartment 1 represents: ', COMP1, '\n')
-    pd['COMP1'] = COMP1  # store it.
+        pd['COMP1'] = COMP1  # store it.
 
     VsupTube = 0.1*pd['Vhousing_m3']
     if ONECOMPARTMENT:

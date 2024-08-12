@@ -62,6 +62,15 @@ else:
         print('loading default parameter units from: ' + paramDir + defaultUnitsName)
         pu = et.loadPUnits(defaultUnitsDir, defaultUnitsName)
 
+# default the comp 1 role if not in param file
+try:
+    COMP1 = pd['COMP1']
+except:
+    # define what is compartment 1 (also determines comp2)
+    #COMP1 = 'housing'       # comp2 = et vol
+    COMP1 = 'supply_tubing'  # comp2 = housing+et vol
+    pd['COMP1'] = COMP1  # store it.
+
 # load unit conversions and phys constants (they never change!)
 uc = et.loadUnitConv(defaultUnitsDir, unitsConvfilename)
 print('loaded unit conversions')
