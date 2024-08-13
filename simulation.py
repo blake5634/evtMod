@@ -190,32 +190,32 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # state trans conditions:
         LoPressure = drivepress < Pth1
         HiPressure = drivepress > Pth2
-        SlackGro = (th_dot - 2*Ldot/pd['rReel']) > epsilon
+        SlackExists = (theta - 2*L/pd['rReel']) > epsilon
         noSlack =  Lc < epsilon
 
          # state transition rules:
         if   systemState == 0:           #  Growing and Taut
-            if LoPressure and not SlackGro:
+            if LoPressure and not SlackExists:
                 systemState = STUCK_TAUT
-            if LoPressure and SlackGro:
+            if LoPressure and SlackExists:
                 systemState = STUCK_SLACK
-            if SlackGro:
+            if SlackExists:
                 systemState = GROW_SLACK
 
         elif systemState == 1:            # Growing and Slack
-            if noSlack:
-                systemState = GROW_TAUT
             if LoPressure and noSlack:
                 systemState = STUCK_TAUT
             if LoPressure:
                 systemState = STUCK_SLACK
+            if noSlack:
+                systemState = GROW_TAUT
 
         elif systemState == 2:            # Stuck and Taut
-            if HiPressure and SlackGro:
+            if HiPressure and SlackExists:
                 systemState = GROW_SLACK
             if HiPressure:
                 systemState = GROW_TAUT
-            if SlackGro:
+            if SlackExists:
                 systemState = STUCK_SLACK
 
         elif systemState == 3:            # Stuck and Slack
@@ -295,8 +295,6 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         #tubing mass depends on length
         Mt =  (L+0.4) *  pd['et_MPM']
-
-
 
         #  Crumple length
         Lc = pd['rReel']*theta - 2*L  # reel must supply 2x length
