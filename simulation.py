@@ -146,11 +146,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         it +=1
         tdata.append(t)  # in case of error exit
 
-
-        ###########################
+        #################################################################
         #
         #  Compute force thresholds for break-away/stuck states
         #
+
         #  thresholds seem to grow closer together with eversion
         # lower threshold (Halting)
         Pth1 = pd['PHalt_dyn']  + pd['Threshold Taper'] * L
@@ -190,7 +190,7 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         # state trans conditions:
         LoPressure = drivepress < Pth1
         HiPressure = drivepress > Pth2
-        SlackExists = (theta - 2*L/pd['rReel']) > epsilon
+        SlackExists = (theta*pd['rReel'] - 2*L) > epsilon
         noSlack =  Lc < epsilon
 
          # state transition rules:
@@ -224,13 +224,13 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             if HiPressure:
                 systemState = GROW_SLACK
 
-        # Solve Pressures
-        #2Compartment
 
-        # Experimental: Comp1 = air tubing, Comp2 = housing+ET
-        #VC1 = 0.2*pd['Vhousing_m3'] # estimate tubing vol
-        #VC2 = (pd['Vhousing_m3'] + et.Vet.et_vol)
-        # original model
+        #################################################################
+        #
+        #  Solve for volumes and pressures
+        #
+
+        #2Compartment
 
         if COMP1 == 'housing':
             VC1 = pd['Vhousing_m3']  # fixed
@@ -248,7 +248,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
             PC1 = N1*pd['RT'] / VC1
             PC2 = N2*pd['RT'] / VC2
 
-        # source flow
+
+        #################################################################
+        #
+        #  Compute flows
+        #
         fsource = (pd['Psource_SIu'] - PC1) / r_source_C1
         # other flows for 2comp
         if not ONECOMPARTMENT:
@@ -269,17 +273,27 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         #Rs2 = (1.0-beta)*pd['Rsource_SIu']
         #Psens.append(pd['Psource_SIu'] - fsource*Rs1)
 
-        # Eq 5.1
-        # this is coulomb fric due to reel brake (TAUT states (0,2) only)
+
+        #################################################################
+        #
+        #  Compute Coulomb Reel Friction Force
+        #
         Fcoulomb = pd['Tau_coulomb'] / pd['rReel']
         F_c.append(Fcoulomb) # not scaled because constant w.r.t. |vel|
 
+
+        #################################################################
         #
-        # F_drag
+        #  Compute Viscous drag forces
         #
         F_dr = F_drag(L,Ldot,pd)     # material speed is 2x Ldot
         F_d.append(F_dr)
 
+
+        #################################################################
+        #
+        #  Compute Eversion Force
+        #
         # F_ever
         if ONECOMPARTMENT:
             drivepress = PC1
@@ -288,21 +302,34 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         F_ever = max(0, 0.5 * (drivepress-pd['Patmosphere']) * np.pi*et.Ret(L,pd)**2) # 1/2 pres. applied to tip
         F_e.append(F_ever)   # eversion force
 
-        # Net Force
-        #F_j.append(-2*Lddot*pd['J']/pd['rReel']**2)
+
+        #################################################################
+        #
+        #  Compute Net Force
+        #
+
         F_j.append(F_ever-F_dr-Fcoulomb)  # now 'Net Force'
 
 
-        #tubing mass depends on length
+
+        #################################################################
+        #
+        #  Compute tubing mass (depends on length)
+        #
         Mt =  (L+0.4) *  pd['et_MPM']
 
-        #  Crumple length
+
+        #################################################################
+        #
+        #  Compute Crumple length
+        #
         Lc = pd['rReel']*theta - 2*L  # reel must supply 2x length
         if Lc < -0.050005 and it%500==0:  # for some reason frequently close to -5mm
             print(f't:{t:5.3f} somethings wrong with Lc: {Lc:5.3f}')
         Lc = max(0.0, Lc)  # can't go negative
         lc.append(Lc)
 
+        #################################################################
         #
         #     Compute accelerations via dynamic equations depending on systemState
         #
@@ -339,8 +366,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         else:
             error('Invalid State: '+state)
 
-
+        #################################################################
+        #
         # Record data
+        #
+
         l.append(L)                      # tube length
         ldot.append(Ldot)                # tube eversion velocity
         f.append(fsource)                # flow from source
@@ -354,7 +384,10 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
         vol1.append(pd['Vhousing_m3'])   # right now housing vol is constant(!)
         vol2.append(et.Vet.et_vol)       # query the Etube volume
 
+        #################################################################
+        #
         # Integrate the state variables.
+        #
         Ldot   += Lddot   * dt
         Ldot   =  max(0,Ldot)    # Ldot can never go negative
         LdotMAX = 0.5  # m/sec
