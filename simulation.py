@@ -21,7 +21,7 @@ def F_drag(L,Ldot, pd):
     # 2Ldot comes from eversion kinematics
     everDrag =    (pd['Kdrag'] +  pd['K2drag'] * L) * 2 * Ldot
     #
-    #   Kdrag is viscous drag,   K2drag is lenght-proportional viscous drag
+    #   Kdrag is viscous drag,   K2drag is length-proportional viscous drag
 
     #  increase drag at end of tubing (max eversion length)
     #     i.e. when the tubing runs out and is stuck to reel.
@@ -314,15 +314,11 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
         #################################################################
         #
-        #  Compute tubing mass (depends on length)
+        #  Compute tubing mass (depends on length) and  Crumple length
         #
         Mt =  (L+0.4) *  pd['et_MPM']
 
-
-        #################################################################
-        #
-        #  Compute Crumple length
-        #
+        # Crumple
         Lc = pd['rReel']*theta - 2*L  # reel must supply 2x length
         if Lc < -0.050005 and it%500==0:  # for some reason frequently close to -5mm
             print(f't:{t:5.3f} somethings wrong with Lc: {Lc:5.3f}')
