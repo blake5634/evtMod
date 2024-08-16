@@ -1,23 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from matplotlib import ticker
 import simulation as sim
 import et_lib as et
-from et_lib import error
 import sys
 import glob
 import re
 
+modeltypes = ['1Comp','2Comp','23-Jul']
 
 args = sys.argv
 cl = ' '.join(args)
+paramDir = 'evtParams/2Comp/'
+
 if len(args) == 3:  #  >fmod2SI   nn  [1Comp]   nn=fileNo  '1Comp' for non-default one comp model
-    if args[2] != '1Comp':
-        et.error(f'fmod2SI: unknown command line arg: \n     >{cl}')
-    paramDir = 'evtParams/1Comp/'
-else:
-    paramDir = 'evtParams/2Comp/'   # default is 2Compartment model
+    if args[2] not in modeltypes:
+            et.error(f'fmod2SI: unknown command line arg: \n     >{cl}')
+    if args[2] == '1Comp':     # not same as pd['Compartments']
+        paramDir = 'evtParams/1Comp/'
+    elif args[2] == '2Comp':   # not same as pd['Compartments']
+        paramDir = 'evtParams/2Comp/'   # default is 2Compartment model
+    elif args[2] == '23-Jul':
+        paramDir = 'evtParams/23-Jul-FlowData/'
 
 unitsConvfilename = 'unitConv.txt'
 defaultParamName = 'InitialParams.txt'
@@ -98,7 +102,7 @@ PLOT_TYPE = 'OVERLAY'   # includes experimental data
 FPLOT = False             # make a force plot as well
 REYNOLDSPLOT = False
 PHASEPLOT = False
-STATEPLOT = True
+STATEPLOT = False
 
 # States
 PRESSURE_TEST = 2
@@ -202,7 +206,7 @@ PltFlMAX = prd['Flow'][1]
 #
 #  HACK
 #PltFlMAX = 25 * uc['m3_per_Liter']/uc['sec_per_min']
-print('  Flow Max: ', PltFlMAX)
+print('Flow lims    : ', PltFlMIN, PltFlMAX)
 PltLeMIN = prd['Length'][0]
 PltLeMAX = prd['Length'][1]
 PltSpMIN = prd['Speed'][0]
@@ -274,6 +278,33 @@ pr1 = []
 if state==PRESSURE_TEST:
     axs[0].text(0.5, 10000, 'PRESSURE_TEST (no eversion)')
 
+#
+#   Load in the exp. data and briefly inspect/correct it
+#
+
+try:
+    ed = et.get_data_from_AL_csv(fn)
+except:
+    et.error("I don't know how to read from data file: "+fn)
+
+#if paramFileNo < 10:
+ed = et.convert_units(ed,uc)
+
+# HACK
+if paramFileNo < 10:  # correct old flow bug
+#if True:  # correct old flow bug
+    ed['flow'] *= 10.0
+else:
+    pass
+
+# adapt plotting limits for high pressure
+pexpMax = max(ed['P'])
+if pexpMax > PltPrMAX:
+    rnum = (pexpMax // 1000 + 1)*1000
+    print('resetting Pr Max plotting to ', rnum)
+    PltPrMAX = rnum
+
+
 #############################################################################
 #
 #   Plot the simulation outputs
@@ -293,7 +324,6 @@ y2 = pd['Patmosphere']
 
 #   Presure vs FLow Plot
 #
-
 
 #Presure- Flow phase plot
 
@@ -399,31 +429,16 @@ if PHASEPLOT:   # plot reel phase space (theta vs thetadot)
     fig3.suptitle('   Reel Phase Plot\n  '+ fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
     fig3.tight_layout()
 
-#######
+##########################################################33
+#
+#    Add Experimental Data to plot
+#
 
 if PLOT_TYPE == 'OVERLAY':
     # filename, fn, is chosen above prior to sim
 
     # data/simulation plot heading title super title
     fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
-
-    #print('opening: ',fn)
-    #x=input('       ... OK?? <cr>')
-
-    try:
-        ed = et.get_data_from_AL_csv(fn)
-    except:
-        et.error("I don't know how to read from data file: "+fn)
-
-    #if paramFileNo < 10:
-    ed = et.convert_units(ed,uc)
-
-    # HACK
-    if paramFileNo < 10:  # correct old flow bug
-    #if True:  # correct old flow bug
-        ed['flow'] *= 10.0
-    else:
-        pass
 
     # add pressure to axs[0,0] subplot
     Interval = 25
@@ -462,6 +477,10 @@ if PLOT_TYPE == 'OVERLAY':
 
     # obsolete:  changes are made outside of runtime and thus undetectable.
     #et.print_param_table2(pd,pd_orig, pu)  # print with change markers
+
+    print('Range Report:')
+    print(f"Presure: Min: {min(ed['P']):8.3E}  {max(ed['P']):8.3E}")
+    print(f"Flow:    Min: {min(ed['flow']):8.3E}  {max(ed['flow']):8.3E}")
 
 if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot it.
     et.plot_tube_shape(pd)

@@ -671,6 +671,24 @@ def print_param_table(pd,pu):
 
     print('')
 
+
+def print_param_table_latex(pd,pu):
+    print('''\\begin{table}
+\\begin{tabular}{l|c|l}''')
+    for k in sorted(pd.keys()):
+        val = pd[k]
+        #print('        --- ',k,pd[k])
+        if type(val) == type(['x','y']):  # list param
+            print(f'     {k:18} & {pd[k]}  &   {pu[k]:15} \\\\ \\hline')
+        elif type(val) == type('x'):
+            print(f'     {k:18} & {pd[k]}  &  {pu[k]:15}\\\\ \\hline')  # string params
+        else: #  ints and floats
+            print(f'     {k:18} & {pd[k]:8.4E} & {pu[k]:15} \\\\ \\hline')
+    print('''      \\end{tabular}
+   \\caption{}
+\\end{table}''')
+
+    print('')
 def print_param_table2(pd,pdo,pu):  # highlight changes in params due to hacks
     print('\n Parameter Table ')
     for k in sorted(pdo.keys()):

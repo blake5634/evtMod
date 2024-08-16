@@ -26,7 +26,7 @@ def F_drag(L,Ldot, pd):
     #  increase drag at end of tubing (max eversion length)
     #     i.e. when the tubing runs out and is stuck to reel.
     #     0.5*F comes from eversion kinematics
-    Fsteadystate = 0.5 *  pd['Psource_SIu']*np.pi*et.Ret(L,pd)**2
+    Fsteadystate = 0.5 * (pd['Psource_SIu']-pd['Patmosphere']) *np.pi*et.Ret(L,pd)**2
     F_limit = (L/pd['Lmax'])**17 * Fsteadystate  # a very steep increase
     return max(everDrag,  F_limit)
 
@@ -349,8 +349,8 @@ def simulate(pd,uc,tmin=0,tmax=8.0):
 
             # SYSTEM STATE 2,3
         elif systemState == 2 or systemState == 3:  # STUCK condition, Ldot = 0
-            alpha = 100000 * pd['dt']  # empirical fit
-            Lddot =   -1 * max(0, alpha * Ldot)
+            tauStop = 0.05 #sec
+            Lddot =   -1 * (1/tauStop) * max(0,Ldot)
             #disable smooth slow down
             #Lddot=0
             #Ldot = 0
