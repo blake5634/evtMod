@@ -672,6 +672,26 @@ def print_param_table(pd,pu):
     print('')
 
 
+
+def param_table_fileFormat(pd,pu):
+    o = ''
+    for k in pd.keys():
+        val = pd[k]
+        #print('        --- ',k,pd[k])
+        if type(val) == type(['x','y']):  # list param
+            o += (f'{k:18} : {pd[k]}')
+        elif type(val) == type('x'):
+            o += (f'{k:18} : {pd[k]:10} ')  # string params
+        else: #  ints and floats
+            if abs(val) > 1.0E4:
+                #val = int(val)
+                o += (f'{k:18} : {val:<10.3E} ')
+            else:
+                o += (f'{k:18} : {val:<10.3} ')
+        o+= '\n'
+    return o
+
+
 def print_param_table_latex(pd,pu):
     print('''\\begin{table}
 \\begin{tabular}{l|c|l}''')
