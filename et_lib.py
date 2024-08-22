@@ -483,9 +483,9 @@ def setup_params():
     pd['Tau_coulomb'] = Tau_coulomb
     pu['Tau_coulomb'] = 'Nm'
 
-    th_dot_minCoulomb = 0.05 # rad/sec  (no coulomb fric below this vel)
-    pd['th_dot_minCoulomb'] = th_dot_minCoulomb
-    pu['th_dot_minCoulomb'] = 'rad/sec'
+    #th_dot_minCoulomb = 0.05 # rad/sec  (no coulomb fric below this vel)
+    #pd['th_dot_minCoulomb'] = th_dot_minCoulomb
+    #pu['th_dot_minCoulomb'] = 'rad/sec'
 
     # housing
     r_hous = 0.075 / 2 # 75mm diam.
@@ -539,13 +539,13 @@ def setup_params():
     pu['Psource_SIu'] = 'Pascals'
 
     # Flow intercept
-    LLine_meas = 0.6   # L/ min / kPa  (Lewis paper, page 5 col 2)
-    LLine_SIu = LLine_meas * uc['m3_per_Liter'] /(uc['sec_per_min'] * uc['Pa_per_kPa'])  # m3 / sec / Pa
+    #LLine_meas = 0.6   # L/ min / kPa  (Lewis paper, page 5 col 2)
+    #LLine_SIu = LLine_meas * uc['m3_per_Liter'] /(uc['sec_per_min'] * uc['Pa_per_kPa'])  # m3 / sec / Pa
     Fopen = LLine_SIu * pd['Psource_SIu']  # open cavity flow (no ev tube)
     pd['Rsource_SIu'] = Psource_SIu / Fopen
     pu['Rsource_SIu'] = 'Pa/m3/sec'
-    pd['LLine_SIu']  = LLine_SIu
-    pu['LLine_SIu']  = 'm3/sec / Pascal'
+    #pd['LLine_SIu']  = LLine_SIu
+    #pu['LLine_SIu']  = 'm3/sec / Pascal'
 
 
     ## these seem not used???
@@ -584,8 +584,8 @@ def setup_params():
     pu['Threshold Taper'] = 'Pa /m'
 
     # force threshold taper
-    pd['dF1dL'] =  0.5*(26-18)/1.1
-    pu['dF1dL'] = 'N/m??' #??
+    #pd['dF1dL'] =  0.5*(26-18)/1.1
+    #pu['dF1dL'] = 'N/m??' #??
 
 
     # simulation details
@@ -659,7 +659,8 @@ def loadDict(folder, fname):
 
 def print_param_table(pd,pu):
     print('\n Parameter Table ')
-    for k in sorted(pd.keys()):
+    #for k in sorted(pd.keys()):
+    for k in pd.keys():
         val = pd[k]
         #print('        --- ',k,pd[k])
         if type(val) == type(['x','y']):  # list param
@@ -695,15 +696,17 @@ def param_table_fileFormat(pd,pu):
 def print_param_table_latex(pd,pu):
     print('''\\begin{table}
 \\begin{tabular}{l|c|l}''')
-    for k in sorted(pd.keys()):
+    #for k in sorted(pd.keys()):
+    for k in pd.keys():
         val = pd[k]
+        kl = k.replace('_','\_') # latex _ escapes
         #print('        --- ',k,pd[k])
         if type(val) == type(['x','y']):  # list param
-            print(f'     {k:18} & {pd[k]}  &   {pu[k]:15} \\\\ \\hline')
+            print(f'     {kl:18} & {pd[k]}  &   {pu[k]:15} \\\\ \\hline')
         elif type(val) == type('x'):
-            print(f'     {k:18} & {pd[k]}  &  {pu[k]:15}\\\\ \\hline')  # string params
+            print(f'     {kl:18} & {pd[k]}  &  {pu[k]:15}\\\\ \\hline')  # string params
         else: #  ints and floats
-            print(f'     {k:18} & {pd[k]:8.4E} & {pu[k]:15} \\\\ \\hline')
+            print(f'     {kl:18} & {pd[k]:8.3E} & {pu[k]:15} \\\\ \\hline')
     print('''      \\end{tabular}
    \\caption{}
 \\end{table}''')

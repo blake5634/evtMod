@@ -299,6 +299,12 @@ else:
 
 # adapt plotting limits for high pressure
 pexpMax = max(ed['P'])
+try:
+    x = pd['Pmax']  # if there is a param file entry it takes over
+    PltPrMAX = x
+except:
+    pass
+
 if pexpMax > PltPrMAX:
     rnum = (pexpMax // 1000 + 1)*1000
     print('resetting Pr Max plotting to ', rnum)
@@ -486,6 +492,11 @@ if pd['ET_RofL_mode'] != 'constant':  # if the tube shape is interesting, plot i
     et.plot_tube_shape(pd)
 
 print(f'\n\n           {paramFileName} was simulated by {compModName} model. \n')
+
+pfname = input('Enter filename root for plot file (xxxxxxx.png): (cr) for none.')
+if len(pfname) > 4:
+    fn = pfname+'.png'
+    fig.savefig(fn, dpi=300)  # Save as PNG with 300 DPI resolution
 
 plt.show()
 
