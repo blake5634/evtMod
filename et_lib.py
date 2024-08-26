@@ -65,6 +65,7 @@ def constrainR(pd):
 #    functions to support variable diameter with length ( V(L) )
 #
 # radius of everting tube as function of Length
+radModes = ['constant', 'box', 'constrict', 'gap', 'ramp']
 def Ret(L,pd):
     mode = pd['ET_RofL_mode']
     if mode == 'constant':
@@ -78,6 +79,8 @@ def Ret(L,pd):
     elif mode == 'ramp':
         return etr_ramp(L,pd)
     else:
+        print('')
+        print('Ret(L,pd): valid radius modes: ', radModes)
         error('R of (L): unknown radius mode: '+pd['ET_RofL_mode'] )
 
 def etr_box(L,pd):
