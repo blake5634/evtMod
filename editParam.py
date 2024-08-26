@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import et_lib as et
 import glob, os
+import re
 
 
 
@@ -10,71 +11,57 @@ import glob, os
 #
 #    Configure here
 #
-freeParams = ['K2drag', 'Kdrag', 'PBA_static', 'PHalt_dyn', 'Psource_SIu', 'Rsource_SIu', 'Threshold Taper']
 
+ParamDirNames = ['evtParams/2Comp/']
+
+# example of multiple changes:
+#freeParams = ['K2drag', 'Kdrag', 'PBA_static', 'PHalt_dyn', 'Psource_SIu', 'Rsource_SIu', 'Threshold Taper']
 #pars = freeParams
 #newvals = [8.7556E-1,  2.0389, 1.1432E5, 1.0791E5, 1.2761E5,
            #1.0489E8, 3.1858E3 ]
 
-pars = ['Compartments']
-newvals = [2]
+pars = ['K2drag']
+newvals = [0.0]
 
-#paramDirList = ['evtParams/1Comp/']#, 'evtParams/2Comp/']
-paramDirList = [ 'evtParams/2Comp/']
+pars =  ['J', 'K2drag', 'Kdrag', 'Lmax', 'PBA_static', 'PHalt_dyn', 'Psource_SIu', 'Rsource_SIu', 'Tau_coulomb', 'Threshold Taper'  ]
 
-SIMULATE = False
+newvals =  [0.000262, 5.555555555555555, 2.111111111111111, 0.7, 112943.33333333333, 108844.44444444444, 125822.22222222222, 135000000.0, 0.0032222222222222222, 0.0  ]
+
+
+
+
+######
+SIMULATE = False       # don't do the edit for real: only test
 #
-#######################################################
+#
+##################################################################
 
 
-
-paramDir = 'evtParams'
-
+paramDir = ParamDirNames[0]
+defaultParamDir = 'evtParams/'
 unitsConvfilename = 'unitConv.txt'
 defaultParamName = 'InitialParams.txt'
 defaultUnitsName = 'units_'+defaultParamName
-paramFileName = defaultParamName
 unitsConvfilename = defaultUnitsName
 
-pd = et.loadParams(paramDir, paramFileName)
-#uc = et.loadUnitConv(paramDir, unitsConvfilename)
+fnums = []
+parFiles = []
+DparFiles = list(glob.glob(paramDir + '/Set*.txt'))
+if len(DparFiles) ==0:
+    et.error('No Setxxparam.txt files found')
+for pf in DparFiles:
+    fname = pf.split('/')[-1]
+    try:
+        SetNo = int(re.search(r'\d+', fname).group())
+    except:
+        et.error('No match to int in file name: '+str(fname) + ' fullpath:'+pf)
+    fnums.append(SetNo)
+tmp = list(zip(fnums, DparFiles))
+tmp2 = sorted(tmp, key=lambda x: x[0] ) # numerical order
+for n, fn in tmp2:
+    parFiles.append(fn)
 
-# unit constants
-sec_per_min = 60
-kPa_per_Pa = 0.001
-Pa_per_kPa = 1.0/kPa_per_Pa
-min_per_sec = 1/sec_per_min
-Gal_per_Liter = 0.2642
-Liter_per_Gal = 3.7854
-Liter_per_m3  = 1000.0
-Liter_per_mm3 = Liter_per_m3 / 1000**3
-Gal_per_mm3 = Liter_per_mm3 *Gal_per_Liter
-mm3_per_Gal = 1.0/Gal_per_mm3
-MM3perLiter = 1.0 / Liter_per_mm3
-# Ideal Gas Law  https://pressbooks.uiowa.edu/clonedbook/chapter/the-ideal-gas-law/
-m3_per_mole = 0.02241 # m3/mol of Air
-moles_per_m3 = 1.0/m3_per_mole
-Pa_per_PSI  = 6894.76
-atmos_Pa = 14.5 * Pa_per_PSI
-m3_per_Liter =  1.0 / Liter_per_m3  # m3
-Patmosphere = 101325.0    # Pascals
-Psource_SIu = Patmosphere + 3.0 * Pa_per_PSI # pascals
-
-ParamDirNames = paramDirList
-
-files = []
-fnRoots = []
-for parDir in ParamDirNames:
-        hashesRemoved = set()
-        parFiles = list(glob.glob(parDir + '/' + "*"))
-        parFiles.sort(key=lambda x: os.path.basename(x),reverse=False) # newest first
-        filenameroots = []
-        if len(parFiles) ==0:
-            cto.error('No param.txt files found')
-        for f in parFiles:
-            if '.txt' in f and 'Set' in f:     # e.g. Set5Params.txt
-                files.append(f)
-
+files = parFiles
 #print('file set:  ', files)
 ###################################################
 #
@@ -82,10 +69,14 @@ for parDir in ParamDirNames:
 #
 ###################################################
 print('Discovered Data Files: ')
-for i,fn in enumerate(files):
-    #tmp = fn.split('/')
-    fn2 = fn
+for i,fn in enumerate(parFiles):
+    fn2 = '/'.join(fn.split('/')[1:])
     print(f'{i:3}  {fn2}')
+
+if SIMULATE:
+    print('\n            Simulating ...\n')
+else:
+    x = input('NOT Simulating... are you sure? <cr>')
 
 sel = str(input('Select file numbers (-1) for all: '))
 nums = sel.split()
@@ -99,21 +90,19 @@ else:
         fset.append(int(n))
 
 if SIMULATE:
-    print('  ...   SIMULATING  ...')
+    print('  ...   SIMULATING (no file changes) ...')
 for index in fset:
     print('Param set: ', files[index])
     pd = et.loadDict('', files[index])
     for i,par in enumerate(pars):
-        try:
-            print(f'    changing {par} from {pd[par]:12} to {newvals[i]}')
-        except:
-            print(f'    changing {par} from {"missing":12} to {newvals[i]}')
-
+        print(f'    changing {par:17} from:{pd[par]:8.2}   to:{newvals[i]:8.2}')
         if not SIMULATE:
             pd[par] = newvals[i]
     if not SIMULATE:
         et.saveParams(files[index],pd)
-    print(files[index], ' ...   Saved')
+        print(files[index], ' ...   Saved')
+    else:
+        print('Simulating: ... save modified params to ', files[index])
 
 if SIMULATE:
     print(' ... end of SIMULATION ...')
