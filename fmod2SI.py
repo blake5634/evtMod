@@ -136,7 +136,7 @@ T= 295.4  # 72F in deg K
 df_hashes = [
     "15g42423",   # these are the data file hashes if needed.
     "891a0abc",   # note: these hashes cannot look like floats or ints!!!
-    "52f8bea7",
+    "52f8bea7",   # examples: 12E404 and 87654321 are NOT allowed
     "e50137ee",
     "eb610645",
     "c4f507b1",
@@ -495,7 +495,7 @@ print(f'\n\n           {paramFileName} was simulated by {compModName} model. \n'
 
 pfname = input('Enter filename root for plot file (xxxxxxx.png): (cr) for none.')
 if len(pfname) > 4:
-    fn = pfname+'.png'
+    fn = 'smoothTubeWShapes/'+pfname+'.png'
     fig.savefig(fn, dpi=300)  # Save as PNG with 300 DPI resolution
 
 plt.show()
