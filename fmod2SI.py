@@ -316,10 +316,13 @@ if pexpMax > PltPrMAX:
 #   Plot the simulation outputs
 #
 
-clrs = ['b','g','r','c','m']
+prop_cycle = plt.rcParams['axes.prop_cycle']
+colors = prop_cycle.by_key()['color'] # match the defaults
+
+clrs = [colors[0],colors[1],'g','c','m']
 #trajectory:
 
-# constrain the resitances (5-Aug-24)
+# constrain the resistances (5-Aug-24)
 r_source, r_tube = et.constrainR(pd)
 
 # "ideal" loadline endpoints
@@ -339,7 +342,8 @@ favg = 0.5*(np.array(f)+np.array(ft))
 axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
 # simulated housing and tube pressures
 #axs[0,0].plot(f, pc1, favg, pc2)
-axs[0,0].plot(f, pc1, ft, pc2)
+axs[0,0].plot(f, pc1,  color=clrs[0])
+axs[0,0].plot(ft, pc2, color=clrs[1])
 if pd['COMP1'] == 'housing':
     axs[0,0].legend(['Source Load Line',  'Housing', 'Ev. Tube'])
 if pd['COMP1'] == 'supply_tubing':
@@ -357,8 +361,8 @@ ax00.xaxis.set_major_locator(xpressticks)
 
 #plt.sca(axs[0,0])
 # Plot 2   # PRESSURE
-axs[1,0].plot(time, pc1)
-axs[1,0].plot(time, pc2)
+axs[1,0].plot(time, pc1, color=clrs[0])
+axs[1,0].plot(time, pc2, color=clrs[1])
 
 if pd['COMP1'] == 'housing':
     axs[1,0].legend(['Phousing', 'Ptube' ])
@@ -373,28 +377,31 @@ axs[1,0].plot(time, pstt, linestyle='dashed', color=clrs[3])
 axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
 
 # Plot 3
-axs[2,0].plot(time, vol1, time, vol2 )
+axs[2,0].plot(time, vol1, color=clrs[0] )
+axs[2,0].plot(time, vol2, color=clrs[1] )
 axs[2,0].legend(['Vhousing', 'Vtube'])
 axs[2,0].set_xlabel('Time (sec)')
 axs[2,0].set_ylabel('Volume (m3)')
 axs[2,0].set_xlim(PltTMIN, PltTMAX)
 axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
 
-axs[0,1].plot(time, f, time, ft)
+axs[0,1].plot(time, f,color=clrs[0])
+axs[0,1].plot(time, ft, color=clrs[1])
 axs[0,1].set_xlabel('Time (sec)')
 axs[0,1].set_ylabel('Flow (m3/sec)')
 axs[0,1].legend(['Flow Source->C1', 'Flow C1->C2'])
 axs[0,1].set_xlim(PltTMIN, PltTMAX)
 axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
-axs[1,1].plot(time, l, time, lc)
+axs[1,1].plot(time, l,color=clrs[0])
+axs[1,1].plot(time, lc,color=clrs[1])
 axs[1,1].set_xlabel('Time (sec)')
 axs[1,1].set_ylabel('Length (m)')
 axs[1,1].legend(['Tube Length', 'Crumple Length'])
 axs[1,1].set_xlim(PltTMIN, PltTMAX)
 axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
 
-axs[2,1].plot(time, ldot)
+axs[2,1].plot(time, ldot,color=clrs[0])
 axs[2,1].set_xlabel('Time (sec)')
 axs[2,1].set_ylabel('Tube Velocity (m/sec)')
 axs[2,1].set_xlim(PltTMIN, PltTMAX)
@@ -450,18 +457,18 @@ if PLOT_TYPE == 'OVERLAY':
     Interval = 25
     x = ed['flow']
     y = ed['P']
-    et.plot_curve_with_arrows2(x, y, ax00, Interval,color=clrs[1])
+    et.plot_curve_with_arrows2(x, y, ax00, Interval,color=clrs[2])
     if pd['COMP1'] == 'housing':
         ax00.legend(['Source Load Line',  'Housing', 'Everting Tube', 'Experiment'])
     if pd['COMP1'] == 'supply_tubing':
         ax00.legend(['Source Load Line',  'Supply Tubing', 'Housing + ET', 'Experiment'])
 
 
-    axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[1])  # Experimental Data
+    axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[2])  # Experimental Data
     #axs[2,0].plot(ed['time'], ed['vol'], '--',color=clrs[1])  # Experimental Data
-    axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[1])  # Experimental Data
-    axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[1])  # Experimental Data
-    axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[1])  # Experimental Data
+    axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[2])  # Experimental Data
+    axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[2])     # Experimental Data
+    axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[2])  # Experimental Data
 
     # Adjust layout
     fig.tight_layout()
