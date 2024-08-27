@@ -17,26 +17,16 @@ modeltypes = ['1Comp','2Comp','23-Jul']
 
 args = sys.argv
 cl = ' '.join(args)
-paramDir = 'evtParams/2Comp/'
-unitsDir = 'evtParams/'
 
-
-#if len(args) == 3:  #  >fmod2SI   nn  [1Comp]   nn=fileNo  '1Comp' for non-default one comp model
-    #if args[2] not in modeltypes:
-            #et.error(f'fmod2SI: unknown command line arg: \n     >{cl}')
-    #if args[2] == '1Comp':     # not same as pd['Compartments']
-        #paramDir = 'evtParams/1Comp/'
-    #elif args[2] == '2Comp':   # not same as pd['Compartments']
-        #paramDir = 'evtParams/2Comp/'   # default is 2Compartment model
-    #elif args[2] == '23-Jul':
-        #paramDir = 'evtParams/23-Jul-FlowData/'
-
-paramDir = 'evtParams/2Comp/'   # default is 2Compartment model
+#paramDir = 'evtParams/2Comp/'   # default is 2Compartment model
+# for comparing tube profiles
+#paramDir = 'evtParams/burstyPs/'   # default is 2Compartment model
+paramDir = 'evtParams/smoothPs/'   # default is 2Compartment model
 
 unitsConvfilename = 'unitConv.txt'
-defaultParamName = 'InitialParams.txt'
-defaultUnitsName = 'units_'+defaultParamName
-defaultUnitsDir = 'evtParams/'
+defaultParamName  = 'InitialParams.txt'
+defaultUnitsName  = 'units_'+defaultParamName
+defaultUnitsDir   = 'evtParams/'
 
 # load parameter file(s)
 
@@ -114,7 +104,7 @@ try:
     pu = et.loadPUnits(defaultUnitsDir, defaultUnitsName)
 except:
     et.error('Cant Load param units file: ',defaultUnitsName)
-print('loading default parameter units from: ' + paramDir + defaultUnitsName)
+print('loading default parameter units from: ' + defaultUnitsDir + defaultUnitsName)
 pu = et.loadPUnits(defaultUnitsDir, defaultUnitsName)
 
 
@@ -125,7 +115,12 @@ pu = et.loadPUnits(defaultUnitsDir, defaultUnitsName)
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color'] # match the defaults
 clrs = [colors[0],colors[1],'g','c','m']
+expDataColor = 'g'
+firstColor = colors[0]
+secondColor = colors[1]
 
+radius_modes = ['constant','box','constrict', 'gap', 'ramp']
+#pu['radius_modes'] = 'text list'
 ###########################################################################
 #
 # Big loop to simulate requested files
@@ -135,7 +130,11 @@ for PSetInt in fileNos:
     if not bool(re.fullmatch(r"\d+", paramFileNoStr)):
         et.error('unknown param file: ',paramFileName, '  ...  quitting')
 
-    paramFileName = 'Set'+paramFileNoStr+'Params.txt'  # look up SetxxParams.txt
+    # for regular 2Comp sims
+    #paramFileName = 'Set'+paramFileNoStr+'Params.txt'  # look up SetxxParams.txt
+    # for overlay of different tube shape responses
+    #paramFileName = 'shapebP'+paramFileNoStr+'.txt'  # look up SetxxParams.txt
+    paramFileName = 'shapeS_P'+paramFileNoStr+'.txt'  # look up SetxxParams.txt
     paramFileNo = int(paramFileNoStr)
 
     print('loading Parameter Dict:',paramFileName)
@@ -272,6 +271,13 @@ PltVoMAX = prd['Volume'][1]
 #
 fig, axs = plt.subplots(3, 2, figsize=(8, 10))
 
+#fig.suptitle(fn.split('/')[-1] + '\n       ' + paramFileName + ', ' + compModName)
+
+#titleStr = f'Simulation Overplot.  \n Bursty Params (1): Tube Profiles: {" ".join(fileNos)}'
+titleStr = f'Simulation Overplot.  \n Smooth Params (1): Tube Profiles: {" ".join(fileNos)}'
+
+fig.suptitle(titleStr)
+
 if state==PRESSURE_TEST:
     axs[0].text(0.5, 10000, 'PRESSURE_TEST (no eversion)')
 
@@ -289,6 +295,9 @@ if state==PRESSURE_TEST:
 #   Loop through the sim results and overplot them
 #
 #
+ic = 0 # color iterator
+shapeNames  = []  # legend items (for single plots)
+shapeNames2 = []  # legend items (for double plots)
 for sr in SimResults:
     print('\n\n             Plotting sim result\n\n')
     # break out the time vectors
@@ -312,11 +321,17 @@ for sr in SimResults:
 #
 #   Plot the simulation outputs
 #
-
-
-    # constrain the resitances (5-Aug-24)
+    firstColor = colors[ic]
+    secondColor = colors[ic+5]
+    shapeNames.append(radius_modes[ic])
+    shapeNames2.append(radius_modes[ic])  # first color mode
+    shapeNames2.append(radius_modes[ic])  # second color mode
+    ic += 1
+    #
+    #  generate ideal load line
+    #
+    # constrain the resistances (5-Aug-24)
     r_source, r_tube = et.constrainR(pd)
-
     # "ideal" loadline endpoints
     x1 = 0.0
     y1 = pd['Psource_SIu']
@@ -334,8 +349,8 @@ for sr in SimResults:
     axs[0,0].plot([x1,x2], [y1,y2], color='k', linestyle='-.')  # x1,..y2 defined above
     # simulated housing and tube pressures
     #axs[0,0].plot(f, pc1, favg, pc2)
-    axs[0,0].plot(f,  pc1, color=clrs[0])
-    axs[0,0].plot(ft, pc2, color=clrs[1])
+    axs[0,0].plot(f,  pc1, color=firstColor)
+    axs[0,0].plot(ft, pc2, color=secondColor)
     #if pd['COMP1'] == 'housing':
         #axs[0,0].legend(['Source Load Line',  'Housing', 'Ev. Tube'])
     #if pd['COMP1'] == 'supply_tubing':
@@ -353,8 +368,8 @@ for sr in SimResults:
 
     #plt.sca(axs[0,0])
     # Plot 2   # PRESSURE
-    axs[1,0].plot(time, pc1, color=clrs[0])
-    axs[1,0].plot(time, pc2, color=clrs[1])
+    axs[1,0].plot(time, pc1, color=firstColor)
+    axs[1,0].plot(time, pc2, color=secondColor)
 
     #if pd['COMP1'] == 'housing':
         #axs[1,0].legend(['Phousing', 'Ptube' ])
@@ -369,31 +384,32 @@ for sr in SimResults:
     axs[1,0].plot(time, pbat, linestyle='dashed', color=clrs[4])
 
     # Plot 3
-    axs[2,0].plot(time, vol1, color=clrs[0] )
-    axs[2,0].plot(time, vol2, color=clrs[1] )
+    axs[2,0].plot(time, vol1, color=firstColor )
+    axs[2,0].plot(time, vol2, color=secondColor )
     #axs[2,0].legend(['Vhousing', 'Vtube'])
     axs[2,0].set_xlabel('Time (sec)')
     axs[2,0].set_ylabel('Volume (m3)')
     axs[2,0].set_xlim(PltTMIN, PltTMAX)
     axs[2,0].set_ylim(PltVoMIN, PltVoMAX)
 
-    axs[0,1].plot(time, f,color=clrs[0])
-    axs[0,1].plot(time, ft, color=clrs[1])
+    axs[0,1].plot(time, f,color=firstColor)
+    axs[0,1].plot(time, ft, color=secondColor)
     axs[0,1].set_xlabel('Time (sec)')
     axs[0,1].set_ylabel('Flow (m3/sec)')
-    #axs[0,1].legend(['Flow Source->C1', 'Flow C1->C2'])
+    axs[0,1].legend(shapeNames2)
     axs[0,1].set_xlim(PltTMIN, PltTMAX)
     axs[0,1].set_ylim(PltFlMIN, PltFlMAX)
 
-    axs[1,1].plot(time, l,color=clrs[0])
-    axs[1,1].plot(time, lc,color=clrs[1])
+    axs[1,1].plot(time, l,color=firstColor)
+    axs[1,1].plot(time, lc,color=secondColor)
     axs[1,1].set_xlabel('Time (sec)')
     axs[1,1].set_ylabel('Length (m)')
-    axs[1,1].legend(['Tube Length', 'Crumple Length'])
+    #axs[1,1].legend(['Tube Length', 'Crumple Length'])
+    #axs[1,1].legend(shapeNames)
     axs[1,1].set_xlim(PltTMIN, PltTMAX)
     axs[1,1].set_ylim(PltLeMIN, PltLeMAX)
 
-    axs[2,1].plot(time, ldot,color=clrs[0])
+    axs[2,1].plot(time, ldot,color=firstColor)
     axs[2,1].set_xlabel('Time (sec)')
     axs[2,1].set_ylabel('Tube Velocity (m/sec)')
     axs[2,1].set_xlim(PltTMIN, PltTMAX)
@@ -449,18 +465,18 @@ if PLOT_TYPE == 'OVERLAY':
     Interval = 25
     x = ed['flow']
     y = ed['P']
-    et.plot_curve_with_arrows2(x, y, ax00, Interval,color=clrs[1])
+    et.plot_curve_with_arrows2(x, y, ax00, Interval,color=secondColor)
     if pd['COMP1'] == 'housing':
         ax00.legend(['Source Load Line',  'Housing', 'Everting Tube', 'Experiment'])
     if pd['COMP1'] == 'supply_tubing':
         ax00.legend(['Source Load Line',  'Supply Tubing', 'Housing + ET', 'Experiment'])
 
 
-    axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=clrs[2])  # Experimental Data
-    #axs[2,0].plot(ed['time'], ed['vol'], '--',color=clrs[1])  # Experimental Data
-    axs[0,1].plot(ed['time'], ed['flow'], '--',color=clrs[2])  # Experimental Data
-    axs[1,1].plot(ed['time'], ed['L'], '--',color=clrs[2])  # Experimental Data
-    axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=clrs[2])  # Experimental Data
+    axs[1,0].plot(np.array(ed['time']), np.array(ed['P']), '--', color=expDataColor)  # Experimental Data
+    #axs[2,0].plot(ed['time'], ed['vol'], '--',color=secondColor)  # Experimental Data
+    axs[0,1].plot(ed['time'], ed['flow'], '--',color=expDataColor)  # Experimental Data
+    axs[1,1].plot(ed['time'], ed['L'], '--',color=expDataColor)  # Experimental Data
+    axs[2,1].plot(ed['time'], ed['Ldot'], '--',color=expDataColor)  # Experimental Data
 
     # Adjust layout
     fig.tight_layout()
@@ -496,8 +512,8 @@ if PLOT_TYPE == 'OVERLAY':
 #
 pfname = input('Enter filename root for plot file (xxxxxxx.png): (cr) for none.')
 if len(pfname) > 4:
-    fn = '.'+pfname+'.png'
+    fn = './'+pfname+'.png'
     fig.savefig(fn, dpi=300)  # Save as PNG with 300 DPI resolution
-
+    print('graphics saved to ',fn)
 plt.show()
 

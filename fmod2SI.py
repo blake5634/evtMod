@@ -109,7 +109,7 @@ PRESSURE_TEST = 2
 GROWING = 1
 STUCK = 0
 
-pd['radius_modes'] = ['constant','box','ramp','constrict']
+pd['radius_modes'] = ['constant','box','constrict', 'gap', 'ramp']
 pu['radius_modes'] = 'text list'
 
 ## Constant Eversion forces
